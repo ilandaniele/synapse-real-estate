@@ -260,6 +260,10 @@ importers:
         version: 19.3.1
 
   packages/ui:
+    dependencies:
+      '@synapse/domain':
+        specifier: workspace:*
+        version: link:../domain
     devDependencies:
       '@types/react':
         specifier: ^19
