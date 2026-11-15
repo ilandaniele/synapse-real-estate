@@ -1,0 +1,44 @@
+# Single-VM production stack: API (PGlite + local storage), showroom, admin and Caddy (automatic HTTPS).
+# Usage is in docs/DEPLOYMENT.md. Needs .env.production next to this file.
+x-app: &app
+  build: .
+  image: synapse-app
+  restart: unless-stopped
+  env_file: .env.production
+  init: true
+
+services:
+  api:
+    <<: *app
+    command: ["pnpm", "--filter", "@synapse/api", "start"]
+    volumes:
+      - data:/app/.data
+      - storage:/app/storage
+
+  showroom:
+    <<: *app
+    command: ["pnpm", "--filter", "@synapse/showroom", "start"]
+
+  admin:
+    <<: *app
+    command: ["pnpm", "--filter", "@synapse/admin", "start"]
+
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    env_file: .env.production
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [api, showroom, admin]
+
+volumes:
+  data:
+  storage:
+  caddy_data:
+  caddy_config:

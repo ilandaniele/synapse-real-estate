@@ -34,7 +34,7 @@ from a real run.
 | Check | Result | Time |
 |---|---|---|
 | `pnpm typecheck` | pass, all packages | 6.7 s |
-| `pnpm test` | 117 passed, 0 failed | 7.2 s |
+| `pnpm test` | 124 passed, 0 failed | 7 s |
 | `pnpm build` | pass (showroom 10 routes, admin 8 routes) | 6.0 s |
 | `pnpm test:e2e` | 29 passed, 0 failed, 0 skipped | 54 s |
 
@@ -70,7 +70,8 @@ Masterplan times include software WebGL. Expect real GPUs to be faster, but this
 
 ## Pending and limitations
 
-- Deployment is local only. A remote deploy (Cloudflare or other) needs approval because it may cost money.
+- Deployment files for a single free VM (Docker Compose + Caddy) are ready but not run yet. The Docker image
+  was not built locally because Docker Desktop did not start. See [DEPLOYMENT.md](DEPLOYMENT.md).
 - Panoramas are single-resolution. Multiresolution tiles are supported by the engine design but not generated.
 - Postgres, Redis/BullMQ and S3 are configurable but untested in this session. Everything ran on PGlite and
   local storage.

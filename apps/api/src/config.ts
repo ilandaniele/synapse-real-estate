@@ -9,7 +9,8 @@ const Env = z.object({
   DATABASE_URL: z.string().default(""),
   SESSION_SECRET: z.string().optional(),
   STORAGE_DIR: z.string().default("./storage"),
-  PUBLIC_API_URL: z.string().url().default("http://localhost:4000"),
+  // Empty means relative /media and /api URLs, for a proxy that serves the API on each app's own origin.
+  PUBLIC_API_URL: z.union([z.literal(""), z.string().url()]).default("http://localhost:4000"),
   CORS_ORIGINS: z.string().default("http://localhost:3000,http://localhost:3001"),
   TRUST_PROXY: z.enum(["true", "false"]).default("false"),
 });

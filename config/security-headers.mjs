@@ -1,10 +1,11 @@
 /**
  * Security headers shared by the Next apps. `extraOrigins` lists third-party hosts the page fetches from
- * (map tiles); the API origin is always allowed for data and media.
+ * (map tiles). The API origin is allowed for data and media; an empty NEXT_PUBLIC_API_URL means same origin.
  */
 export function securityHeaders(extraOrigins = []) {
-  const api = new URL(process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").origin;
-  const remote = [api, ...extraOrigins].join(" ");
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+  const api = apiUrl ? [new URL(apiUrl).origin] : [];
+  const remote = [...api, ...extraOrigins].join(" ");
   const devEval = process.env.NODE_ENV === "production" ? "" : " 'unsafe-eval'";
   const csp = [
     "default-src 'self'",

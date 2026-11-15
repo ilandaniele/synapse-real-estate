@@ -22,14 +22,14 @@ pnpm 9.15.9) on 2026-11-15. Nothing here is projected.
 | `packages/3d-engine` | `src/helpers.test.ts` | 14 |
 | `packages/tour-engine` | `src/geometry.test.ts`, `src/tour-navigator.test.ts` | 16 |
 | `tools/cad-importer` | `test/cad-importer.test.ts` | 7 |
-| `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security` | 58 |
-| **Total** | | **117 passed, 0 failed** (about 7 s wall clock) |
+| `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security`, `deploy-config` | 65 |
+| **Total** | | **124 passed, 0 failed** (about 7 s wall clock) |
 
 The API tests start the real Fastify app with an in-memory PGlite database and cover 401, 403, 404, 409,
 413, 415 and 429 responses, cross-organization access (IDOR), the role matrix, the lead honeypot and rate
 limit, magic-byte checks on uploads, DWG rejection and versioned publishing. `security.test.ts` covers role
 changes and removed members on live sessions, the Origin check on writes and the absence of `/docs` in
-production.
+production. `deploy-config.test.ts` covers relative media URLs and the production guard of the demo seed.
 
 `packages/ui`, `packages/contracts`, `workers/*`, `apps/admin` and `apps/showroom` have no unit tests of
 their own. Contracts are exercised through the API tests; the apps are covered by E2E.

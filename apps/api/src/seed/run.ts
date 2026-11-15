@@ -26,14 +26,14 @@ import {
 import type { Role, UnitStatus } from "@synapse/domain";
 import { loadConfig } from "../config";
 import { buildManifest } from "../lib/manifest";
+import { seedPassword } from "./guard";
 
 /**
  * Idempotent demo seed. Reads `<repo>/storage/demo/manifest.json` (written by `pnpm assets:generate`) and rebuilds
  * the two demo organizations from scratch (cascade delete by slug, then insert), then publishes version 1.
- * Local demo data only: the shared password below must never be used outside a development machine.
+ * Production runs need an explicit opt-in and a strong password (see ./guard).
  */
 
-const DEFAULT_PASSWORD = "demo-password-123";
 const DEMO_DIR = process.env.SEED_DEMO_DIR ? path.resolve(process.env.SEED_DEMO_DIR) : path.join(REPO_ROOT, "storage", "demo");
 const MANIFEST_FILE = path.join(DEMO_DIR, "manifest.json");
 
@@ -205,11 +205,8 @@ async function wipe(db: Db) {
 }
 
 async function main() {
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("The demo seed wipes the database and uses known passwords; it never runs with NODE_ENV=production.");
-  }
+  const password = seedPassword(process.env);
   const demo = readDemoManifest();
-  const password = process.env.SEED_PASSWORD?.trim() || DEFAULT_PASSWORD;
   const config = loadConfig();
   const handle = await createDb(config.databaseUrl);
   const db = handle.db;

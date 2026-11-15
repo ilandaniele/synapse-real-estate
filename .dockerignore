@@ -1,0 +1,17 @@
+**/node_modules
+**/.next
+**/dist
+**/coverage
+**/*.tsbuildinfo
+**/next-env.d.ts
+.git
+.data
+storage
+referencias
+*.mp4
+.env
+.env.*
+!.env.production.example
+tests/test-results
+tests/playwright-report
+.claude

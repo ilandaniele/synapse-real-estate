@@ -1,0 +1,21 @@
+# Each public host serves its Next app; /api and /media go to the API on the same origin,
+# so the session cookie and the CSP stay same-origin.
+(app) {
+	encode zstd gzip
+	header Strict-Transport-Security "max-age=31536000"
+	@api path /api/* /media/*
+	handle @api {
+		reverse_proxy api:4000
+	}
+	handle {
+		reverse_proxy {args[0]}
+	}
+}
+
+{$SHOWROOM_HOST} {
+	import app showroom:3000
+}
+
+{$ADMIN_HOST} {
+	import app admin:3001
+}
