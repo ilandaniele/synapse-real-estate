@@ -205,6 +205,9 @@ async function wipe(db: Db) {
 }
 
 async function main() {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("The demo seed wipes the database and uses known passwords; it never runs with NODE_ENV=production.");
+  }
   const demo = readDemoManifest();
   const password = process.env.SEED_PASSWORD?.trim() || DEFAULT_PASSWORD;
   const config = loadConfig();

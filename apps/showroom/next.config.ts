@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import path from "node:path";
+import { securityHeaders } from "../../config/security-headers.mjs";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -10,6 +11,7 @@ const nextConfig: NextConfig = {
     "@synapse/domain",
     "@synapse/contracts",
   ],
+  headers: async () => securityHeaders(["https://tiles.openfreemap.org"]),
   turbopack: {
     root: path.resolve(import.meta.dirname, "../.."),
   },

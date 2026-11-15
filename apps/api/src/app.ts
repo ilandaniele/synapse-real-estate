@@ -4,11 +4,11 @@ import rateLimit from "@fastify/rate-limit";
 import fastifyStatic from "@fastify/static";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
-import Fastify, { type FastifyInstance } from "fastify";
+import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
 import type { Db } from "@synapse/db";
 import { loadConfig, type Config } from "./config";
 import { decorateAuth } from "./lib/auth";
-import { errorHandler, notFoundHandler } from "./lib/errors";
+import { errorHandler, forbidden, notFoundHandler } from "./lib/errors";
 import { buildOpenApiDocument } from "./lib/openapi";
 import authRoutes from "./routes/auth";
 import publicRoutes from "./routes/public";
@@ -32,6 +32,12 @@ export interface BuildAppOptions {
 
 const TEST_SECRET = "dev-only-secret-dev-only-secret-0123456789";
 const MEDIA_CACHE = "public, max-age=604800, stale-while-revalidate=86400";
+const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
+/** Upload URLs carry a signed token in the query string; keep it out of the logs. */
+function redactedRequest(request: FastifyRequest) {
+  return { method: request.method, url: request.url.replace(/([?&]token=)[^&]*/g, "$1[REDACTED]"), reqId: request.id };
+}
 
 export async function buildApp(options: BuildAppOptions): Promise<FastifyInstance> {
   const config: Config = {
@@ -48,7 +54,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   const limits = { global: 300, login: 10, leads: 5, ...options.rateLimit };
 
   const app = Fastify({
-    logger: options.logger ?? false,
+    logger: options.logger ? { serializers: { req: redactedRequest } } : false,
     bodyLimit: 1024 * 1024,
     trustProxy: config.trustProxy,
     // Rows are validated with Zod; Fastify's own validation/serialisation stays out of the way.
@@ -67,6 +73,13 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     reply.header("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'");
   });
 
+  // CSRF defence in depth on top of SameSite=Lax: browsers always send Origin on cross-site writes.
+  app.addHook("onRequest", async (request) => {
+    const origin = request.headers.origin;
+    if (SAFE_METHODS.has(request.method) || !origin) return;
+    if (!config.corsOrigins.includes(origin)) throw forbidden("Origin not allowed");
+  });
+
   await app.register(cors, {
     origin: config.corsOrigins,
     credentials: true,
@@ -82,11 +95,13 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
       Object.assign(new Error(`Too many requests. Retry in ${Math.ceil(context.ttl / 1000)} s.`), { statusCode: 429 }),
   });
 
-  await app.register(swagger, {
-    mode: "static",
-    specification: { document: buildOpenApiDocument(config.publicApiUrl) as never },
-  });
-  await app.register(swaggerUi, { routePrefix: "/docs" });
+  if (!config.isProd) {
+    await app.register(swagger, {
+      mode: "static",
+      specification: { document: buildOpenApiDocument(config.publicApiUrl) as never },
+    });
+    await app.register(swaggerUi, { routePrefix: "/docs" });
+  }
 
   await app.register(fastifyStatic, {
     root: options.storageDir,

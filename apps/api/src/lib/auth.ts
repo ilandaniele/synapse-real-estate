@@ -1,8 +1,9 @@
 import { createHash } from "node:crypto";
 import type { FastifyInstance, FastifyRequest } from "fastify";
+import { and, eq } from "drizzle-orm";
 import { jwtVerify, SignJWT } from "jose";
 import { can, ROLES, type Action, type Role } from "@synapse/domain";
-import type { Db } from "@synapse/db";
+import { organizationMemberships, type Db } from "@synapse/db";
 import type { Config } from "../config";
 import { forbidden, unauthorized } from "./errors";
 
@@ -54,14 +55,31 @@ export function sessionCookieOptions(config: Config) {
   return { httpOnly: true, sameSite: "lax" as const, secure: config.isProd, path: "/", maxAge: SESSION_TTL_SECONDS };
 }
 
+/** Current role of the user in the session's organization, so removed members and role changes apply at once. */
+async function currentRole(db: Db, claims: SessionClaims): Promise<Role | null> {
+  const [row] = await db
+    .select({ role: organizationMemberships.role })
+    .from(organizationMemberships)
+    .where(
+      and(
+        eq(organizationMemberships.userId, claims.userId),
+        eq(organizationMemberships.organizationId, claims.organizationId),
+      ),
+    )
+    .limit(1);
+  return row ? (row.role as Role) : null;
+}
+
 export function decorateAuth(app: FastifyInstance) {
   app.decorateRequest("session", null);
   app.decorate("requireAuth", (action?: Action) => async (request: FastifyRequest) => {
     const token = request.cookies[SESSION_COOKIE];
     const claims = token ? await verifySession(app.config.sessionSecret, token) : null;
     if (!claims) throw unauthorized();
-    if (action && !can(claims.role, action)) throw forbidden();
-    request.session = claims;
+    const role = await currentRole(app.db, claims);
+    if (!role) throw unauthorized("Session is no longer valid");
+    if (action && !can(role, action)) throw forbidden();
+    request.session = { ...claims, role };
   });
 }
 
