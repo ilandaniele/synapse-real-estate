@@ -6,12 +6,13 @@
   "scripts": {
     "assets:generate": "pnpm --filter @synapse/demo-assets generate",
     "db:seed": "pnpm --filter @synapse/api seed",
-    "dev": "pnpm -r --parallel --filter @synapse/api --filter @synapse/showroom --filter @synapse/admin --filter @synapse/asset-worker dev",
+    "dev": "pnpm -r --parallel --filter @synapse/api --filter @synapse/showroom --filter @synapse/admin dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
     "test": "pnpm -r --filter !@synapse/e2e test",
-    "test:e2e": "pnpm --filter @synapse/e2e test"
+    "test:e2e": "pnpm --filter @synapse/e2e test",
+    "workers": "pnpm -r --parallel --filter @synapse/asset-worker --filter @synapse/render-worker --if-present start"
   },
   "devDependencies": {
     "typescript": "5.9.3",

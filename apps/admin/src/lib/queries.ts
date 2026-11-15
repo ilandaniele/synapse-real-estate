@@ -1,0 +1,83 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import type { Asset, Development, FloorPlan, Job, Lead, Publication, Scene, SessionUser, Unit } from "@synapse/contracts";
+import type { JobStatus, UnitStatus } from "@synapse/domain";
+import { api, ApiRequestError } from "./api";
+
+export interface Dashboard {
+  unitsByStatus: Record<UnitStatus, number>;
+  leadsLast30Days: number;
+  lastPublication: { version: number; publishedAt: string; developmentId: string; developmentName: string; publishedBy: string } | null;
+  jobsByStatus: Record<JobStatus, number>;
+}
+
+export interface LeadsPage {
+  items: Lead[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export const ACTIVE_JOB_STATUSES: readonly JobStatus[] = ["PENDING", "PROCESSING"];
+export const isActiveJob = (job: Pick<Job, "status">) => ACTIVE_JOB_STATUSES.includes(job.status);
+
+export const keys = {
+  me: ["me"] as const,
+  dashboard: ["dashboard"] as const,
+  developments: ["developments"] as const,
+  development: (id: string) => ["developments", id] as const,
+  units: (devId: string) => ["developments", devId, "units"] as const,
+  scenes: (devId: string) => ["developments", devId, "scenes"] as const,
+  floorPlans: (devId: string) => ["developments", devId, "floor-plans"] as const,
+  publications: (devId: string) => ["developments", devId, "publications"] as const,
+  scene: (id: string) => ["scenes", id] as const,
+  hotspots: (sceneId: string) => ["scenes", sceneId, "hotspots"] as const,
+  leads: (filters: unknown) => ["leads", filters] as const,
+  lead: (id: string) => ["leads", "detail", id] as const,
+  assets: ["assets"] as const,
+  jobs: ["jobs"] as const,
+  job: (id: string) => ["jobs", id] as const,
+};
+
+/** 401/403/404 will not get better on retry. */
+const retry = (count: number, error: Error) =>
+  !(error instanceof ApiRequestError && [401, 403, 404].includes(error.status)) && count < 2;
+
+export const useMe = () => useQuery({ queryKey: keys.me, queryFn: () => api<SessionUser>("/auth/me"), retry: false, staleTime: 60_000 });
+export const useDashboard = () => useQuery({ queryKey: keys.dashboard, queryFn: () => api<Dashboard>("/admin/dashboard"), retry });
+export const useDevelopments = () => useQuery({ queryKey: keys.developments, queryFn: () => api<Development[]>("/admin/developments"), retry });
+export const useDevelopment = (id: string) =>
+  useQuery({ queryKey: keys.development(id), queryFn: () => api<Development>(`/admin/developments/${id}`), retry });
+export const useUnits = (devId: string) =>
+  useQuery({ queryKey: keys.units(devId), queryFn: () => api<Unit[]>(`/admin/developments/${devId}/units`), enabled: Boolean(devId), retry });
+export const useScenes = (devId: string | undefined) =>
+  useQuery({
+    queryKey: keys.scenes(devId ?? ""),
+    queryFn: () => api<Scene[]>(`/admin/developments/${devId}/scenes`),
+    enabled: Boolean(devId),
+    retry,
+  });
+export const useFloorPlans = (devId: string) =>
+  useQuery({ queryKey: keys.floorPlans(devId), queryFn: () => api<FloorPlan[]>(`/admin/developments/${devId}/floor-plans`), retry });
+export const usePublications = (devId: string) =>
+  useQuery({ queryKey: keys.publications(devId), queryFn: () => api<Publication[]>(`/admin/developments/${devId}/publications`), retry });
+export const useScene = (id: string) => useQuery({ queryKey: keys.scene(id), queryFn: () => api<Scene>(`/admin/scenes/${id}`), retry });
+export const useAssets = () => useQuery({ queryKey: keys.assets, queryFn: () => api<Asset[]>("/admin/assets"), retry });
+
+export const useJobs = () =>
+  useQuery({
+    queryKey: keys.jobs,
+    queryFn: () => api<Job[]>("/admin/jobs"),
+    retry,
+    refetchInterval: (query) => (query.state.data?.some(isActiveJob) ? 3000 : false),
+  });
+
+export const useJob = (id: string | null) =>
+  useQuery({
+    queryKey: keys.job(id ?? ""),
+    queryFn: () => api<Job>(`/admin/jobs/${id}`),
+    enabled: Boolean(id),
+    retry,
+    refetchInterval: (query) => (query.state.data && isActiveJob(query.state.data) ? 3000 : false),
+  });
