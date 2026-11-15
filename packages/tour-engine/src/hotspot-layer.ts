@@ -53,6 +53,6 @@ export function destroyRecordHotspots(record: SceneRecord): void {
 }
 
 function destroyEntry(container: Marzipano.HotspotContainer, entry: HotspotEntry): void {
-  entry.handle.destroy();
   if (container.hasHotspot(entry.hotspot)) container.destroyHotspot(entry.hotspot);
+  entry.handle.destroy();
 }

@@ -217,7 +217,7 @@ export function PanoramaViewer(props: PanoramaViewerProps) {
     setStatus("loading");
 
     const sweep = () => {
-      if (viewerRef.current !== viewer) return;
+      if (viewerRef.current !== viewer || currentRef.current !== record) return;
       for (const stale of [...recordsRef.current]) {
         if (stale === currentRef.current) continue;
         destroyRecordHotspots(stale);

@@ -104,6 +104,7 @@ export function createHotspotHandle(
   let suppressClick = false;
 
   const onPointerDown = (e: PointerEvent) => {
+    suppressClick = false;
     if (!view.editable || e.button !== 0) return;
     drag = { pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, moved: false };
     button.setPointerCapture(e.pointerId);
@@ -169,7 +170,6 @@ export function createHotspotHandle(
       button.removeEventListener("click", onClick);
       root.removeEventListener("keydown", onKeyDown);
       root.removeEventListener("focusout", onFocusOut);
-      root.remove();
     },
   };
 }

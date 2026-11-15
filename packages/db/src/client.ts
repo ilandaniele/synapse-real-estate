@@ -29,11 +29,12 @@ const migrators = new WeakMap<object, () => Promise<void>>();
 /**
  * DATABASE_URL set (postgres://...)  -> real Postgres via `postgres` driver.
  * DATABASE_URL=memory://             -> in-memory PGlite (tests).
+ * DATABASE_URL=pglite://<dir>        -> PGlite persisted at <repo>/<dir> (e.g. isolated E2E data).
  * DATABASE_URL empty                 -> PGlite persisted at <repo>/.data/pglite.
  */
 export async function createDb(databaseUrl: string | undefined = process.env.DATABASE_URL): Promise<DbHandle> {
   const url = databaseUrl?.trim();
-  if (url && !url.startsWith("memory://")) {
+  if (url && !url.startsWith("memory://") && !url.startsWith("pglite://")) {
     const client = postgres(url, { max: 10, onnotice: () => {} });
     const db = drizzlePostgres(client, { schema });
     migrators.set(db, () => migratePostgres(db, { migrationsFolder: MIGRATIONS_FOLDER }));
@@ -43,7 +44,8 @@ export async function createDb(databaseUrl: string | undefined = process.env.DAT
   if (url?.startsWith("memory://")) {
     client = new PGlite();
   } else {
-    const dir = path.join(REPO_ROOT, ".data", "pglite");
+    const custom = url?.startsWith("pglite://") ? url.slice("pglite://".length) : "";
+    const dir = custom ? path.resolve(REPO_ROOT, custom) : path.join(REPO_ROOT, ".data", "pglite");
     mkdirSync(dir, { recursive: true });
     client = new PGlite(dir);
   }

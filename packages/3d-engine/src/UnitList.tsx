@@ -9,16 +9,17 @@ export interface UnitListProps {
   selectedUnitId: string | null;
   onSelect: (unitId: string | null) => void;
   onHover: (unitId: string | null) => void;
-  /** `false`: invisible 1px buttons (keyboard/test alternative to picking). `true`: visible chips (WebGL fallback). */
+  /** `false`: invisible 8px buttons (keyboard/test alternative to picking). `true`: visible chips (WebGL fallback). */
   visible?: boolean;
 }
+
+const HIDDEN_BUTTON_SIZE = 8;
 
 const hiddenList: CSSProperties = {
   position: "absolute",
   top: 0,
   left: 0,
-  width: 1,
-  height: 1,
+  width: HIDDEN_BUTTON_SIZE,
   margin: 0,
   padding: 0,
   listStyle: "none",
@@ -26,8 +27,8 @@ const hiddenList: CSSProperties = {
 };
 
 /**
- * Accessible alternative to canvas picking. Hidden buttons are 1x1px, opacity 0 and stacked 1px apart
- * so they stay hit-testable (Playwright `click()` works) without being visible.
+ * Accessible alternative to canvas picking. Hidden buttons are opacity 0 and stacked without overlap
+ * so each one stays hit-testable (Playwright `click()` works) without being visible.
  */
 export function UnitList({ units, selectedUnitId, onSelect, onHover, visible = false }: UnitListProps) {
   return (
@@ -39,7 +40,7 @@ export function UnitList({ units, selectedUnitId, onSelect, onHover, visible = f
       {units.map((unit, i) => {
         const selected = unit.id === selectedUnitId;
         return (
-          <li key={unit.id} style={visible ? undefined : { position: "absolute", top: i, left: 0, width: 1, height: 1 }}>
+          <li key={unit.id} style={visible ? undefined : { position: "absolute", top: i * HIDDEN_BUTTON_SIZE, left: 0, width: HIDDEN_BUTTON_SIZE, height: HIDDEN_BUTTON_SIZE }}>
             <button
               type="button"
               data-testid={`masterplan-unit-${unit.code}`}
@@ -59,7 +60,7 @@ export function UnitList({ units, selectedUnitId, onSelect, onHover, visible = f
                       color: "#111827",
                       cursor: "pointer",
                     }
-                  : { width: 1, height: 1, padding: 0, border: 0, overflow: "hidden", opacity: 0 }
+                  : { display: "block", width: HIDDEN_BUTTON_SIZE, height: HIDDEN_BUTTON_SIZE, padding: 0, border: 0, overflow: "hidden", opacity: 0 }
               }
             >
               {unit.name} - {STATUS_META[unit.status].label}
