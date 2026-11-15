@@ -419,7 +419,8 @@ async function main() {
     console.log("\nSeed complete (database: " + handle.driver + ")");
     console.log(`  Development: Lomas del Faro (slug lomas-del-faro), ${VILLAS.length} villas, ${TOUR.length} tour scenes, ${gallery.length} gallery images, ${POIS.length} POIs, publication v1`);
     console.log("  Second org: Otra Inmobiliaria (slug vista-alta), 2 villas, publication v1");
-    console.log(`\nLogin credentials (local demo only). Password for all users: ${password}`);
+    const shownPassword = process.env.NODE_ENV === "production" ? "the SEED_PASSWORD value" : password;
+    console.log(`\nLogin credentials. Password for all users: ${shownPassword}`);
     for (const u of USERS) console.log(`  ${u.role.padEnd(6)} ${u.email}`);
     console.log(`\nManifest: ${config.publicApiUrl}/api/v1/public/developments/lomas-del-faro/manifest`);
   } finally {

@@ -36,7 +36,7 @@ from a real run.
 | `pnpm typecheck` | pass, all packages | 6.7 s |
 | `pnpm test` | 124 passed, 0 failed | 7 s |
 | `pnpm build` | pass (showroom 10 routes, admin 8 routes) | 6.0 s |
-| `pnpm test:e2e` | 29 passed, 0 failed, 0 skipped | 54 s |
+| `pnpm test:e2e` | 29 passed, 0 failed, 0 skipped (before `csp.spec.ts`; that spec passes against the Docker stack) | 54 s |
 
 Details are in [TESTING.md](TESTING.md). Security review results and fixes are in [SECURITY.md](SECURITY.md).
 
@@ -70,8 +70,11 @@ Masterplan times include software WebGL. Expect real GPUs to be faster, but this
 
 ## Pending and limitations
 
-- Deployment files for a single free VM (Docker Compose + Caddy) are ready but not run yet. The Docker image
-  was not built locally because Docker Desktop did not start. See [DEPLOYMENT.md](DEPLOYMENT.md).
+- Deployment files for a single free VM (Docker Compose + Caddy) are ready and the full stack was built and
+  smoke-tested locally on x86_64 (image 53 s, 1.88 GB). It has not been built on ARM or deployed yet. See
+  [DEPLOYMENT.md](DEPLOYMENT.md).
+- The local Docker test found that the production CSP blocked the masterplan's WebAssembly decoder. Fixed
+  with `'wasm-unsafe-eval'` and covered by `tests/e2e/csp.spec.ts`.
 - Panoramas are single-resolution. Multiresolution tiles are supported by the engine design but not generated.
 - Postgres, Redis/BullMQ and S3 are configurable but untested in this session. Everything ran on PGlite and
   local storage.

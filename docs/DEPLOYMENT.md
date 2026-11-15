@@ -3,8 +3,8 @@
 ## Estado
 El stack de producción para **una VM gratuita** (Oracle Cloud Always Free, ARM) está listo en el repo:
 `Dockerfile`, `docker-compose.prod.yml`, `deploy/Caddyfile` y `.env.production.example`. Todavía no se
-creó ningún recurso remoto. La imagen Docker no se construyó en local (Docker Desktop no arrancó en esta
-sesión); la primera construcción real será en la VM.
+creó ningún recurso remoto. El stack completo se construyó y probó en local (x86_64, Docker Desktop) el
+2026-11-15; ver «Prueba local del stack». Falta construirlo en ARM, que será en la VM.
 
 ## Local (sin Docker)
 ```bash
@@ -90,6 +90,26 @@ docker compose -f docker-compose.prod.yml up -d
 
 Comprobar: `https://<SHOWROOM_HOST>/` y `https://<ADMIN_HOST>/login` (usuario `owner@synapse.local` con el
 `SEED_PASSWORD` elegido).
+
+### Prueba local del stack
+Chrome trata `http://*.localhost` como contexto seguro, así que la cookie `Secure` funciona sin HTTPS. En
+`.env.production`: `SHOWROOM_HOST=http://showroom.localhost`, `ADMIN_HOST=http://admin.localhost` y
+`CORS_ORIGINS` con esos dos orígenes. Con el prefijo `http://` Caddy no pide certificados. Después, los
+mismos comandos de build, seed y `up -d` de arriba. El puerto 80 del host debe estar libre.
+
+Resultado del 2026-11-15 (Windows 11, Docker Desktop, x86_64):
+
+| Comprobación | Resultado |
+|---|---|
+| `build` de la imagen | 53 s, 1,88 GB |
+| Seed sin `SEED_ALLOW_PRODUCTION` | rechazado, como se espera |
+| Seed con confirmación + `assets:generate` | 27 s; no imprime la contraseña |
+| Rutas del showroom y del admin vía Caddy | 200; URLs de media y manifiesto relativas; `/docs` 404 |
+| Cabeceras de seguridad y escritura con `Origin` ajeno | presentes; 403 |
+| GLB del masterplan | 200 desde `/media/demo/models/masterplan.glb` |
+| `tests/e2e/csp.spec.ts` contra `http://showroom.localhost` | pasa (falló antes de añadir `'wasm-unsafe-eval'`) |
+| Login del admin en Chromium | 200; cookie `HttpOnly`, `Secure`, `SameSite=Lax`; `/auth/me` 200 |
+| Lead público vía Caddy | 201 |
 
 ### Operación
 - Logs: `docker compose -f docker-compose.prod.yml logs -f api`.

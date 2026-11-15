@@ -9,7 +9,7 @@ export function securityHeaders(extraOrigins = []) {
   const devEval = process.env.NODE_ENV === "production" ? "" : " 'unsafe-eval'";
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline'${devEval}`,
+    `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${devEval}`,
     "style-src 'self' 'unsafe-inline'",
     `img-src 'self' data: blob: ${remote}`,
     `connect-src 'self' data: blob: ${remote}`,

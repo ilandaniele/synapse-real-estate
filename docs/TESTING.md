@@ -65,9 +65,16 @@ Specs (`tests/e2e`):
 | `flow-b-masterplan-lead` | Masterplan, select Villa 6, sheet, tour, another room, back with selection kept, lead submitted; filters synced with the list; lead validation, honeypot and consent |
 | `flow-c-admin-publish` | Admin creates villa V9, publishes version 2 and the public site shows it; VIEWER sees no write actions; bad login shows an error |
 | `flow-d-hotspot-editor` | Create a hotspot by clicking the panorama, set its target, preview, publish, and navigate with it on the public tour |
+| `csp` | Masterplan, tour and location pages log no Content Security Policy violations (catches the production CSP blocking the GLB decoder's WebAssembly) |
 | `a11y-touch-visual` | Tab through the main menu with visible focus; select a villa with the keyboard; mobile menu, tap a villa, swipe the panorama and tap a hotspot; 15 visual baselines (5 pages × 3 projects, 3D canvas masked) |
 
-**Last run: 29 passed, 0 failed, 0 skipped, 54 s.** This run had the CSP and security headers active.
+**Last full run: 29 passed, 0 failed, 0 skipped, 54 s.** This run had the CSP and security headers active.
+It predates `csp.spec.ts`. Those specs did not check the console, so they did not catch the WebAssembly
+block in the masterplan.
+
+On 2026-11-15 the full suite could not be rerun: another project's container held port 3000. `csp.spec.ts`
+was run alone against the production Docker stack (`baseURL: http://showroom.localhost`, through Caddy).
+It failed before the fix and passed after it. See the local stack test in [DEPLOYMENT.md](DEPLOYMENT.md).
 
 Visual baselines live in `tests/e2e/a11y-touch-visual.spec.ts-snapshots/`. They are platform-specific
 (`-win32`). Update them only on purpose, with `npx playwright test --update-snapshots`.
