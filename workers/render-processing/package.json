@@ -1,0 +1,16 @@
+{
+  "name": "@synapse/render-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p .",
+    "start": "tsx --env-file-if-exists=../../.env src/index.ts",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@synapse/domain": "workspace:*",
+    "@synapse/db": "workspace:*",
+    "drizzle-orm": "^0.45.4"
+  }
+}

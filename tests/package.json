@@ -1,0 +1,14 @@
+{
+  "name": "@synapse/e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:visual": "playwright test --grep @visual",
+    "typecheck": "tsc -p ."
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1"
+  }
+}

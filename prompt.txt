@@ -1,0 +1,1717 @@
+# PROMPT MAESTRO — PLATAFORMA DE ARQUITECTURA 3D, RENDERS INTERACTIVOS Y SHOWROOM INMOBILIARIO
+
+## 1. TU ROL Y OBJETIVO
+
+Actuá como un equipo senior de desarrollo de software compuesto por:
+
+- Principal Software Architect
+- Senior Full Stack Engineer
+- Senior Three.js / WebGL / WebGPU Engineer
+- Computer Graphics Engineer
+- CAD/BIM Integration Engineer
+- 3D Technical Artist
+- AI/Computer Vision Engineer
+- DevOps Engineer
+- UI/UX Product Designer
+- QA Automation Engineer
+
+Tu misión es investigar, diseñar, desarrollar, probar y documentar una plataforma web profesional de visualización arquitectónica 3D y comercialización inmobiliaria.
+
+Quiero reproducir las funcionalidades que aparecen en tres videos de referencia de Instagram, utilizando una arquitectura propia, tecnologías modernas y librerías open source cuando sea posible.
+
+**No quiero una maqueta, un prototipo estático ni una demo visual sin funcionamiento real. Quiero un producto ejecutable, extensible y preparado para evolucionar hacia un SaaS comercial.**
+
+El desarrollo debe realizarse por fases, pero todas deben estar contempladas desde el diseño inicial.
+
+---
+
+## 2. MATERIAL DE REFERENCIA
+
+Estos son los tres videos originales:
+
+**Video 1 — Arquitectura 3D y recorridos navegables**
+
+https://www.instagram.com/reel/DfsVPUIIpxv/
+
+**Video 2 — Visualización y showroom inmobiliario**
+
+https://www.instagram.com/p/Dfp2F_3sovy/
+
+**Video 3 — Aplicación de IA para estudios de arquitectura**
+
+https://www.instagram.com/reel/DfoFLlfxJ2d/
+
+También proporcionaré, cuando estén disponibles en tu entorno, tres archivos MP4 y un paquete de investigación llamado:
+
+`kit_claude_showroom_3d_tres_videos.zip`
+
+Este paquete contiene:
+
+- `CLAUDE.md`
+- `docs/EVIDENCIA_DE_LOS_TRES_VIDEOS.md`
+- `docs/ARQUITECTURA_INMOBILIARIA.md`
+- `docs/BACKLOG_PRODUCTO_REAL.md`
+- `docs/LIBRERIAS_Y_VERIFICACION.md`
+- Capturas de referencia de los videos
+
+Leé estos archivos antes de empezar el desarrollo, si están disponibles.
+
+Si los videos no están accesibles directamente desde Instagram, utilizá los MP4 locales. No afirmes haber reproducido o inspeccionado material que no pudiste abrir.
+
+### 2.1 Funcionalidades observadas en las referencias
+
+Los videos muestran una combinación de:
+
+1. Visualizaciones arquitectónicas fotorrealistas.
+2. Recorridos interiores interactivos.
+3. Navegación entre habitaciones.
+4. Selección de puntos mediante un plano.
+5. Movimiento de cámara mediante mouse o touch.
+6. Hotspots y flechas de navegación.
+7. Vistas de fachadas e interiores.
+8. Visualización aérea de desarrollos inmobiliarios.
+9. Masterplan con unidades seleccionables.
+10. Identificación de casas o villas.
+11. Resaltado visual de unidades disponibles.
+12. Información comercial de cada inmueble.
+13. Precios, superficies y características.
+14. Galerías y fotografías.
+15. Mapas de ubicación.
+16. Puntos de interés cercanos.
+17. Formularios para solicitar información.
+18. Un flujo promocionado como conversión de DWG a renders 3D navegables.
+
+IMPORTANTE: la publicidad de conversión de DWG a renders 3D en minutos no demuestra por sí sola que todo el proceso esté automatizado. Investigá y validá esa capacidad antes de prometerla.
+
+### 2.2 Ingeniería inversa de las tecnologías originales
+
+Antes de implementar, investigá si se puede identificar el software que aparece en los videos.
+
+Buscá:
+
+- Nombre de la plataforma y su desarrollador.
+- Sitio web oficial y demostraciones públicas.
+- Repositorios del autor, si existen.
+- Dependencias publicadas.
+- Librerías de renderizado.
+- Tecnologías de recorrido panorámico.
+- Uso de Three.js, Babylon.js, Unreal Engine, Unity u otros motores.
+- Uso de Gaussian Splatting, NeRF o panoramas 360°.
+- Herramientas de conversión CAD/BIM.
+- Servicios de almacenamiento y render.
+- Arquitectura frontend y backend, cuando existan evidencias verificables.
+
+El nombre "RAE" apareció en la investigación inicial, pero no se verificó que corresponda al producto. No lo atribuyas al creador sin evidencia. No reutilices código de repositorios no relacionados, especialmente cuando existan licencias que restrinjan aplicaciones competidoras.
+
+Si conseguís la URL pública del showroom real, realizá una inspección legítima del navegador, recursos cargados y dependencias públicas.
+
+Clasificá los resultados como:
+
+- CONFIRMADO: evidencia directa de código, paquete o declaración oficial.
+- PROBABLE: indicios técnicos sólidos.
+- POSIBLE: deducción basada solamente en el funcionamiento.
+- NO VERIFICADO: no existe evidencia suficiente.
+
+Documentá todo en `docs/REVERSE_ENGINEERING.md`.
+
+No es necesario descubrir exactamente el stack original para implementar una alternativa funcional.
+
+---
+
+# 3. VISIÓN DEL PRODUCTO
+
+Quiero construir una plataforma con dos grandes experiencias principales y un sistema de gestión común.
+
+## Modo A — Arquitectura 3D interactiva
+
+Orientado a arquitectos, diseñadores y estudios.
+
+Un profesional puede cargar un proyecto, organizar sus modelos, renders y planos, generar experiencias visuales y compartir un enlace con sus clientes.
+
+El visitante puede explorar la arquitectura, mirar alrededor, navegar por habitaciones y consultar detalles del proyecto.
+
+## Modo B — Showroom inmobiliario
+
+Orientado a desarrolladores inmobiliarios, constructoras e inmobiliarias.
+
+El usuario puede explorar un barrio, edificio o promoción inmobiliaria desde una vista aérea 3D, seleccionar una propiedad, ver su disponibilidad, recorrerla virtualmente y solicitar información.
+
+## Modo C — Administración y publicación
+
+Un panel privado permite administrar múltiples proyectos, modelos 3D, panoramas, unidades comerciales, ubicaciones, escenas, usuarios, precios y consultas recibidas.
+
+## Modo D — Procesamiento CAD/BIM e IA
+
+Un módulo de procesamiento permite importar planos y modelos arquitectónicos y transformarlos progresivamente en recursos compatibles con la plataforma.
+
+Debe combinar herramientas deterministas, automatización, asistencia por IA y revisión humana para los pasos que no puedan resolverse con fiabilidad.
+
+---
+
+# 4. STACK TECNOLÓGICO PROPUESTO
+
+Investigá las versiones estables, compatibilidades y licencias antes de instalar las dependencias.
+
+Usá este stack como referencia principal, salvo que encuentres alternativas técnicamente superiores y justifiques el cambio.
+
+## 4.1 Frontend
+
+- Next.js
+- React
+- TypeScript con modo estricto
+- Tailwind CSS
+- shadcn/ui
+- Radix UI
+- Lucide Icons
+- Zustand para estado local
+- TanStack Query para estado servidor
+- React Hook Form
+- Zod para validaciones
+
+Implementá una interfaz moderna, modular y completamente responsive.
+
+Separá la interfaz del visitante de las herramientas administrativas.
+
+## 4.2 Motor 3D
+
+Tecnologías principales:
+
+- `three`
+- `@react-three/fiber`
+- `@react-three/drei`
+- `@react-three/postprocessing`
+- `camera-controls`
+- `gsap`
+
+Usalas según necesidad, sin incorporar librerías innecesarias.
+
+Three.js debe manejar:
+
+- Escenas tridimensionales.
+- Geometrías.
+- Modelos GLB/GLTF.
+- Materiales PBR.
+- Cámaras.
+- Iluminación.
+- Selección de objetos.
+- Raycasting.
+- Sombras.
+- Transiciones.
+- Geometría instanciada.
+- Texturas.
+- Niveles de detalle.
+
+React Three Fiber debe integrar las escenas con React.
+
+Drei debe facilitar controles, carga de modelos y utilidades del visor.
+
+Postprocessing debe utilizarse únicamente cuando mejore visualmente la escena sin perjudicar excesivamente el rendimiento.
+
+## 4.3 Motor de recorridos 360°
+
+Investigá y compará:
+
+- Marzipano
+- Photo Sphere Viewer
+- Pannellum
+- Un visor propio basado en Three.js, si existe una justificación clara
+
+Seleccioná preferentemente Marzipano o Photo Sphere Viewer para los recorridos panorámicos.
+
+El motor debe admitir:
+
+- Imágenes equirectangulares.
+- Cubemaps.
+- Panoramas multirresolución.
+- Movimiento horizontal y vertical.
+- Zoom.
+- Hotspots.
+- Transiciones entre escenas.
+- Navegación táctil.
+- Pantalla completa.
+- Miniaturas.
+- Plano interactivo.
+
+No utilices un motor 3D generalista para implementar recorridos panorámicos si una librería especializada ofrece mejor rendimiento y mantenimiento.
+
+## 4.4 Renderizado arquitectónico
+
+Investigá e integrá, inicialmente como pipeline offline:
+
+- Blender
+- Blender Cycles
+- glTF 2.0
+- glTF Transform
+- Meshoptimizer
+- Draco cuando corresponda
+- KTX2/Basis Universal
+- Sharp
+- FFmpeg
+
+Investigá también opciones como Unreal Engine, Twinmotion, Enscape, D5 Render o V-Ray, pero no las introduzcas como dependencias obligatorias del MVP.
+
+El objetivo es conseguir imágenes de alta calidad sin exigir que todos los visitantes tengan una GPU potente.
+
+La estrategia principal debe ser híbrida:
+
+- Three.js para interacciones 3D reales.
+- Panoramas prerenderizados para interiores fotorrealistas.
+- Blender u otro motor offline para crear recursos visuales.
+- UI web convencional para datos y administración.
+
+## 4.5 Backend
+
+Stack preferido:
+
+- Node.js LTS
+- TypeScript
+- Fastify
+- PostgreSQL
+- Drizzle ORM o Prisma
+- Redis
+- BullMQ
+- OpenAPI
+
+Podés utilizar NestJS si justificás que sus módulos y estructura aportan beneficios importantes.
+
+Creá una API REST versionada con contratos tipados y validación.
+
+## 4.6 Archivos y almacenamiento
+
+Implementá una capa abstraída para almacenamiento compatible con S3.
+
+Opciones:
+
+- MinIO en desarrollo local.
+- Cloudflare R2 o equivalente en producción, sujeto a costos y condiciones.
+- CDN para recursos públicos.
+
+Utilizá URLs firmadas para uploads y permisos adecuados para assets privados.
+
+No dependas exclusivamente de una plataforma propietaria.
+
+## 4.7 Mapas
+
+Usá MapLibre GL JS.
+
+Integrá:
+
+- Ubicación geográfica del proyecto.
+- Marcadores.
+- Puntos de interés.
+- Navegación.
+- Visualización satelital cuando haya un proveedor autorizado.
+- Distancias o rutas cuando exista un servicio compatible.
+
+No utilices tiles, mapas satelitales ni APIs sin verificar sus condiciones de uso.
+
+---
+
+# 5. ARQUITECTURA DEL SISTEMA
+
+Creá un monorepositorio administrado con pnpm workspaces.
+
+Estructura recomendada:
+
+`apps/showroom` — Web pública para visitantes.
+
+`apps/admin` — Panel de administración.
+
+`apps/api` — Backend principal.
+
+`packages/ui` — Componentes compartidos.
+
+`packages/domain` — Modelos y reglas de negocio.
+
+`packages/contracts` — Esquemas y contratos API.
+
+`packages/3d-engine` — Componentes Three.js/R3F.
+
+`packages/tour-engine` — Adaptador del visor 360°.
+
+`packages/assets` — Tipos y herramientas de recursos.
+
+`workers/asset-processing` — Procesamiento de archivos.
+
+`workers/render-processing` — Renderizado offline.
+
+`tools/cad-importer` — Adaptadores CAD/BIM.
+
+`docs` — Arquitectura y documentación.
+
+`tests` — Pruebas integrales.
+
+Separá claramente la lógica de dominio de la tecnología de renderizado.
+
+El frontend no debe depender de detalles internos de la base de datos.
+
+El motor 3D no debe contener lógica comercial de disponibilidad, precios o ventas.
+
+Implementá interfaces y adaptadores para facilitar futuros cambios de tecnología.
+
+---
+
+# 6. FUNCIONALIDAD: VISOR ARQUITECTÓNICO
+
+Esta es una de las funcionalidades más importantes del producto.
+
+Quiero que un visitante pueda entrar a una casa y recorrerla visualmente como en los videos.
+
+## 6.1 Navegación
+
+El usuario debe poder:
+
+- Girar la cámara.
+- Mirar hacia arriba y abajo.
+- Hacer zoom.
+- Navegar con mouse.
+- Navegar con touch.
+- Cambiar de habitación.
+- Utilizar flechas de desplazamiento.
+- Seleccionar habitaciones desde un plano.
+- Cambiar entre cámaras guardadas.
+- Volver al punto anterior.
+- Entrar en modo pantalla completa.
+
+Implementá transiciones visualmente suaves y naturales.
+
+## 6.2 Hotspots
+
+Cada escena puede tener puntos interactivos.
+
+Tipos:
+
+- Ir a otra habitación.
+- Ver información.
+- Mostrar materiales.
+- Abrir una fotografía.
+- Mostrar una descripción.
+- Abrir un plano.
+- Ir a una vista exterior.
+
+Cada hotspot debe guardar:
+
+- Identificador.
+- Escena de origen.
+- Tipo.
+- Posición angular o espacial.
+- Texto.
+- Icono.
+- Destino.
+- Comportamiento.
+- Estado de publicación.
+
+Los hotspots deben ser administrables sin modificar código.
+
+## 6.3 Plano interactivo
+
+Implementá una funcionalidad similar al modal "Ir a un punto" de los videos.
+
+Mostrar un plano de la propiedad con puntos seleccionables.
+
+Al hacer clic en un ambiente:
+
+1. Cerrar o minimizar el plano.
+2. Cargar la escena correspondiente.
+3. Orientar la cámara a un ángulo inicial.
+4. Actualizar el punto activo.
+5. Mantener sincronización con los hotspots.
+
+Utilizá SVG con coordenadas normalizadas para que el plano sea responsive.
+
+## 6.4 Calidad del render
+
+Quiero una estética visual de arquitectura premium.
+
+Priorizá:
+
+- Materiales físicamente plausibles.
+- Iluminación natural.
+- Texturas de alta resolución.
+- Reflejos coherentes.
+- Buena exposición.
+- Sombras suaves.
+- Interiores realistas.
+- Transiciones limpias.
+
+No confundas calidad fotorrealista con renderizado calculado en tiempo real.
+
+Para interiores complejos, preferí panoramas de alta calidad generados offline.
+
+---
+
+# 7. FUNCIONALIDAD: MASTERPLAN 3D INTERACTIVO
+
+Construí un visor tridimensional para explorar un desarrollo inmobiliario.
+
+El usuario debe ver:
+
+- Terreno.
+- Calles.
+- Vegetación.
+- Edificios o villas.
+- Unidades comercializables.
+- Posiciones geográficas relativas.
+- Elementos arquitectónicos.
+- Etiquetas de identificación.
+
+## 7.1 Controles
+
+Implementá:
+
+- Rotación orbital.
+- Zoom.
+- Pan cuando corresponda.
+- Vista cenital.
+- Vista isométrica.
+- Restablecer cámara.
+- Selección de unidades.
+- Animación de enfoque.
+- Cambio de perspectiva.
+
+La cámara nunca debe atravesar accidentalmente la geometría del terreno.
+
+Limitá ángulos, distancias y movimientos según la escena.
+
+## 7.2 Selección de viviendas
+
+Cada vivienda debe poder seleccionarse mediante clic o toque.
+
+Utilizá raycasting o picking 3D real.
+
+Al seleccionar una vivienda:
+
+- Resaltar su geometría.
+- Mostrar su nombre.
+- Consultar su información.
+- Mostrar precio.
+- Mostrar disponibilidad.
+- Mostrar superficie.
+- Mostrar dormitorios y baños.
+- Permitir abrir su ficha.
+- Permitir iniciar el recorrido virtual.
+
+No simules la selección utilizando botones colocados sobre una imagen fija si existe una geometría real.
+
+## 7.3 Colores comerciales
+
+Crear estados configurables:
+
+- Disponible.
+- Reservada.
+- Vendida.
+- No publicada.
+
+Utilizar colores y estilos visuales consistentes.
+
+Los colores deben sincronizarse con los datos reales del backend.
+
+## 7.4 Relación entre modelo y datos
+
+Cada modelo GLB puede contener muchos objetos.
+
+Implementá un mecanismo `UnitMeshMapping` para vincular una unidad comercial a uno o varios nodos del modelo.
+
+Ejemplo conceptual:
+
+- Unit ID: `villa-06`
+- Meshes: `Villa_06`, `Villa_06_Roof`, `Villa_06_Garden`
+- Estado: `AVAILABLE`
+- Precio: definido en la base de datos
+
+No guardes el precio directamente dentro de los archivos GLB como única fuente de verdad.
+
+---
+
+# 8. FUNCIONALIDAD: CATÁLOGO INMOBILIARIO
+
+Creá una experiencia comercial profesional.
+
+Secciones públicas:
+
+- Inicio.
+- Masterplan.
+- Áreas comunes.
+- Unidades.
+- Galería.
+- Ubicación.
+- Contacto.
+
+## 8.1 Buscador
+
+Permitir filtrar por:
+
+- Nombre o número de unidad.
+- Estado comercial.
+- Precio mínimo y máximo.
+- Superficie.
+- Dormitorios.
+- Baños.
+- Tipo de unidad.
+- Planta o sector.
+
+Los resultados deben sincronizarse con el masterplan.
+
+## 8.2 Ficha de unidad
+
+Mostrar:
+
+- Nombre.
+- Identificador.
+- Estado comercial.
+- Precio y moneda.
+- Metros cuadrados interiores.
+- Metros cuadrados exteriores.
+- Superficie de terreno.
+- Dormitorios.
+- Baños.
+- Características.
+- Imágenes.
+- Planos.
+- Recorrido 360°.
+- Ubicación dentro del masterplan.
+- Botón para solicitar información.
+
+Todas estas características deben ser administrables.
+
+## 8.3 Consultas comerciales
+
+Implementá formulario con:
+
+- Nombre.
+- Email.
+- Teléfono opcional.
+- Mensaje.
+- Unidad consultada.
+- Proyecto.
+- Consentimiento cuando corresponda.
+
+Guardar los leads en el backend.
+
+Agregar validaciones, protección antispam y control de frecuencia.
+
+El administrador debe poder consultar y exportar los leads autorizados.
+
+---
+
+# 9. FUNCIONALIDAD: PANEL ADMINISTRATIVO
+
+El panel administrativo es obligatorio.
+
+No quiero que el contenido de las propiedades esté escrito directamente en componentes React.
+
+## 9.1 Dashboard
+
+Mostrar:
+
+- Proyectos.
+- Unidades.
+- Estado comercial.
+- Recorridos publicados.
+- Assets.
+- Trabajos de procesamiento.
+- Consultas recibidas.
+- Actividad reciente.
+
+## 9.2 Gestión de proyectos
+
+Permitir:
+
+- Crear proyecto.
+- Editar proyecto.
+- Subir portada.
+- Definir nombre.
+- Definir descripción.
+- Definir ubicación.
+- Configurar moneda.
+- Agregar galerías.
+- Subir modelo masterplan.
+- Administrar unidades.
+- Publicar o despublicar.
+
+## 9.3 Gestión de unidades
+
+CRUD completo con validación.
+
+Soportar cambios de precio y disponibilidad.
+
+Mantener historial de cambios relevantes.
+
+## 9.4 Gestión de escenas 360°
+
+El administrador debe poder:
+
+- Subir panoramas.
+- Ver una previsualización.
+- Crear habitaciones.
+- Asignar nombres.
+- Definir cámara inicial.
+- Agregar hotspots.
+- Configurar destinos.
+- Reordenar escenas.
+- Asociarlas a un plano.
+- Guardar borradores.
+- Publicar cambios.
+
+## 9.5 Editor visual de hotspots
+
+Esto es especialmente importante.
+
+No quiero configurar manualmente cada coordenada desde un archivo JSON.
+
+Creá un editor donde el administrador abra el panorama y haga clic sobre el lugar donde quiere agregar el hotspot.
+
+Debe poder:
+
+- Crear.
+- Arrastrar cuando sea posible.
+- Editar.
+- Eliminar.
+- Elegir destino.
+- Previsualizar.
+- Guardar.
+
+También debe existir una herramienta para posicionar los nodos sobre el plano SVG.
+
+## 9.6 Usuarios y permisos
+
+Roles iniciales:
+
+- Owner.
+- Editor.
+- Sales.
+- Viewer.
+
+Implementar aislamiento entre organizaciones.
+
+Un usuario de una inmobiliaria no puede acceder a datos privados de otra.
+
+---
+
+# 10. FUNCIONALIDAD: IMPORTACIÓN CAD/BIM
+
+Quiero aproximarme a la experiencia promocionada en el primer video: pasar de planos a una experiencia 3D.
+
+Pero debe implementarse con rigor técnico.
+
+## 10.1 Formatos
+
+Diseñar adaptadores para:
+
+- DWG.
+- DXF.
+- IFC.
+- GLB.
+- GLTF.
+- OBJ.
+- FBX, si hay herramientas compatibles.
+- SVG.
+- Imágenes de planos.
+- PDF de planos, en una fase posterior.
+
+Priorizar inicialmente GLB y panoramas porque permiten publicar experiencias reales inmediatamente.
+
+Después incorporar IFC y DXF.
+
+DWG requiere una solución de conversión legalmente utilizable.
+
+## 10.2 Proceso de importación
+
+Diseñar este flujo:
+
+1. Usuario crea proyecto.
+2. Sube archivo.
+3. Sistema valida formato.
+4. Detecta metadatos.
+5. Identifica unidades y escala cuando sea posible.
+6. Almacena original.
+7. Crea trabajo de procesamiento.
+8. Extrae geometría.
+9. Genera previsualización.
+10. Permite revisión y corrección.
+11. Exporta modelo optimizado.
+12. Publica en el showroom.
+
+Cada trabajo debe tener estado:
+
+- Pending.
+- Processing.
+- Requires Review.
+- Completed.
+- Failed.
+
+Registrar errores y permitir reintentos seguros.
+
+## 10.3 Reconstrucción de planos 2D
+
+Investigar una implementación gradual para reconocer:
+
+- Paredes.
+- Habitaciones.
+- Puertas.
+- Ventanas.
+- Columnas.
+- Escaleras.
+- Aberturas.
+- Dimensiones.
+- Capas CAD.
+
+Utilizar parsers CAD, geometría computacional e IA cuando sea apropiado.
+
+Permitir que el administrador corrija manualmente el reconocimiento.
+
+A partir de geometría validada, investigar extrusión de paredes, colocación de aberturas y exportación a GLB.
+
+No asumir que cualquier DWG puede transformarse automáticamente en una casa fotorrealista.
+
+---
+
+# 11. FUNCIONALIDAD: GENERACIÓN DE RENDERS
+
+Implementá un pipeline separado del frontend.
+
+## 11.1 Render offline
+
+Usar Blender CLI como primera opción de investigación.
+
+Permitir:
+
+- Importar escena.
+- Aplicar configuración de cámara.
+- Definir resolución.
+- Configurar iluminación.
+- Ejecutar render.
+- Guardar resultados.
+- Registrar estado.
+- Publicar assets.
+
+## 11.2 Panoramas 360°
+
+Investigar generación de panoramas equirectangulares de alta resolución.
+
+Soportar puntos de cámara configurables.
+
+Generar:
+
+- Panorama.
+- Miniatura.
+- Tiles multirresolución.
+- Manifest de escena.
+- Metadatos.
+
+Cada panorama debe tener resolución y parámetros configurables.
+
+## 11.3 Optimización
+
+Implementar:
+
+- Conversión de formatos.
+- Compresión.
+- Generación de miniaturas.
+- LOD.
+- Optimización de texturas.
+- Compresión de modelos.
+- Caché.
+- Distribución CDN.
+
+La descarga de un proyecto no debe bloquear la interfaz mientras carga todos sus recursos.
+
+## 11.4 Trabajos asíncronos
+
+Usar workers separados.
+
+Si un render falla, registrar:
+
+- Error.
+- Fecha.
+- Duración.
+- Archivo.
+- Configuración.
+- Número de reintentos.
+
+No ejecutar renders pesados dentro del servidor HTTP.
+
+---
+
+# 12. IA APLICADA AL PRODUCTO
+
+Quiero preparar la arquitectura para integrar IA de forma útil.
+
+No agregues IA solo como elemento de marketing.
+
+Priorizá casos concretos.
+
+## 12.1 Asistente de importación
+
+Analizar planos y sugerir:
+
+- Ambientes.
+- Dimensiones.
+- Muros.
+- Aberturas.
+- Distribución.
+
+Cada sugerencia debe poder confirmarse o corregirse.
+
+## 12.2 Asistente de publicación
+
+Ayudar a:
+
+- Generar descripciones comerciales.
+- Organizar habitaciones.
+- Etiquetar imágenes.
+- Clasificar recursos.
+- Proponer puntos de cámara.
+
+No publicar automáticamente información inventada sobre dimensiones, precios o disponibilidad.
+
+## 12.3 Generación de materiales
+
+Investigar sugerencias de materiales a partir de referencias visuales.
+
+Las propuestas de IA deben almacenarse como borradores y validarse antes de aplicarse.
+
+## 12.4 Proveedores
+
+Diseñar adaptadores para distintos modelos de IA.
+
+No acoplar la lógica comercial a un proveedor.
+
+Priorizar capacidades locales o gratuitas cuando sean suficientes.
+
+No ejecutar servicios de pago sin autorización.
+
+---
+
+# 13. EXPERIENCIA DE USUARIO Y DISEÑO
+
+Quiero una interfaz premium, minimalista y arquitectónica.
+
+Inspiración visual:
+
+- Arquitectura contemporánea.
+- Software de visualización profesional.
+- Presentaciones inmobiliarias de alta gama.
+- Interfaces inmersivas.
+- Diseño editorial elegante.
+
+## 13.1 Estética
+
+Usar:
+
+- Tipografía limpia.
+- Espaciado consistente.
+- Animaciones discretas.
+- Paneles flotantes.
+- Transparencias moderadas.
+- Controles compactos.
+- Jerarquía visual clara.
+- Tarjetas de propiedades elegantes.
+
+Evitar:
+
+- Estética de dashboard genérico.
+- Sombras excesivas.
+- Gradientes innecesarios.
+- Botones gigantes.
+- Emojis decorativos.
+- Animaciones que distraigan del contenido.
+
+## 13.2 Interacciones
+
+El viewport debe ocupar la mayor superficie posible.
+
+Los controles deben aparecer de forma contextual.
+
+Implementar transiciones suaves para:
+
+- Cambiar habitación.
+- Seleccionar propiedad.
+- Acercar cámara.
+- Abrir ficha.
+- Mostrar plano.
+- Cambiar entre masterplan y tour.
+
+## 13.3 Dispositivos
+
+Soportar:
+
+- Desktop.
+- Laptops.
+- Tablets.
+- Pantallas táctiles.
+- Mobile.
+- Pantallas grandes de showroom.
+
+Diseñar controles para mouse y touch desde el principio.
+
+---
+
+# 14. MODELO DE DATOS
+
+Crear una base de datos relacional normalizada.
+
+Entidades mínimas:
+
+`Organization`
+
+`User`
+
+`OrganizationMembership`
+
+`Development`
+
+`Building`
+
+`Unit`
+
+`UnitType`
+
+`UnitAvailabilityHistory`
+
+`FloorPlan`
+
+`Scene`
+
+`SceneHotspot`
+
+`PanoramaAsset`
+
+`ModelAsset`
+
+`UnitMeshMapping`
+
+`GalleryItem`
+
+`PointOfInterest`
+
+`Lead`
+
+`Asset`
+
+`ImportJob`
+
+`RenderJob`
+
+`AuditEvent`
+
+`Publication`
+
+### Reglas
+
+- UUIDs como identificadores principales.
+- Timestamps en UTC.
+- Moneda con código ISO.
+- Precios con tipo decimal, nunca floating point.
+- Relaciones explícitas.
+- Índices según consultas reales.
+- Constraints e integridad referencial.
+- Soft delete solamente donde tenga sentido.
+- Historial de disponibilidad.
+- Control de versiones de publicación.
+- Auditoría de cambios sensibles.
+- Aislamiento por organización.
+
+Crear migraciones y datos de ejemplo.
+
+---
+
+# 15. API
+
+Construir una API documentada con OpenAPI.
+
+Endpoints públicos orientativos:
+
+`GET /api/v1/public/developments`
+
+`GET /api/v1/public/developments/:slug`
+
+`GET /api/v1/public/developments/:slug/manifest`
+
+`GET /api/v1/public/developments/:slug/units`
+
+`GET /api/v1/public/units/:id`
+
+`GET /api/v1/public/units/:id/scenes`
+
+`GET /api/v1/public/developments/:slug/pois`
+
+`POST /api/v1/public/leads`
+
+Endpoints administrativos:
+
+`POST /api/v1/admin/developments`
+
+`PATCH /api/v1/admin/developments/:id`
+
+`POST /api/v1/admin/units`
+
+`PATCH /api/v1/admin/units/:id`
+
+`PATCH /api/v1/admin/units/:id/availability`
+
+`POST /api/v1/admin/scenes`
+
+`POST /api/v1/admin/hotspots`
+
+`POST /api/v1/admin/assets/presign`
+
+`POST /api/v1/admin/import-jobs`
+
+`POST /api/v1/admin/render-jobs`
+
+`GET /api/v1/admin/jobs/:id`
+
+`POST /api/v1/admin/developments/:id/publish`
+
+`GET /api/v1/admin/leads`
+
+No implementar endpoints de ejemplo que devuelvan siempre datos hardcodeados como solución final.
+
+Durante el desarrollo pueden existir fixtures y mocks tipados, claramente separados de la API real.
+
+---
+
+# 16. DEMOSTRACIONES FUNCIONALES OBLIGATORIAS
+
+Necesito dos proyectos de ejemplo completos.
+
+## DEMO 1 — CASA ARQUITECTÓNICA
+
+Crear una casa moderna con las siguientes escenas:
+
+- Exterior.
+- Living.
+- Comedor.
+- Cocina.
+- Dormitorio.
+- Baño, si existen assets adecuados.
+
+Debe tener:
+
+- Visor navegable.
+- Hotspots.
+- Plano con puntos.
+- Menú de habitaciones.
+- Transiciones.
+- Miniaturas.
+- Pantalla completa.
+- Interacción mouse/touch.
+
+Utilizar recursos originales, generados legítimamente o con licencia compatible.
+
+Si no existen renders fotorrealistas disponibles, crear una escena 3D propia sencilla y panoramas de demostración sin fingir que son renders aportados por un cliente.
+
+## DEMO 2 — DESARROLLO DE VILLAS
+
+Crear un desarrollo inmobiliario ficticio con ocho villas.
+
+Debe incluir:
+
+- Terreno 3D real.
+- Ocho viviendas seleccionables.
+- Vista aérea.
+- Zoom y rotación.
+- Diferentes estados comerciales.
+- Etiquetas.
+- Buscador.
+- Filtros.
+- Ficha completa.
+- Galería.
+- Recorrido virtual para al menos una unidad.
+- Mapa geográfico de prueba.
+- Formulario de contacto funcional.
+
+Crear geometrías 3D propias si no se dispone de modelos arquitectónicos.
+
+Asociar cada villa a un identificador estable.
+
+Demostrar que actualizar una unidad en el administrador modifica el showroom público.
+
+---
+
+# 17. FLUJOS DE USUARIO QUE DEBEN FUNCIONAR
+
+## Flujo A — Visita arquitectónica
+
+1. Abrir casa de demostración.
+2. Ver fachada.
+3. Entrar al recorrido interior.
+4. Rotar la vista.
+5. Hacer clic en un hotspot.
+6. Entrar a otra habitación.
+7. Abrir plano.
+8. Seleccionar dormitorio.
+9. Cambiar a dormitorio.
+10. Volver a una escena anterior.
+
+## Flujo B — Compra inmobiliaria
+
+1. Abrir proyecto de villas.
+2. Visualizar masterplan.
+3. Rotar cámara.
+4. Seleccionar Villa 6.
+5. Mostrar resaltado.
+6. Abrir ficha.
+7. Mostrar precio y disponibilidad.
+8. Iniciar recorrido.
+9. Explorar la vivienda.
+10. Volver al masterplan conservando selección.
+11. Solicitar información.
+12. Guardar lead en backend.
+
+## Flujo C — Administración
+
+1. Iniciar sesión como administrador.
+2. Crear nueva unidad.
+3. Asignar características.
+4. Configurar precio y estado.
+5. Asociar geometría.
+6. Publicar.
+7. Abrir showroom público.
+8. Ver cambios reales.
+
+## Flujo D — Editor de panoramas
+
+1. Subir panorama.
+2. Crear escena.
+3. Agregar hotspot.
+4. Vincular escena destino.
+5. Asociar punto del plano.
+6. Previsualizar.
+7. Publicar.
+8. Verificar navegación pública.
+
+## Flujo E — Procesamiento
+
+1. Subir archivo compatible.
+2. Validar.
+3. Crear trabajo.
+4. Procesar.
+5. Visualizar progreso.
+6. Revisar resultado.
+7. Publicar asset.
+
+El soporte por formato puede incorporarse por etapas. Un formato todavía no implementado debe mostrarlo claramente, nunca simular procesamiento satisfactorio.
+
+---
+
+# 18. RENDIMIENTO
+
+El rendimiento es prioritario porque los recursos 3D pueden ser pesados.
+
+Implementar:
+
+- Lazy loading.
+- Suspense y fallbacks adecuados.
+- Descarga progresiva.
+- Prefetch de escenas vecinas.
+- Texturas comprimidas.
+- LOD.
+- Frustum culling.
+- Geometría instanciada cuando sea útil.
+- Resource cleanup.
+- Cancelación de solicitudes obsoletas.
+- Límites de DPR.
+- Modos gráficos adaptativos.
+- Optimización mobile.
+- Manejo de context loss de WebGL.
+
+Medir:
+
+- FPS.
+- Uso de memoria.
+- Tamaño inicial descargado.
+- Tiempo de carga de escena.
+- Tiempo hasta primera interacción.
+- Duración de transiciones.
+- Cantidad de draw calls.
+- Peso de modelos y texturas.
+
+Usar presupuestos iniciales como objetivos de ingeniería, no como garantías universales.
+
+Priorizar experiencia fluida sobre efectos gráficos innecesarios.
+
+---
+
+# 19. SEGURIDAD Y BUENAS PRÁCTICAS
+
+Implementar:
+
+- Autenticación segura.
+- Autorización por roles.
+- Aislamiento entre organizaciones.
+- Validación de entradas.
+- Rate limiting.
+- Sanitización donde corresponda.
+- Protección de endpoints.
+- Control de tamaños de archivos.
+- Verificación real de tipo de archivo.
+- Protección frente a archivos maliciosos.
+- URLs firmadas.
+- Gestión segura de secretos.
+- Auditoría.
+- Manejo consistente de errores.
+- Logs sin datos sensibles.
+- Protección de datos personales.
+- Consentimiento para consultas comerciales cuando corresponda.
+
+No introducir credenciales reales en el repositorio.
+
+No copiar información privada a servicios externos.
+
+No realizar compras ni habilitar servicios pagos sin autorización.
+
+---
+
+# 20. TESTING
+
+Quiero pruebas automatizadas reales.
+
+Tecnologías recomendadas:
+
+- Vitest.
+- React Testing Library.
+- Playwright.
+- ESLint.
+- TypeScript strict.
+- Herramientas de análisis de bundles.
+
+## Unit tests
+
+Cubrir:
+
+- Validación de entidades.
+- Estados comerciales.
+- Conversión de coordenadas.
+- Navegación entre escenas.
+- Mapeo de unidades a geometrías.
+- Validación de archivos.
+- Permisos.
+- Transformaciones de datos.
+
+## Integration tests
+
+Cubrir:
+
+- API y base de datos.
+- Autenticación.
+- CRUD.
+- Publicación.
+- Leads.
+- Uploads.
+- Trabajos de procesamiento.
+- Aislamiento multitenant.
+
+## E2E
+
+Automatizar los flujos A, B, C y D definidos anteriormente.
+
+## Visual regression
+
+Crear capturas reproducibles de:
+
+- Vista masterplan.
+- Villa seleccionada.
+- Ficha comercial.
+- Plano interactivo.
+- Tour 360.
+- Panel administrativo.
+
+No declarar una prueba aprobada si no fue ejecutada.
+
+---
+
+# 21. DESPLIEGUE E INFRAESTRUCTURA
+
+Priorizar un sistema que pueda ejecutarse localmente sin servicios pagos.
+
+Crear:
+
+- `.env.example`
+- Docker Compose para dependencias locales.
+- Migraciones.
+- Seeds.
+- Scripts de desarrollo.
+- Scripts de build.
+- Scripts de tests.
+- Instrucciones de producción.
+
+Evaluar para despliegue:
+
+- Vercel o Cloudflare para frontend.
+- Backend en plataforma compatible con procesos persistentes.
+- PostgreSQL administrado.
+- Redis administrado.
+- Almacenamiento S3/R2.
+- Worker separado para tareas pesadas.
+
+No ejecutar Blender dentro de funciones serverless con restricciones incompatibles.
+
+No asumir que los planes gratuitos ofrecen capacidad suficiente para renders, GPUs o procesamiento CAD intensivo.
+
+Documentar costos estimados y limitaciones antes de recomendar infraestructura productiva.
+
+El sistema local debe seguir funcionando sin depender de proveedores pagos.
+
+---
+
+# 22. GITHUB Y ORGANIZACIÓN DEL TRABAJO
+
+Crear un repositorio Git bien organizado.
+
+Si existe acceso autorizado a GitHub:
+
+- Crear repositorio.
+- Configurar `.gitignore`.
+- Agregar README.
+- Crear estructura del monorepo.
+- Configurar lint.
+- Configurar tests.
+- Configurar CI.
+- Realizar commits descriptivos.
+
+Si no existe acceso al repositorio remoto, preparar todo localmente y documentar el comando necesario para publicarlo.
+
+No sobrescribir repositorios existentes ni realizar operaciones destructivas.
+
+## Documentación obligatoria
+
+Mantener:
+
+`README.md`
+
+`CLAUDE.md`
+
+`docs/ARCHITECTURE.md`
+
+`docs/REVERSE_ENGINEERING.md`
+
+`docs/TECH_STACK.md`
+
+`docs/DATABASE.md`
+
+`docs/API.md`
+
+`docs/RENDER_PIPELINE.md`
+
+`docs/CAD_PIPELINE.md`
+
+`docs/DEPLOYMENT.md`
+
+`docs/TESTING.md`
+
+`docs/ROADMAP.md`
+
+`docs/DECISIONS.md`
+
+`docs/PROGRESS.md`
+
+Estos archivos deben reflejar lo implementado de verdad, no solamente planes.
+
+---
+
+# 23. PLAN DE DESARROLLO
+
+Ejecutar el proyecto progresivamente.
+
+## Fase 0 — Investigación y arquitectura
+
+- Analizar las referencias.
+- Inspeccionar los documentos adjuntos.
+- Investigar tecnologías.
+- Confirmar licencias.
+- Definir arquitectura.
+- Crear monorepo.
+- Configurar entorno.
+- Preparar base de datos.
+- Documentar decisiones.
+
+Resultado: estructura compilable, documentación y entorno reproducible.
+
+## Fase 1 — Visor arquitectónico 360°
+
+Construir:
+
+- Motor de panoramas.
+- Navegación.
+- Hotspots.
+- Modal de plano.
+- Escenas.
+- Miniaturas.
+- Controles.
+- Demo de casa.
+
+Resultado: recorrido virtual real y navegable.
+
+## Fase 2 — Masterplan 3D
+
+Construir:
+
+- Escena GLB.
+- Terreno.
+- Viviendas.
+- Cámaras.
+- Raycasting.
+- Resaltado.
+- Selección.
+- Filtros.
+- Fichas.
+- Conexión con tour.
+
+Resultado: desarrollo inmobiliario interactivo.
+
+## Fase 3 — Backend y administración
+
+Construir:
+
+- API.
+- PostgreSQL.
+- Autenticación.
+- Organizaciones.
+- CRUD.
+- Assets.
+- Leads.
+- Publicación.
+- Editor visual de hotspots.
+
+Resultado: contenido administrable sin cambios de código.
+
+## Fase 4 — Geografía y experiencia comercial
+
+Construir:
+
+- Mapas.
+- Puntos de interés.
+- Galerías.
+- Formularios.
+- Mejoras de navegación.
+- Responsive.
+- Analytics opcional.
+
+Resultado: showroom comercial completo.
+
+## Fase 5 — Pipeline de assets
+
+Construir:
+
+- Uploads.
+- Jobs.
+- Optimización GLB.
+- Generación de panoramas.
+- Tiles.
+- Miniaturas.
+- Blender CLI.
+- Errores y reintentos.
+
+Resultado: flujo reproducible de creación y publicación de contenido visual.
+
+## Fase 6 — CAD/BIM
+
+Investigar e implementar progresivamente:
+
+- Import IFC.
+- Import DXF.
+- Conversión DWG autorizada.
+- Extracción geométrica.
+- Previsualización.
+- Reconstrucción parcial.
+- Revisión manual.
+- Exportación GLB.
+
+Resultado: primer flujo CAD/BIM validado con archivos reales.
+
+## Fase 7 — IA y automatización
+
+Agregar capacidades de asistencia:
+
+- Interpretación de planos.
+- Detección de ambientes.
+- Organización de escenas.
+- Sugerencias de materiales.
+- Generación de descripciones.
+- Automatización de tareas repetitivas.
+
+Resultado: herramientas medibles que reduzcan trabajo manual.
+
+## Fase 8 — Producto SaaS
+
+Preparar:
+
+- Multiempresa.
+- Gestión de usuarios.
+- Planes comerciales futuros.
+- Límites de uso.
+- Métricas.
+- Facturación futura mediante interfaz abstracta.
+- Backups.
+- Observabilidad.
+- Despliegue productivo.
+
+No integrar pagos reales todavía.
+
+---
+
+# 24. CRITERIOS DE ACEPTACIÓN
+
+No consideres terminado el MVP si solamente se ve bonito.
+
+Para dar por completada la primera versión, debo poder:
+
+1. Ejecutar la aplicación.
+2. Abrir un proyecto de arquitectura.
+3. Navegar realmente entre panoramas.
+4. Abrir el plano y seleccionar ambientes.
+5. Abrir un masterplan 3D.
+6. Rotar y acercar la cámara.
+7. Seleccionar una villa mediante geometría real.
+8. Ver la ficha de esa villa.
+9. Entrar al recorrido correspondiente.
+10. Enviar una consulta.
+11. Ver la consulta en el administrador.
+12. Cambiar disponibilidad de una unidad.
+13. Publicar los cambios.
+14. Ver reflejado el nuevo estado.
+15. Crear hotspots mediante interfaz visual.
+16. Recargar la aplicación sin perder los datos guardados.
+17. Ejecutar correctamente build y tests esenciales.
+
+No sustituir estas funciones por imágenes estáticas con botones falsos.
+
+---
+
+# 25. FORMA DE TRABAJAR
+
+Esta sección es muy importante.
+
+**No te limites a elaborar un plan. Implementá el software.**
+
+Quiero que trabajes con autonomía técnica y avances tanto como permitan el entorno, las herramientas disponibles y los permisos existentes.
+
+### Reglas de ejecución
+
+1. Inspeccioná el repositorio antes de modificarlo.
+2. Identificá los recursos disponibles.
+3. Investigá las dependencias actuales.
+4. Seleccioná versiones compatibles.
+5. Implementá una fase.
+6. Compilá.
+7. Ejecutá pruebas.
+8. Corregí errores.
+9. Registrá progreso.
+10. Continuá con la siguiente tarea prioritaria.
+
+No me preguntes por decisiones técnicas rutinarias que puedas resolver razonablemente.
+
+Usá valores y datos ficticios cuando sea apropiado para demostraciones.
+
+Si no existe un modelo 3D, generá geometría de prueba legítima.
+
+Si no hay panoramas disponibles, generá o utilizá assets de prueba con licencia válida.
+
+Si una librería no funciona, evaluá alternativas.
+
+Si una integración externa no está disponible, implementá un adaptador y continuá con las partes independientes.
+
+Si un componente requiere credenciales, documentá qué falta y dejá el resto funcional.
+
+Si un servicio exige pago, no lo contrates ni actives sin autorización.
+
+Si existe un bloqueo que no podés resolver, registralo y avanzá con otro módulo sin ocultarlo.
+
+No cambies silenciosamente una funcionalidad real por una simulación.
+
+### Gestión del progreso
+
+Actualizá `docs/PROGRESS.md` con:
+
+- Fase actual.
+- Funcionalidades implementadas.
+- Archivos modificados.
+- Comandos ejecutados.
+- Tests aprobados.
+- Tests fallidos.
+- Bloqueos.
+- Próxima tarea.
+
+El documento debe permitir continuar el trabajo después de reiniciar la sesión de Claude.
+
+Mantené tareas pequeñas, verificables y con criterios de aceptación.
+
+No ejecutes operaciones destructivas, despliegues públicos ni cambios en cuentas ajenas sin los permisos necesarios.
+
+---
+
+# 26. PRIORIDAD DE PRODUCTO
+
+El orden de importancia es:
+
+1. Experiencia visual y navegación real.
+2. Recorrido arquitectónico 360°.
+3. Masterplan 3D seleccionable.
+4. Catálogo inmobiliario.
+5. Panel administrativo.
+6. Publicación de proyectos.
+7. Pipeline de renders y assets.
+8. Importación CAD/BIM.
+9. Asistencia mediante IA.
+10. Escalabilidad SaaS.
+
+No sacrifiques las primeras funciones por construir infraestructura excesivamente compleja desde el inicio.
+
+Pero tampoco diseñes una arquitectura que impida implementar las fases posteriores.
+
+---
+
+# 27. RESULTADO FINAL ESPERADO
+
+Al completar el desarrollo necesito:
+
+- Aplicación frontend funcional.
+- Visor 3D.
+- Motor 360°.
+- Dos proyectos demo navegables.
+- Panel administrativo.
+- API.
+- Base de datos.
+- Persistencia.
+- Gestión de assets.
+- Pruebas automatizadas.
+- Documentación.
+- Repositorio Git.
+- Instrucciones de ejecución.
+- Plan de despliegue.
+- Roadmap de las funciones pendientes.
+
+Quiero poder abrir la plataforma, ver un desarrollo inmobiliario desde el aire, seleccionar una casa, consultar sus características y recorrerla virtualmente con una calidad visual profesional.
+
+También quiero poder cargar mis propios proyectos y administrarlos sin tocar el código.
+
+El objetivo a largo plazo es vender esta tecnología a arquitectos, constructoras, promotoras e inmobiliarias como plataforma SaaS.
+
+---
+
+# 28. INSTRUCCIÓN FINAL
+
+Empezá ahora.
+
+Primero:
+
+1. Inspeccioná el entorno y los archivos disponibles.
+2. Leé todo el material de referencia.
+3. Investigá las herramientas y dependencias que realmente necesitás.
+4. Diferenciá explícitamente el software observado de la arquitectura propuesta.
+5. Prepará el monorepo.
+6. Configurá las herramientas.
+7. Implementá el primer flujo funcional de recorrido arquitectónico.
+8. Implementá luego el masterplan 3D.
+9. Ejecutá tests y verificá los resultados.
+10. Continuá siguiendo las fases y prioridades.
+
+No te detengas únicamente después de escribir la arquitectura.
+
+Tomá las decisiones técnicas justificables y resolvé los problemas que aparezcan.
+
+El código debe ser legible, modular, tipado, mantenible, documentado y realmente ejecutable.
+
+**El objetivo no es imitar un video: es desarrollar una plataforma funcional que permita crear y explorar experiencias arquitectónicas e inmobiliarias interactivas.**

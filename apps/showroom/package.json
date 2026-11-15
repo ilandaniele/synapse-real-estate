@@ -1,0 +1,34 @@
+{
+  "name": "@synapse/showroom",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@synapse/domain": "workspace:*",
+    "@synapse/contracts": "workspace:*",
+    "@synapse/ui": "workspace:*",
+    "@synapse/tour-engine": "workspace:*",
+    "@synapse/3d-engine": "workspace:*",
+    "next": "16.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "maplibre-gl": "^6.18.0",
+    "zustand": "^5.1.0",
+    "@tanstack/react-query": "^5.107.1",
+    "lucide-react": "^1.73.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "tailwindcss": "^4.3.5",
+    "@tailwindcss/postcss": "^4.3.5"
+  }
+}

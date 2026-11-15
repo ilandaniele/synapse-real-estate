@@ -1,0 +1,16 @@
+node_modules/
+.next/
+dist/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+.data/
+storage/
+test-results/
+playwright-report/
+*.tsbuildinfo
+next-env.d.ts
+*.mp4
+.claude/settings.local.json

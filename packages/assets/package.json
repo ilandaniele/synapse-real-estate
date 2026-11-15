@@ -1,0 +1,16 @@
+{
+  "name": "@synapse/demo-assets",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p .",
+    "generate": "tsx src/generate.ts",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "sharp": "^0.35.5",
+    "@gltf-transform/core": "^4.5.1",
+    "@gltf-transform/functions": "^4.5.1"
+  }
+}

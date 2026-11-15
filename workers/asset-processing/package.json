@@ -1,0 +1,20 @@
+{
+  "name": "@synapse/asset-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p .",
+    "dev": "tsx watch --env-file-if-exists=../../.env src/index.ts",
+    "start": "tsx --env-file-if-exists=../../.env src/index.ts",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@synapse/domain": "workspace:*",
+    "@synapse/db": "workspace:*",
+    "@synapse/cad-importer": "workspace:*",
+    "drizzle-orm": "^0.45.4",
+    "sharp": "^0.35.5",
+    "@gltf-transform/core": "^4.5.1"
+  }
+}
