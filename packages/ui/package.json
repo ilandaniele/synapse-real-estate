@@ -9,6 +9,9 @@
     "typecheck": "tsc -p .",
     "test": "vitest run --passWithNoTests"
   },
+  "dependencies": {
+    "@synapse/domain": "workspace:*"
+  },
   "peerDependencies": {
     "react": "^19"
   },
