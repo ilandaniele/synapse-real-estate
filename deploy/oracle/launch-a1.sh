@@ -2,6 +2,7 @@
 # Retries launching the Always Free Ampere A1 VM until Oracle has capacity.
 # Requires an authenticated OCI CLI (oci setup bootstrap). See docs/DEPLOYMENT.md.
 set -euo pipefail
+export PYTHONWARNINGS=ignore
 
 NAME="${NAME:-synapse-showroom}"
 OCPUS="${OCPUS:-4}"
