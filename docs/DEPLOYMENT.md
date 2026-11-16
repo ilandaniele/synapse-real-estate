@@ -57,6 +57,31 @@ Los hosts gratuitos salen de [sslip.io](https://sslip.io), que resuelve `showroo
 3. En la *security list* de la VCN abrir TCP 80 y 443 (y UDP 443 para HTTP/3).
 4. Pasar la IP pública y el acceso SSH.
 
+### Crear la VM cuando no hay capacidad A1
+Las regiones con un solo dominio de disponibilidad (por ejemplo `sa-vinhedo-1`) suelen responder
+"Out of capacity for shape VM.Standard.A1.Flex". La región *home* no se puede cambiar, así que
+`deploy/oracle/launch-a1.sh` reintenta el lanzamiento hasta que haya capacidad.
+
+Requisitos:
+- OCI CLI (`uv tool install oci-cli --python 3.12`; si falla con `No module named 'dateutil.rrule'`,
+  reinstalar con `--force --reinstall --no-cache`).
+- Autenticación una sola vez con `oci setup bootstrap` (abre el navegador; la clave API queda en `~/.oci`,
+  nunca en el repositorio).
+- Una VCN con subred pública llamada `synapse-public-subnet`, creada en la consola.
+
+```bash
+DRY_RUN=1 deploy/oracle/launch-a1.sh   # valida config, subred, AD e imagen sin lanzar
+deploy/oracle/launch-a1.sh             # reintenta cada 90 s hasta RUNNING e imprime la IP pública
+```
+
+Variables: `OCPUS` (4), `MEMORY_GB` (24), `NAME` (`synapse-showroom`), `SUBNET_NAME`, `SSH_KEY_FILE`
+(`~/.ssh/id_ed25519_synapse_oracle.pub`), `RETRY_SECONDS` (90), `MAX_ATTEMPTS` (0 = sin límite),
+`COMPARTMENT_ID` (por defecto la *tenancy* de `~/.oci/config`).
+
+El script no lanza nada si ya existe una instancia no terminada con el mismo nombre, solo reintenta los
+errores de capacidad y de límite de peticiones (429), y asigna IP pública. Con menos recursos
+(`OCPUS=2 MEMORY_GB=12`) suele encontrar capacidad antes; todo queda dentro de Always Free.
+
 ### Instalación en la VM
 ```bash
 sudo apt-get update && sudo apt-get install -y docker.io docker-compose-v2 git
