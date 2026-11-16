@@ -35,7 +35,7 @@ Las licencias se revisaron contra [FUENTES_Y_LICENCIAS.md](FUENTES_Y_LICENCIAS.m
 
 ## Herramientas externas opcionales
 - **FFmpeg 8.1** — usado solo para extraer fotogramas de los videos de referencia durante el análisis.
-- **Blender** — no instalado; previsto para renders reales (ver RENDER_PIPELINE.md).
+- **Blender 4.5 LTS** — opcional, proceso externo (GPL) para renderizar panoramas de GLB con Cycles en GPU; se activa con `BLENDER_PATH` (ver RENDER_PIPELINE.md).
 
 ## Descartados
 - **BullMQ + Redis**: reemplazado por cola en Postgres (ADR-006).

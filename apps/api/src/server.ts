@@ -11,18 +11,24 @@ async function main() {
 
   const app = await buildApp({ db: handle.db, storageDir: config.storageDir, config, logger: true });
 
-  // PGlite only allows one process on its data dir, so without DATABASE_URL the asset worker runs inside the API.
+  // PGlite only allows one process on its data dir, so without DATABASE_URL the workers run inside the API.
   const worker = new AbortController();
-  let workerDone: Promise<void> = Promise.resolve();
+  const workersDone: Promise<void>[] = [];
   if (handle.driver === "pglite") {
     const { runAssetWorker } = await import("../../../workers/asset-processing/src/loop");
     app.log.info("PGlite mode: asset worker embedded in the API process");
-    workerDone = runAssetWorker(handle.db, config.storageDir, worker.signal);
+    workersDone.push(runAssetWorker(handle.db, config.storageDir, worker.signal));
+    const { blenderPath } = await import("../../../workers/render-processing/src/blender");
+    if (blenderPath()) {
+      const { runRenderWorker } = await import("../../../workers/render-processing/src/loop");
+      app.log.info("PGlite mode: render worker embedded in the API process");
+      workersDone.push(runRenderWorker(handle.db, worker.signal));
+    }
   }
 
   const shutdown = async () => {
     worker.abort();
-    await workerDone;
+    await Promise.all(workersDone);
     await app.close();
     await handle.close();
     process.exit(0);

@@ -7,7 +7,7 @@ import type SharpFn from "sharp";
 import { Asset, Job } from "@synapse/contracts";
 import { assets, claimJob, developments, importJobs, panoramaAssets, renderJobs, unitMeshMappings } from "@synapse/db";
 import { processJob } from "../../../workers/asset-processing/src/process";
-import { NO_RENDER_BACKEND_MESSAGE, processRenderJob } from "../../../workers/render-processing/src/index";
+import { NO_RENDER_BACKEND_MESSAGE, processRenderJob, type PanoramaRenderer } from "../../../workers/render-processing/src/index";
 import { ADMIN, buildGlb, createTestContext, EMAILS, uploadFile, type TestContext } from "./helpers";
 
 let ctx: TestContext;
@@ -231,6 +231,43 @@ describe("render jobs", () => {
     expect(row!.error).toContain("No render backend");
     // import queue untouched
     expect((await ctx.db.select().from(importJobs).where(eq(importJobs.status, "PROCESSING"))).length).toBe(0);
+  });
+
+  it("registers each rendered view as an uploaded asset with an IMPORT job and waits for review", async () => {
+    const { assetId } = await uploadFile(ctx, editor, "house.glb", buildGlb(["a"]));
+    await ctx.app.inject({ method: "POST", url: `${ADMIN}/jobs`, headers: { cookie: editor }, payload: { kind: "RENDER", assetId } });
+    const job = await claimJob(ctx.db, "RENDER");
+    const fakeBlender: PanoramaRenderer = async ({ inputFile, outputDir, settings }) => {
+      expect(existsSync(inputFile)).toBe(true);
+      expect(settings.device).toBe("CPU");
+      const file = path.join(outputDir, "living.jpg");
+      await sharp({ create: { width: 64, height: 32, channels: 3, background: "#88aacc" } }).jpeg().toFile(file);
+      return [{ slug: "living", file, seconds: 1.5 }];
+    };
+
+    const outcome = await processRenderJob(ctx.db, job!, { STORAGE_DIR: ctx.storageDir, RENDER_DEVICE: "cpu" }, fakeBlender);
+
+    expect(outcome).toBe("REQUIRES_REVIEW");
+    const [row] = await ctx.db.select().from(renderJobs).where(eq(renderJobs.id, job!.id));
+    const views = (row!.result as { views: { slug: string; assetId: string }[] }).views;
+    expect(views).toHaveLength(1);
+    const [rendered] = await ctx.db.select().from(assets).where(eq(assets.id, views[0]!.assetId));
+    expect(rendered).toMatchObject({ filename: "living.jpg", status: "UPLOADED", kind: "jpeg" });
+    const [importJob] = await ctx.db.select().from(importJobs).where(eq(importJobs.assetId, rendered!.id));
+    const imported = await processJob(ctx.db, importJob!, ctx.storageDir);
+    expect(imported).toMatchObject({ status: "COMPLETED", result: { kind: "panorama" } });
+  });
+
+  it("FAILED when the asset is not a GLB, without calling the renderer", async () => {
+    const { assetId } = await uploadFile(ctx, editor, "drawing.dwg", DWG_BYTES);
+    await ctx.app.inject({ method: "POST", url: `${ADMIN}/jobs`, headers: { cookie: editor }, payload: { kind: "RENDER", assetId } });
+    const job = await claimJob(ctx.db, "RENDER");
+    let called = false;
+    const outcome = await processRenderJob(ctx.db, job!, { STORAGE_DIR: ctx.storageDir }, async () => ((called = true), []));
+    expect(outcome).toBe("FAILED");
+    expect(called).toBe(false);
+    const [row] = await ctx.db.select().from(renderJobs).where(eq(renderJobs.id, job!.id));
+    expect(row!.error).toContain("Only GLB models can be rendered");
   });
 });
 
