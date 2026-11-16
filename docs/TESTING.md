@@ -68,7 +68,7 @@ Specs (`tests/e2e`):
 | `csp` | Masterplan, tour and location pages log no Content Security Policy violations (catches the production CSP blocking the GLB decoder's WebAssembly) |
 | `a11y-touch-visual` | Tab through the main menu with visible focus; select a villa with the keyboard; mobile menu, tap a villa, swipe the panorama and tap a hotspot; 15 visual baselines (5 pages × 3 projects, 3D canvas masked) |
 
-**Last full run: 29 passed, 0 failed, 0 skipped, 54 s.** This run had the CSP and security headers active.
+**Last full run: 30 passed, 0 failed, 0 skipped, 1.1 min.** This run had the CSP and security headers active.
 It predates `csp.spec.ts`. Those specs did not check the console, so they did not catch the WebAssembly
 block in the masterplan.
 

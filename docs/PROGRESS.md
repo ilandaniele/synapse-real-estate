@@ -36,7 +36,7 @@ from a real run.
 | `pnpm typecheck` | pass, all packages | 6.7 s |
 | `pnpm test` | 124 passed, 0 failed | 7 s |
 | `pnpm build` | pass (showroom 10 routes, admin 8 routes) | 6.0 s |
-| `pnpm test:e2e` | 29 passed, 0 failed, 0 skipped (before `csp.spec.ts`; that spec passes against the Docker stack) | 54 s |
+| `pnpm test:e2e` | 30 passed, 0 failed, 0 skipped | 1.1 min |
 
 Details are in [TESTING.md](TESTING.md). Security review results and fixes are in [SECURITY.md](SECURITY.md).
 
