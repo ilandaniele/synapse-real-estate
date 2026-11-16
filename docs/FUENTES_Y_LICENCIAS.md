@@ -37,3 +37,8 @@ Aunque resulten interesantes técnicamente, **el parecido del nombre no los iden
 - No copiar imágenes, fuentes, modelos, datos, código privado, branding ni música sin licencia.
 - Registrar copyright, licencia y fuente de assets incorporados; separar código original nuevo de upstream.
 - Para producir un servicio competitivo, revisar restricciones de source-available (especialmente FSL) antes de reutilizar código.
+
+## Assets de terceros usados localmente (no versionados)
+- HDRI "Kloofendal 48d Partly Cloudy (Pure Sky)", Poly Haven — https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky
+  - Licencia CC0. Se descarga a `storage/hdri/` (ignorado por git) y solo se usa como cielo del render offline
+    (`RENDER_HDRI`). No se redistribuye en el repositorio.

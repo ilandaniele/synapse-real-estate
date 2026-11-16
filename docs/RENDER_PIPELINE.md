@@ -14,11 +14,12 @@
    `blender --background --factory-startup --python-exit-code 1 --python blender/render_panorama.py -- <args>`.
    El proceso tiene timeout (`RENDER_TIMEOUT_MINUTES`).
 3. `render_panorama.py` importa el GLB, crea una cámara equirectangular y renderiza un panorama 2:1 en JPEG por
-   cada punto de vista. Usa cielo procedural (Nishita), tone mapping AgX y denoiser (OptiX en GPU NVIDIA,
-   OpenImageDenoise en el resto).
+   cada punto de vista. Usa como cielo e iluminación el HDRI de `RENDER_HDRI` o, sin él, un cielo procedural
+   (Nishita); tone mapping AgX y denoiser (OptiX en GPU NVIDIA, OpenImageDenoise en el resto).
 4. Puntos de vista: cada objeto del GLB cuyo nombre empieza por `PANO_` (por ejemplo un *empty*
    `PANO_living` a 1,6 m del suelo). Su rotación Z fija el centro del panorama. Sin marcadores se renderiza una
-   sola vista `overview` en el centro del modelo, a la altura de ojo.
+   sola vista `overview` en el centro del modelo, a la altura de ojo. El masterplan demo trae tres marcadores
+   (`PANO_Acceso`, `PANO_Mirador`, `PANO_Terraza_V6`) en el nodo `Viewpoints`.
 5. Cada imagen se registra como un asset nuevo `UPLOADED` con su propio job `IMPORT`. El pipeline de
    importación existente la valida, genera la vista previa y la miniatura y crea el `PanoramaAsset`.
 6. El job `RENDER` termina `REQUIRES_REVIEW`. Su `result` lista las vistas (`slug`, `assetId`, segundos), el
@@ -35,6 +36,12 @@ válido. Con Postgres corre aparte: `pnpm --filter @synapse/render-worker start`
 | `RENDER_WIDTH` | `4096` | Ancho del panorama (alto = ancho / 2), 512–16384 |
 | `RENDER_SAMPLES` | `128` | Muestras de Cycles, 1–4096 |
 | `RENDER_TIMEOUT_MINUTES` | `60` | Límite por job |
+| `RENDER_HDRI` | vacío | Imagen `.hdr` equirectangular para cielo e iluminación. Si el archivo no existe se usa el cielo procedural |
+
+HDRI recomendado (CC0, 20,7 MB, no versionado):
+```bash
+mkdir -p storage/hdri && curl -L -o storage/hdri/kloofendal_48d_partly_cloudy_puresky_4k.hdr https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/4k/kloofendal_48d_partly_cloudy_puresky_4k.hdr
+```
 
 Valores fuera de rango o desconocidos vuelven al valor por defecto.
 
@@ -59,6 +66,9 @@ Blender 4.5.10 LTS en Windows 11 con NVIDIA GeForce RTX 5070 Ti Laptop GPU (12 G
 | CPU | 2048×1024 | 64 | 10,1 s |
 | OptiX (GPU) | 4096×2048 | 128 | 8,0 s |
 | OptiX (GPU) | 8192×4096 | 256 | 53,5 s |
+
+Con el GLB demo mejorado (fachadas con vidrio y madera, árboles redondos) y el HDRI de Poly Haven, cada una de
+las tres vistas a 4096×2048 y 128 muestras tarda entre 9,6 y 10,9 s; el proceso completo, 33 s.
 
 Arrancar Blender e importar el GLB añade unos 4 s por job (6,4 s de proceso total a 2048/64 en GPU). Una escena
 con materiales y texturas reales tardará más; estos números sirven como base, no como promesa.

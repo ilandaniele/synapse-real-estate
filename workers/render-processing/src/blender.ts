@@ -14,6 +14,8 @@ export interface RenderSettings {
   samples: number;
   device: RenderDevice;
   timeoutMs: number;
+  /** Equirectangular HDR image used as sky and light; null means the procedural sky. */
+  hdri: string | null;
 }
 
 export interface RenderRequest {
@@ -38,10 +40,14 @@ export type BlenderLine =
   | { type: "log"; level: JobLog["level"]; message: string }
   | null;
 
+function existingFile(value: string | undefined): string | null {
+  const configured = value?.trim();
+  return configured && existsSync(configured) ? configured : null;
+}
+
 /** Returns the Blender executable when BLENDER_PATH is set and exists, otherwise null. */
 export function blenderPath(env: NodeJS.ProcessEnv = process.env): string | null {
-  const configured = env.BLENDER_PATH?.trim();
-  return configured && existsSync(configured) ? configured : null;
+  return existingFile(env.BLENDER_PATH);
 }
 
 function boundedInt(value: string | undefined, fallback: number, min: number, max: number): number {
@@ -56,6 +62,7 @@ export function renderSettings(env: NodeJS.ProcessEnv = process.env): RenderSett
     samples: boundedInt(env.RENDER_SAMPLES, 128, 1, 4096),
     device: RENDER_DEVICES.find((d) => d === device) ?? "OPTIX",
     timeoutMs: boundedInt(env.RENDER_TIMEOUT_MINUTES, 60, 1, 24 * 60) * 60_000,
+    hdri: existingFile(env.RENDER_HDRI),
   };
 }
 
@@ -78,6 +85,7 @@ export function blenderArgs({ inputFile, outputDir, settings }: RenderRequest): 
     String(settings.samples),
     "--device",
     settings.device,
+    ...(settings.hdri ? ["--hdri", settings.hdri] : []),
   ];
 }
 

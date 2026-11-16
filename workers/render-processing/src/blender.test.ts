@@ -4,7 +4,7 @@ import { blenderArgs, parseBlenderLine, RENDER_SCRIPT, renderSettings } from "./
 
 describe("renderSettings", () => {
   it("uses safe defaults", () => {
-    expect(renderSettings({})).toEqual({ width: 4096, samples: 128, device: "OPTIX", timeoutMs: 3_600_000 });
+    expect(renderSettings({})).toEqual({ width: 4096, samples: 128, device: "OPTIX", timeoutMs: 3_600_000, hdri: null });
   });
 
   it("reads valid overrides and rejects out-of-range or unknown values", () => {
@@ -13,6 +13,7 @@ describe("renderSettings", () => {
       samples: 16,
       device: "CUDA",
       timeoutMs: 300_000,
+      hdri: null,
     });
     expect(renderSettings({ RENDER_WIDTH: "99999", RENDER_SAMPLES: "-1", RENDER_DEVICE: "rm -rf", RENDER_TIMEOUT_MINUTES: "x" })).toEqual(
       renderSettings({}),
@@ -26,6 +27,13 @@ describe("blenderArgs", () => {
     expect(args.slice(0, 7)).toEqual(["--background", "--factory-startup", "--python-exit-code", "1", "--python", RENDER_SCRIPT, "--"]);
     expect(args.slice(7)).toEqual(["--input", "in.glb", "--output-dir", "out", "--width", "4096", "--samples", "128", "--device", "OPTIX"]);
     expect(existsSync(RENDER_SCRIPT)).toBe(true);
+  });
+
+  it("passes an HDRI only when the configured file exists", () => {
+    expect(renderSettings({ RENDER_HDRI: "/missing/sky.hdr" }).hdri).toBeNull();
+    const settings = renderSettings({ RENDER_HDRI: RENDER_SCRIPT });
+    expect(settings.hdri).toBe(RENDER_SCRIPT);
+    expect(blenderArgs({ inputFile: "in.glb", outputDir: "out", settings }).slice(-2)).toEqual(["--hdri", RENDER_SCRIPT]);
   });
 });
 

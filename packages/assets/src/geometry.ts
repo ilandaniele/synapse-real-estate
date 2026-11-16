@@ -109,3 +109,28 @@ export function coneMesh(radius: number, height: number, segments: number): Mesh
   for (let i = 0; i < segments; i++) m.indices.push(baseStart, baseStart + 1 + i, baseStart + 2 + i);
   return m;
 }
+
+/** Low-poly UV sphere with smooth normals, centered at the origin. */
+export function sphereMesh(radius: number, segments: number, rings: number): MeshData {
+  const m = emptyMesh();
+  for (let r = 0; r <= rings; r++) {
+    const phi = (r / rings) * Math.PI;
+    for (let s = 0; s <= segments; s++) {
+      const theta = (s / segments) * Math.PI * 2;
+      const nx = Math.sin(phi) * Math.cos(theta);
+      const ny = Math.cos(phi);
+      const nz = Math.sin(phi) * Math.sin(theta);
+      m.positions.push(nx * radius, ny * radius, nz * radius);
+      m.normals.push(nx, ny, nz);
+    }
+  }
+  const row = segments + 1;
+  for (let r = 0; r < rings; r++) {
+    for (let s = 0; s < segments; s++) {
+      const a = r * row + s;
+      const b = a + row;
+      m.indices.push(a, a + 1, b, a + 1, b + 1, b);
+    }
+  }
+  return m;
+}

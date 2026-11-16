@@ -40,6 +40,7 @@ def parse_args():
     parser.add_argument("--eye-height", type=float, default=1.6)
     parser.add_argument("--overview-height", type=float, default=None)
     parser.add_argument("--max-views", type=int, default=24)
+    parser.add_argument("--hdri", default=None)
     return parser.parse_args(argv)
 
 
@@ -117,16 +118,21 @@ def configure_render(scene, args):
     scene.view_settings.view_transform = "AgX"
 
 
-def add_sky(scene):
+def add_sky(scene, hdri):
     world = bpy.data.worlds.new("synapse-sky")
     world.use_nodes = True
     nodes = world.node_tree.nodes
-    sky = nodes.new("ShaderNodeTexSky")
-    sky.sky_type = "NISHITA"
-    sky.sun_elevation = math.radians(35)
-    sky.sun_rotation = math.radians(140)
     background = nodes["Background"]
-    background.inputs["Strength"].default_value = 0.12
+    if hdri:
+        sky = nodes.new("ShaderNodeTexEnvironment")
+        sky.image = bpy.data.images.load(hdri, check_existing=True)
+        background.inputs["Strength"].default_value = 1.0
+    else:
+        sky = nodes.new("ShaderNodeTexSky")
+        sky.sky_type = "NISHITA"
+        sky.sun_elevation = math.radians(35)
+        sky.sun_rotation = math.radians(140)
+        background.inputs["Strength"].default_value = 0.12
     world.node_tree.links.new(sky.outputs["Color"], background.inputs["Color"])
     scene.world = world
 
@@ -142,6 +148,7 @@ def add_camera(scene):
 
 
 def render_views(scene, camera, views, output_dir):
+    output_dir = os.path.abspath(output_dir)
     os.makedirs(output_dir, exist_ok=True)
     for slug, location, yaw in views:
         camera.location = location
@@ -159,7 +166,7 @@ def main():
     devices = configure_device(scene, args.device)
     emit("INFO", f"Blender {bpy.app.version_string}, Cycles on {args.device}: {', '.join(devices)}")
     configure_render(scene, args)
-    add_sky(scene)
+    add_sky(scene, args.hdri)
     views = viewpoints(scene, args)
     emit("INFO", f"{len(views)} viewpoint(s) at {args.width}x{args.width // 2}, {args.samples} samples")
     render_views(scene, add_camera(scene), views, args.output_dir)

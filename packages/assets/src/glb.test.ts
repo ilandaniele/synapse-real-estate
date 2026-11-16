@@ -19,8 +19,13 @@ describe("masterplan GLB", () => {
       expect(group, name).toBeDefined();
       const children = (group?.listChildren() ?? []).map((c) => c.getName()).sort();
       expect(children).toEqual([`${name}_Body`, `${name}_Plot`, `${name}_Pool`, `${name}_Roof`]);
+      const bodyMaterials = byName.get(`${name}_Body`)?.getMesh()?.listPrimitives().map((p) => p.getMaterial()?.getName());
+      expect(bodyMaterials).toEqual(["Render_White", "Wood_Cladding", "Glass_Tinted"]);
     }
-    for (const name of ["Terrain", "Road", "Trees"]) expect(byName.has(name), name).toBe(true);
+    for (const name of ["Terrain", "Road", "Trees", "Viewpoints"]) expect(byName.has(name), name).toBe(true);
+    const markers = byName.get("Viewpoints")?.listChildren() ?? [];
+    expect(markers.map((m) => m.getName())).toEqual(["PANO_Acceso", "PANO_Mirador", "PANO_Terraza_V6"]);
+    for (const marker of markers) expect(marker.getMesh()).toBeNull();
     expect(model.units).toHaveLength(8);
     expect(model.units[0]).toMatchObject({ code: "V1", node: "Villa_01" });
     for (const n of model.nodes) expect(byName.has(n), n).toBe(true);
