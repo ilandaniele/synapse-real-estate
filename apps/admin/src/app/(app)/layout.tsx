@@ -4,7 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { can } from "@synapse/domain";
+import { can, type Action } from "@synapse/domain";
 import { ErrorState, Spinner } from "@synapse/ui";
 import { api, ApiRequestError, errorMessage } from "@/lib/api";
 import { useMe } from "@/lib/queries";
@@ -18,7 +18,10 @@ const NAV = [
   { slug: "leads", href: "/leads", label: "Leads" },
   { slug: "assets", href: "/assets", label: "Activos" },
   { slug: "jobs", href: "/jobs", label: "Procesos" },
+  { slug: "members", href: "/members", label: "Miembros" },
 ] as const;
+
+const NAV_PERMISSIONS: Partial<Record<(typeof NAV)[number]["slug"], Action>> = { leads: "lead:read", members: "member:manage" };
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -64,7 +67,10 @@ function Shell({ children }: { children: ReactNode }) {
     },
   });
 
-  const items = NAV.filter((item) => item.slug !== "leads" || can(user.role, "lead:read"));
+  const items = NAV.filter((item) => {
+    const action = NAV_PERMISSIONS[item.slug];
+    return !action || can(user.role, action);
+  });
 
   return (
     <div className="min-h-screen">
@@ -96,6 +102,9 @@ function Shell({ children }: { children: ReactNode }) {
                 <span data-testid="user-role">{ROLE_LABELS[user.role]}</span> · <span data-testid="user-org">{user.organizationName}</span>
               </div>
             </div>
+            <Link href="/account" data-testid="nav-account" aria-current={pathname.startsWith("/account") ? "page" : undefined} className="rounded-md px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-100">
+              Mi cuenta
+            </Link>
             <Button onClick={() => logout.mutate()} disabled={logout.isPending} data-testid="logout">
               Cerrar sesión
             </Button>

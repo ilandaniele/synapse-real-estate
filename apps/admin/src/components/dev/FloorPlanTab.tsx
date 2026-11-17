@@ -9,20 +9,23 @@ import { api } from "@/lib/api";
 import { keys, useFloorPlans, useScenes } from "@/lib/queries";
 import { useCan } from "@/lib/session";
 import { Button, Card, ErrorBanner, QueryBoundary, SelectField } from "../ui";
+import { FloorPlansList } from "./FloorPlansList";
 
 const SAVE_DELAY_MS = 500;
 
 export function FloorPlanTab({ developmentId }: { developmentId: string }) {
   const plans = useFloorPlans(developmentId);
   const scenes = useScenes(developmentId);
+  const planList = plans.data ?? [];
   return (
-    <QueryBoundary query={plans} isEmpty={(items) => items.length === 0} emptyTitle="Este desarrollo no tiene planos" emptyDescription="Los planos se cargan desde el seed o el pipeline de assets; todavía no hay endpoint de subida de planos.">
-      {(planList) => (
+    <div className="flex flex-col gap-6">
+      <FloorPlansList developmentId={developmentId} />
+      {planList.length > 0 ? (
         <QueryBoundary query={scenes} isEmpty={(items) => items.length === 0} emptyTitle="Crea escenas antes de ubicarlas en el plano">
           {(sceneList) => <PlanEditor developmentId={developmentId} plans={planList} scenes={sceneList} />}
         </QueryBoundary>
-      )}
-    </QueryBoundary>
+      ) : null}
+    </div>
   );
 }
 

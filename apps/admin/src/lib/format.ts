@@ -37,3 +37,13 @@ export const ASSET_STATUS_LABELS = {
   UPLOADED: "Subido",
   REJECTED: "Rechazado",
 } as const;
+
+export const POI_CATEGORY_LABELS = {
+  BEACH: "Playa",
+  SCHOOL: "Colegio",
+  HEALTH: "Salud",
+  SHOPPING: "Compras",
+  TRANSPORT: "Transporte",
+  GOLF: "Golf",
+  RESTAURANT: "Restaurante",
+} as const;

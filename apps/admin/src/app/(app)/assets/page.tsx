@@ -3,16 +3,13 @@
 import { useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { z } from "zod";
-import type { Asset, Job, UploadTicket } from "@synapse/contracts";
+import type { Asset, Job } from "@synapse/contracts";
 import { api } from "@/lib/api";
 import { keys, useAssets, useDevelopments } from "@/lib/queries";
 import { useCan } from "@/lib/session";
 import { ASSET_STATUS_LABELS, formatBytes, formatDateTime } from "@/lib/format";
-import { ACCEPTED_EXTENSIONS, contentTypeFor, putWithProgress, validateFileForUpload } from "@/lib/upload";
+import { ACCEPTED_EXTENSIONS, uploadAsset, validateFileForUpload } from "@/lib/upload";
 import { Button, Card, ErrorBanner, PageHeader, QueryBoundary, SelectField, TableShell, TD, TH } from "@/components/ui";
-
-type UploadTicketData = z.infer<typeof UploadTicket>;
 
 export default function AssetsPage() {
   const queryClient = useQueryClient();
@@ -30,14 +27,7 @@ export default function AssetsPage() {
 
   const upload = useMutation({
     mutationFn: async (selected: File) => {
-      const check = validateFileForUpload(selected);
-      if (!check.ok || !check.kind) throw new Error(check.message ?? "Archivo no válido");
-      setProgress(0);
-      const ticket = await api<UploadTicketData>("/admin/assets/uploads", {
-        method: "POST",
-        body: { filename: selected.name, size: selected.size, contentType: contentTypeFor(selected, check.kind) },
-      });
-      await putWithProgress(ticket.uploadUrl, selected, contentTypeFor(selected, check.kind), setProgress);
+      await uploadAsset(selected, setProgress);
       return selected.name;
     },
     onSuccess: (name) => {

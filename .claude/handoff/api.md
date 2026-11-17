@@ -88,5 +88,4 @@ Every mutating admin action writes an `audit_events` row. Lead IPs are stored on
 - `apps/api/tsconfig.json` includes only `src`, so `test/` is not typechecked (vitest transpiles it).
 - Dev-only: a random `SESSION_SECRET` is generated when missing, so sessions reset on restart.
 - No refresh of the session cookie (8 h hard expiry). Password change (`POST /auth/password`) revokes older sessions via `users.sessions_valid_after` + the `iatMs` claim.
-- The admin UI does not yet use the members, gallery, POI and floor-plan write endpoints.
 - Upload storage is local disk (STORAGE_DIR); S3/presigned URLs, antivirus and CDN purge are not implemented.

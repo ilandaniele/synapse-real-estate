@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import type { Asset, Development, FloorPlan, Job, Lead, Publication, Scene, SessionUser, Unit } from "@synapse/contracts";
+import type { Asset, Development, FloorPlan, GalleryItem, Job, Lead, Member, PointOfInterest, Publication, Scene, SessionUser, Unit } from "@synapse/contracts";
 import type { JobStatus, UnitStatus } from "@synapse/domain";
 import { api, ApiRequestError } from "./api";
 
@@ -30,6 +30,8 @@ export const keys = {
   units: (devId: string) => ["developments", devId, "units"] as const,
   scenes: (devId: string) => ["developments", devId, "scenes"] as const,
   floorPlans: (devId: string) => ["developments", devId, "floor-plans"] as const,
+  gallery: (devId: string) => ["developments", devId, "gallery"] as const,
+  pointsOfInterest: (devId: string) => ["developments", devId, "points-of-interest"] as const,
   publications: (devId: string) => ["developments", devId, "publications"] as const,
   scene: (id: string) => ["scenes", id] as const,
   hotspots: (sceneId: string) => ["scenes", sceneId, "hotspots"] as const,
@@ -38,6 +40,7 @@ export const keys = {
   assets: ["assets"] as const,
   jobs: ["jobs"] as const,
   job: (id: string) => ["jobs", id] as const,
+  members: ["members"] as const,
 };
 
 /** 401/403/404 will not get better on retry. */
@@ -60,6 +63,11 @@ export const useScenes = (devId: string | undefined) =>
   });
 export const useFloorPlans = (devId: string) =>
   useQuery({ queryKey: keys.floorPlans(devId), queryFn: () => api<FloorPlan[]>(`/admin/developments/${devId}/floor-plans`), retry });
+export const useGallery = (devId: string) =>
+  useQuery({ queryKey: keys.gallery(devId), queryFn: () => api<GalleryItem[]>(`/admin/developments/${devId}/gallery`), retry });
+export const usePointsOfInterest = (devId: string) =>
+  useQuery({ queryKey: keys.pointsOfInterest(devId), queryFn: () => api<PointOfInterest[]>(`/admin/developments/${devId}/points-of-interest`), retry });
+export const useMembers = () => useQuery({ queryKey: keys.members, queryFn: () => api<Member[]>("/admin/members"), retry });
 export const usePublications = (devId: string) =>
   useQuery({ queryKey: keys.publications(devId), queryFn: () => api<Publication[]>(`/admin/developments/${devId}/publications`), retry });
 export const useScene = (id: string) => useQuery({ queryKey: keys.scene(id), queryFn: () => api<Scene>(`/admin/scenes/${id}`), retry });

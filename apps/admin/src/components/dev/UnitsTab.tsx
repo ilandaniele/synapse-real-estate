@@ -9,6 +9,7 @@ import { api } from "@/lib/api";
 import { keys, useUnits } from "@/lib/queries";
 import { useCan } from "@/lib/session";
 import { apiFieldErrors, parseNumber, zodFieldErrors, type FieldErrors } from "@/lib/forms";
+import { ConfirmDelete } from "../content";
 import { Button, ErrorBanner, Modal, QueryBoundary, SelectField, TableShell, TD, TextAreaField, TextField, TH } from "../ui";
 
 type EditTarget = { mode: "create" } | { mode: "edit"; unit: Unit };
@@ -236,7 +237,18 @@ function UnitDialog({
       {unit ? (
         <>
           <StatusSection unit={unit} canAvailability={canAvailability} onChanged={refresh} />
-          {canWrite ? <DeleteSection unit={unit} onDeleted={() => { refresh(); onClose(); }} /> : null}
+          {canWrite ? (
+            <ConfirmDelete
+              subject={`la unidad ${unit.code}`}
+              buttonLabel="Borrar unidad"
+              testId="unit-delete"
+              remove={() => api<void>(`/admin/units/${unit.id}`, { method: "DELETE" })}
+              onDeleted={() => {
+                refresh();
+                onClose();
+              }}
+            />
+          ) : null}
         </>
       ) : null}
     </Modal>
@@ -305,35 +317,5 @@ function StatusSection({ unit, canAvailability, onChanged }: { unit: Unit; canAv
         </div>
       </div>
     </fieldset>
-  );
-}
-
-function DeleteSection({ unit, onDeleted }: { unit: Unit; onDeleted: () => void }) {
-  const [confirming, setConfirming] = useState(false);
-  const del = useMutation({
-    mutationFn: () => api<void>(`/admin/units/${unit.id}`, { method: "DELETE" }),
-    onSuccess: onDeleted,
-  });
-  return (
-    <div className="mt-5 flex flex-col gap-2 border-t border-gray-200 pt-4">
-      <ErrorBanner error={del.error} testId="unit-delete-error" />
-      {confirming ? (
-        <div role="alertdialog" aria-label={`Confirmar borrado de ${unit.code}`} className="flex flex-wrap items-center gap-2 rounded-md border border-red-300 bg-red-50 p-3 text-sm">
-          <span>¿Borrar la unidad {unit.code}? Esta acción no se puede deshacer.</span>
-          <Button variant="danger" disabled={del.isPending} onClick={() => del.mutate()} data-testid="unit-delete-confirm">
-            Sí, borrar
-          </Button>
-          <Button onClick={() => setConfirming(false)} data-testid="unit-delete-cancel">
-            Cancelar
-          </Button>
-        </div>
-      ) : (
-        <div>
-          <Button variant="danger" onClick={() => setConfirming(true)} data-testid="unit-delete">
-            Borrar unidad
-          </Button>
-        </div>
-      )}
-    </div>
   );
 }

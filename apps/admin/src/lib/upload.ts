@@ -1,6 +1,7 @@
-import { ApiError } from "@synapse/contracts";
+import type { z } from "zod";
+import { ApiError, type UploadTicket } from "@synapse/contracts";
 import { FILE_KINDS, MAX_UPLOAD_BYTES, MIME_BY_KIND, type FileKind } from "@synapse/domain";
-import { ApiRequestError } from "./api";
+import { api, ApiRequestError } from "./api";
 
 const EXTENSION_KIND: Record<string, FileKind> = {
   glb: "glb",
@@ -78,5 +79,44 @@ export function putWithProgress(url: string, file: File, contentType: string, on
       }
     };
     xhr.send(file);
+  });
+}
+
+/** Validates, requests an upload ticket and PUTs the file. Resolves with the new asset id. */
+export async function uploadAsset(file: File, onProgress: (fraction: number) => void): Promise<string> {
+  const check = validateFileForUpload(file);
+  if (!check.ok || !check.kind) throw new Error(check.message ?? "Archivo no válido");
+  const contentType = contentTypeFor(file, check.kind);
+  onProgress(0);
+  const ticket = await api<z.infer<typeof UploadTicket>>("/admin/assets/uploads", {
+    method: "POST",
+    body: { filename: file.name, size: file.size, contentType },
+  });
+  await putWithProgress(ticket.uploadUrl, file, contentType, onProgress);
+  return ticket.assetId;
+}
+
+const IMAGE_KINDS: readonly FileKind[] = ["jpeg", "png", "webp", "svg"];
+export const IMAGE_EXTENSIONS = ".jpg,.jpeg,.png,.webp,.svg";
+
+export function validateImageForUpload(file: File): ClientValidation {
+  const check = validateFileForUpload(file);
+  if (check.ok && check.kind && !IMAGE_KINDS.includes(check.kind)) return { ok: false, message: "Elige una imagen JPG, PNG, WebP o SVG." };
+  return check;
+}
+
+export function readImageSize(file: File): Promise<{ width: number; height: number } | null> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(image.naturalWidth > 0 ? { width: image.naturalWidth, height: image.naturalHeight } : null);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(null);
+    };
+    image.src = url;
   });
 }

@@ -21,9 +21,11 @@ from a real run.
   - scenes and the visual hotspot editor;
   - versioned publishing;
   - leads with CSV export, uploads and job review.
-- Admin API (UI pending): CRUD for gallery, points of interest and floor plans (images from an uploaded
-  asset are copied to `published/<org>/`), member management (owner only, keeps at least one owner) and
-  password change that revokes older sessions.
+- Admin content and accounts (API and screens):
+  - development tabs «Galería» and «Ubicación», and floor-plan create/edit/delete in «Plano», with image
+    upload (images from an uploaded asset are copied to `published/<org>/`);
+  - «Miembros» page, owner only: create, change role and remove, keeping at least one owner;
+  - «Mi cuenta» page: password change that revokes older sessions.
 - Asynchronous ingestion pipeline with manual review. DWG, IFC, FBX and OBJ are rejected explicitly.
   Render without a configured backend fails explicitly.
 - Engine bugs found during integration and fixed in the engines:
@@ -38,8 +40,8 @@ from a real run.
 |---|---|---|
 | `pnpm typecheck` | pass, all packages | 6.7 s |
 | `pnpm test` | 149 passed, 0 failed (2026-11-17) | 7 s |
-| `pnpm build` | pass (showroom 10 routes, admin 8 routes) | 6.0 s |
-| `pnpm test:e2e` | 30 passed, 0 failed, 0 skipped | 1.1 min |
+| `pnpm build` | pass (showroom 10 routes, admin 10 routes) | 6.0 s |
+| `pnpm test:e2e` | 32 passed, 0 failed, 0 skipped (2026-11-17) | 1.1 min |
 
 Details are in [TESTING.md](TESTING.md). Security review results and fixes are in [SECURITY.md](SECURITY.md).
 

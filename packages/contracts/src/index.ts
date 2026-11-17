@@ -221,6 +221,7 @@ const FloorPlanFields = ImageSource.extend({
   height: z.number().positive().max(100_000),
 });
 export const FloorPlanInput = FloorPlanFields.extend({ unitId: Uuid.nullable().default(null) });
+export type FloorPlanInput = z.infer<typeof FloorPlanInput>;
 export const FloorPlanPatch = FloorPlanFields.partial();
 
 const GalleryItemFields = ImageSource.extend({
@@ -234,6 +235,7 @@ export const GalleryItemInput = GalleryItemFields.extend({
   credit: z.string().max(200).default(""),
   sortOrder: z.number().int().default(0),
 });
+export type GalleryItemInput = z.infer<typeof GalleryItemInput>;
 export const GalleryItemPatch = GalleryItemFields.partial();
 
 const PointOfInterestFields = PointOfInterest.omit({ id: true }).extend({
@@ -243,10 +245,12 @@ const PointOfInterestFields = PointOfInterest.omit({ id: true }).extend({
 export const PointOfInterestInput = PointOfInterestFields.extend({
   distanceText: z.string().max(80).nullable().default(null),
 });
+export type PointOfInterestInput = z.infer<typeof PointOfInterestInput>;
 export const PointOfInterestPatch = PointOfInterestFields.partial();
 
 export const NewPassword = z.string().min(12).max(200);
 export const PasswordChangeInput = z.object({ currentPassword: z.string().min(1).max(200), newPassword: NewPassword });
+export type PasswordChangeInput = z.infer<typeof PasswordChangeInput>;
 
 export const Member = z.object({
   id: Uuid,
@@ -263,6 +267,7 @@ export const MemberInput = z.object({
   role: Role,
   password: NewPassword,
 });
+export type MemberInput = z.infer<typeof MemberInput>;
 export const MemberPatch = z.object({ role: Role });
 
 export const UploadRequest = z.object({

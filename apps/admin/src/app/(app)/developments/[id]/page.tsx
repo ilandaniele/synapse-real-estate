@@ -6,6 +6,8 @@ import { useParams } from "next/navigation";
 import { useDevelopment } from "@/lib/queries";
 import { DatosTab } from "@/components/dev/DatosTab";
 import { FloorPlanTab } from "@/components/dev/FloorPlanTab";
+import { GalleryTab } from "@/components/dev/GalleryTab";
+import { LocationTab } from "@/components/dev/LocationTab";
 import { PublishTab } from "@/components/dev/PublishTab";
 import { ScenesTab } from "@/components/dev/ScenesTab";
 import { UnitsTab } from "@/components/dev/UnitsTab";
@@ -16,6 +18,8 @@ const TABS = [
   { name: "unidades", label: "Unidades" },
   { name: "escenas", label: "Escenas" },
   { name: "plano", label: "Plano" },
+  { name: "galeria", label: "Galería" },
+  { name: "ubicacion", label: "Ubicación" },
   { name: "publicar", label: "Publicar" },
 ] as const;
 type TabName = (typeof TABS)[number]["name"];
@@ -74,6 +78,8 @@ export default function DevelopmentDetailPage() {
               {tab === "unidades" ? <UnitsTab developmentId={dev.id} currency={dev.currency} /> : null}
               {tab === "escenas" ? <ScenesTab developmentId={dev.id} /> : null}
               {tab === "plano" ? <FloorPlanTab developmentId={dev.id} /> : null}
+              {tab === "galeria" ? <GalleryTab developmentId={dev.id} /> : null}
+              {tab === "ubicacion" ? <LocationTab developmentId={dev.id} /> : null}
               {tab === "publicar" ? <PublishTab developmentId={dev.id} /> : null}
             </div>
           </>
