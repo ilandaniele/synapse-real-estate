@@ -12,7 +12,8 @@ SSH_KEY_FILE="${SSH_KEY_FILE:-$HOME/.ssh/id_ed25519_synapse_oracle.pub}"
 RETRY_SECONDS="${RETRY_SECONDS:-90}"
 MAX_ATTEMPTS="${MAX_ATTEMPTS:-0}"
 OCI_CONFIG="${OCI_CONFIG:-$HOME/.oci/config}"
-SHAPE="VM.Standard.A1.Flex"
+SHAPE="${SHAPE:-VM.Standard.A1.Flex}"
+BOOT_GB="${BOOT_GB:-50}"
 RETRYABLE='Out of host capacity|Out of capacity|TooManyRequests|"status": 429|timed out|Connection'
 
 log() { printf '[%s] %s\n' "$(date '+%H:%M:%S')" "$*"; }
@@ -50,13 +51,22 @@ public_ip() {
   oci compute instance list-vnics --instance-id "$1" --query 'data[0]."public-ip"' --raw-output | tr -d '\r'
 }
 
+shape_config() {
+  case "$SHAPE" in
+    *.Flex) printf '{"ocpus": %s, "memoryInGBs": %s}' "$OCPUS" "$MEMORY_GB" ;;
+  esac
+}
+
 launch() {
+  local extra=()
+  [ -n "$(shape_config)" ] && extra=(--shape-config "$(shape_config)")
   oci compute instance launch \
     --compartment-id "$COMPARTMENT_ID" \
     --availability-domain "$AD" \
     --display-name "$NAME" \
     --shape "$SHAPE" \
-    --shape-config "{\"ocpus\": $OCPUS, \"memoryInGBs\": $MEMORY_GB}" \
+    "${extra[@]}" \
+    --boot-volume-size-in-gbs "$BOOT_GB" \
     --image-id "$IMAGE_ID" \
     --subnet-id "$SUBNET_ID" \
     --assign-public-ip true \
@@ -87,7 +97,7 @@ AD="$(availability_domain)"
 IMAGE_ID="$(ubuntu_image)"
 [ -n "$IMAGE_ID" ] && [ "$IMAGE_ID" != "null" ] || fail "No Ubuntu 24.04 image for $SHAPE"
 
-log "Launching $NAME ($SHAPE, $OCPUS OCPU, $MEMORY_GB GB) in $AD, retry every ${RETRY_SECONDS}s"
+log "Launching $NAME ($SHAPE $(shape_config), ${BOOT_GB} GB disk) in $AD, retry every ${RETRY_SECONDS}s"
 [ "${DRY_RUN:-0}" = "1" ] && { log "DRY_RUN=1: checks passed, not launching."; exit 0; }
 
 attempt=0

@@ -74,7 +74,8 @@ DRY_RUN=1 deploy/oracle/launch-a1.sh   # valida config, subred, AD e imagen sin 
 deploy/oracle/launch-a1.sh             # reintenta cada 90 s hasta RUNNING e imprime la IP pública
 ```
 
-Variables: `OCPUS` (4), `MEMORY_GB` (24), `NAME` (`synapse-showroom`), `SUBNET_NAME`, `SSH_KEY_FILE`
+Variables: `SHAPE` (`VM.Standard.A1.Flex`), `OCPUS` (4) y `MEMORY_GB` (24) solo para formas `*.Flex`,
+`BOOT_GB` (50), `NAME` (`synapse-showroom`), `SUBNET_NAME`, `SSH_KEY_FILE`
 (`~/.ssh/id_ed25519_synapse_oracle.pub`), `RETRY_SECONDS` (90), `MAX_ATTEMPTS` (0 = sin límite),
 `COMPARTMENT_ID` (por defecto la *tenancy* de `~/.oci/config`).
 
@@ -82,6 +83,16 @@ El script no lanza nada si ya existe una instancia no terminada con el mismo nom
 errores de capacidad, de límite de peticiones (429) y de red (timeouts), y antes de cada intento vuelve a
 comprobar que la instancia no exista (un timeout puede haberla creado igual). Asigna IP pública. Con menos recursos
 (`OCPUS=2 MEMORY_GB=12`) suele encontrar capacidad antes; todo queda dentro de Always Free.
+
+Alternativa mientras no haya A1: la forma fija `VM.Standard.E2.1.Micro` (AMD x86_64, 1/8 OCPU, 1 GB,
+también Always Free) casi siempre tiene capacidad:
+
+```bash
+NAME=synapse-micro SHAPE=VM.Standard.E2.1.Micro deploy/oracle/launch-a1.sh
+```
+
+Con 1 GB no se puede construir el stack en la VM: las imágenes se construyen en una máquina x86_64 y se
+copian (`docker save | ssh … docker load`), y la VM necesita swap.
 
 ### Instalación en la VM
 ```bash
