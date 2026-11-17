@@ -1,3 +1,4 @@
+import { copyFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { jwtVerify, SignJWT } from "jose";
 import { FILE_KINDS, type FileKind } from "@synapse/domain";
@@ -35,6 +36,13 @@ export function resolveInside(storageDir: string, relative: string): string {
   const full = path.resolve(root, relative);
   if (full !== root && !full.startsWith(root + path.sep)) throw new Error("Path escapes STORAGE_DIR");
   return full;
+}
+
+/** Copies a private upload to a public path under STORAGE_DIR (e.g. published/<org>/...), creating folders as needed. */
+export async function copyToPublished(storageDir: string, sourceRelative: string, targetRelative: string): Promise<void> {
+  const target = resolveInside(storageDir, targetRelative);
+  await mkdir(path.dirname(target), { recursive: true });
+  await copyFile(resolveInside(storageDir, sourceRelative), target);
 }
 
 const EXTENSION_KIND: Record<string, FileKind> = {

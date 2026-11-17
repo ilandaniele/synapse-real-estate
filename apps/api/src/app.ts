@@ -13,11 +13,14 @@ import { buildOpenApiDocument } from "./lib/openapi";
 import authRoutes from "./routes/auth";
 import publicRoutes from "./routes/public";
 import { assetAdminRoutes, uploadRoutes } from "./routes/admin/assets";
-import contentRoutes from "./routes/admin/content";
 import dashboardRoutes from "./routes/admin/dashboard";
 import developmentRoutes from "./routes/admin/developments";
+import floorPlanRoutes from "./routes/admin/floor-plans";
+import galleryRoutes from "./routes/admin/gallery";
 import jobRoutes from "./routes/admin/jobs";
 import leadRoutes from "./routes/admin/leads";
+import memberRoutes from "./routes/admin/members";
+import pointOfInterestRoutes from "./routes/admin/points-of-interest";
 import sceneRoutes from "./routes/admin/scenes";
 import unitRoutes from "./routes/admin/units";
 
@@ -132,7 +135,10 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
           await admin.register(developmentRoutes);
           await admin.register(unitRoutes);
           await admin.register(sceneRoutes);
-          await admin.register(contentRoutes);
+          await admin.register(floorPlanRoutes);
+          await admin.register(galleryRoutes);
+          await admin.register(pointOfInterestRoutes);
+          await admin.register(memberRoutes);
           await admin.register(leadRoutes);
           await admin.register(assetAdminRoutes);
           await admin.register(jobRoutes);

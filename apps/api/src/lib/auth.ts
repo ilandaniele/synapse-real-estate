@@ -3,7 +3,7 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 import { and, eq } from "drizzle-orm";
 import { jwtVerify, SignJWT } from "jose";
 import { can, ROLES, type Action, type Role } from "@synapse/domain";
-import { organizationMemberships, type Db } from "@synapse/db";
+import { organizationMemberships, users, type Db } from "@synapse/db";
 import type { Config } from "../config";
 import { forbidden, unauthorized } from "./errors";
 
@@ -31,7 +31,7 @@ declare module "fastify" {
 const key = (secret: string) => new TextEncoder().encode(secret);
 
 export async function signSession(secret: string, claims: SessionClaims): Promise<string> {
-  return new SignJWT({ org: claims.organizationId, role: claims.role })
+  return new SignJWT({ org: claims.organizationId, role: claims.role, iatMs: Date.now() })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(claims.userId)
     .setAudience("session")
@@ -40,12 +40,17 @@ export async function signSession(secret: string, claims: SessionClaims): Promis
     .sign(key(secret));
 }
 
-export async function verifySession(secret: string, token: string): Promise<SessionClaims | null> {
+interface VerifiedSession extends SessionClaims {
+  /** Issue time in milliseconds (JWT `iat` only has second precision). */
+  issuedAtMs: number;
+}
+
+export async function verifySession(secret: string, token: string): Promise<VerifiedSession | null> {
   try {
     const { payload } = await jwtVerify(token, key(secret), { algorithms: ["HS256"], audience: "session" });
     const role = payload.role as Role;
-    if (!payload.sub || typeof payload.org !== "string" || !ROLES.includes(role)) return null;
-    return { userId: payload.sub, organizationId: payload.org, role };
+    if (!payload.sub || typeof payload.org !== "string" || !ROLES.includes(role) || typeof payload.iatMs !== "number") return null;
+    return { userId: payload.sub, organizationId: payload.org, role, issuedAtMs: payload.iatMs };
   } catch {
     return null;
   }
@@ -55,31 +60,37 @@ export function sessionCookieOptions(config: Config) {
   return { httpOnly: true, sameSite: "lax" as const, secure: config.isProd, path: "/", maxAge: SESSION_TTL_SECONDS };
 }
 
-/** Current role of the user in the session's organization, so removed members and role changes apply at once. */
-async function currentRole(db: Db, claims: SessionClaims): Promise<Role | null> {
+/**
+ * Current role of the user in the session's organization, so removed members and role changes apply at once;
+ * null when the membership is gone or the token predates the user's session cutoff.
+ */
+async function currentRole(db: Db, session: VerifiedSession): Promise<Role | null> {
   const [row] = await db
-    .select({ role: organizationMemberships.role })
+    .select({ role: organizationMemberships.role, sessionsValidAfter: users.sessionsValidAfter })
     .from(organizationMemberships)
+    .innerJoin(users, eq(users.id, organizationMemberships.userId))
     .where(
       and(
-        eq(organizationMemberships.userId, claims.userId),
-        eq(organizationMemberships.organizationId, claims.organizationId),
+        eq(organizationMemberships.userId, session.userId),
+        eq(organizationMemberships.organizationId, session.organizationId),
       ),
     )
     .limit(1);
-  return row ? (row.role as Role) : null;
+  if (!row) return null;
+  if (row.sessionsValidAfter && session.issuedAtMs < row.sessionsValidAfter.getTime()) return null;
+  return row.role as Role;
 }
 
 export function decorateAuth(app: FastifyInstance) {
   app.decorateRequest("session", null);
   app.decorate("requireAuth", (action?: Action) => async (request: FastifyRequest) => {
     const token = request.cookies[SESSION_COOKIE];
-    const claims = token ? await verifySession(app.config.sessionSecret, token) : null;
-    if (!claims) throw unauthorized();
-    const role = await currentRole(app.db, claims);
+    const verified = token ? await verifySession(app.config.sessionSecret, token) : null;
+    if (!verified) throw unauthorized();
+    const role = await currentRole(app.db, verified);
     if (!role) throw unauthorized("Session is no longer valid");
     if (action && !can(role, action)) throw forbidden();
-    request.session = { ...claims, role };
+    request.session = { userId: verified.userId, organizationId: verified.organizationId, role };
   });
 }
 

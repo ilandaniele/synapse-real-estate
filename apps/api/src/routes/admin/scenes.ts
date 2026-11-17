@@ -2,11 +2,12 @@ import { and, eq, or } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { HotspotInput, HotspotPatch, SceneInput, ScenePatch, Uuid } from "@synapse/contracts";
-import { panoramaAssets, sceneHotspots, scenes, units, type Db } from "@synapse/db";
+import { panoramaAssets, sceneHotspots, scenes, type Db } from "@synapse/db";
 import { audit, changedKeys } from "../../lib/audit";
 import { session } from "../../lib/auth";
 import { badRequest, conflict, isUniqueViolation, notFound } from "../../lib/errors";
 import { hotspotToContract, loadScenes } from "../../lib/mappers";
+import { assertUnitInDevelopment } from "../../lib/ownership";
 import { IdParams } from "../../lib/params";
 import { toStoredPath } from "../../lib/storage";
 import { findDevelopment } from "./developments";
@@ -20,15 +21,6 @@ async function findScene(db: Db, organizationId: string, id: string) {
     .where(and(eq(scenes.id, id), eq(scenes.organizationId, organizationId)));
   if (!scene) throw notFound("Scene");
   return scene;
-}
-
-async function assertUnitInDevelopment(db: Db, organizationId: string, developmentId: string, unitId: string | null | undefined) {
-  if (!unitId) return;
-  const [unit] = await db
-    .select({ id: units.id })
-    .from(units)
-    .where(and(eq(units.id, unitId), eq(units.developmentId, developmentId), eq(units.organizationId, organizationId)));
-  if (!unit) throw badRequest("unitId does not belong to this development");
 }
 
 interface PanoramaFields {

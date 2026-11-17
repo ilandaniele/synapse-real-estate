@@ -22,8 +22,9 @@ pnpm 9.15.9) on 2026-11-15. Nothing here is projected.
 | `packages/3d-engine` | `src/helpers.test.ts` | 14 |
 | `packages/tour-engine` | `src/geometry.test.ts`, `src/tour-navigator.test.ts` | 16 |
 | `tools/cad-importer` | `test/cad-importer.test.ts` | 7 |
-| `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security`, `deploy-config` | 65 |
-| **Total** | | **124 passed, 0 failed** (about 7 s wall clock) |
+| `workers/render-processing` | unit tests | 5 |
+| `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security`, `deploy-config`, `content`, `members` | 85 |
+| **Total** | | **149 passed, 0 failed** (run 2026-11-17) |
 
 The API tests start the real Fastify app with an in-memory PGlite database and cover 401, 403, 404, 409,
 413, 415 and 429 responses, cross-organization access (IDOR), the role matrix, the lead honeypot and rate

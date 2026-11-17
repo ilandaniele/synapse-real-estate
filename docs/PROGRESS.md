@@ -21,6 +21,9 @@ from a real run.
   - scenes and the visual hotspot editor;
   - versioned publishing;
   - leads with CSV export, uploads and job review.
+- Admin API (UI pending): CRUD for gallery, points of interest and floor plans (images from an uploaded
+  asset are copied to `published/<org>/`), member management (owner only, keeps at least one owner) and
+  password change that revokes older sessions.
 - Asynchronous ingestion pipeline with manual review. DWG, IFC, FBX and OBJ are rejected explicitly.
   Render without a configured backend fails explicitly.
 - Engine bugs found during integration and fixed in the engines:
@@ -34,7 +37,7 @@ from a real run.
 | Check | Result | Time |
 |---|---|---|
 | `pnpm typecheck` | pass, all packages | 6.7 s |
-| `pnpm test` | 124 passed, 0 failed | 7 s |
+| `pnpm test` | 149 passed, 0 failed (2026-11-17) | 7 s |
 | `pnpm build` | pass (showroom 10 routes, admin 8 routes) | 6.0 s |
 | `pnpm test:e2e` | 30 passed, 0 failed, 0 skipped | 1.1 min |
 

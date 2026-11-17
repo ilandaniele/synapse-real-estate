@@ -208,6 +208,63 @@ export const HotspotInput = Hotspot.omit({ id: true, sceneId: true }).extend({
 });
 export const HotspotPatch = HotspotInput.partial();
 
+/** An image is given either as an uploaded asset (published on save) or as a media path / https URL. */
+const ImageSource = z.object({
+  imageAssetId: Uuid.optional(),
+  imageUrl: z.string().min(1).max(2000).optional(),
+});
+
+const FloorPlanFields = ImageSource.extend({
+  unitId: Uuid.nullable(),
+  name: z.string().min(1).max(120),
+  width: z.number().positive().max(100_000),
+  height: z.number().positive().max(100_000),
+});
+export const FloorPlanInput = FloorPlanFields.extend({ unitId: Uuid.nullable().default(null) });
+export const FloorPlanPatch = FloorPlanFields.partial();
+
+const GalleryItemFields = ImageSource.extend({
+  unitId: Uuid.nullable(),
+  title: z.string().min(1).max(120),
+  credit: z.string().max(200),
+  sortOrder: z.number().int(),
+});
+export const GalleryItemInput = GalleryItemFields.extend({
+  unitId: Uuid.nullable().default(null),
+  credit: z.string().max(200).default(""),
+  sortOrder: z.number().int().default(0),
+});
+export const GalleryItemPatch = GalleryItemFields.partial();
+
+const PointOfInterestFields = PointOfInterest.omit({ id: true }).extend({
+  name: z.string().min(1).max(120),
+  distanceText: z.string().max(80).nullable(),
+});
+export const PointOfInterestInput = PointOfInterestFields.extend({
+  distanceText: z.string().max(80).nullable().default(null),
+});
+export const PointOfInterestPatch = PointOfInterestFields.partial();
+
+export const NewPassword = z.string().min(12).max(200);
+export const PasswordChangeInput = z.object({ currentPassword: z.string().min(1).max(200), newPassword: NewPassword });
+
+export const Member = z.object({
+  id: Uuid,
+  userId: Uuid,
+  email: z.string(),
+  name: z.string(),
+  role: Role,
+  createdAt: IsoDate,
+});
+export type Member = z.infer<typeof Member>;
+export const MemberInput = z.object({
+  email: z.string().trim().email().max(254),
+  name: z.string().trim().min(1).max(120),
+  role: Role,
+  password: NewPassword,
+});
+export const MemberPatch = z.object({ role: Role });
+
 export const UploadRequest = z.object({
   filename: z.string().min(1).max(200),
   size: z.number().int().positive(),

@@ -1,5 +1,3 @@
-import { copyFile, mkdir } from "node:fs/promises";
-import path from "node:path";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
@@ -11,7 +9,7 @@ import { session } from "../../lib/auth";
 import { badRequest, conflict, notFound } from "../../lib/errors";
 import { jobToContract } from "../../lib/mappers";
 import { IdParams } from "../../lib/params";
-import { resolveInside } from "../../lib/storage";
+import { copyToPublished } from "../../lib/storage";
 
 const ReviewInput = z.object({ decision: z.enum(["approve", "reject"]), note: z.string().max(500).optional() });
 
@@ -140,9 +138,7 @@ export default async function jobRoutes(app: FastifyInstance) {
     const [asset] = await app.db.select().from(assets).where(and(eq(assets.id, job.assetId), eq(assets.organizationId, organizationId)));
     const publishedRelative = `published/${organizationId}/${job.assetId}.glb`;
     if (asset?.storagePath) {
-      const target = resolveInside(app.config.storageDir, publishedRelative);
-      await mkdir(path.dirname(target), { recursive: true });
-      await copyFile(resolveInside(app.config.storageDir, asset.storagePath), target);
+      await copyToPublished(app.config.storageDir, asset.storagePath, publishedRelative);
     }
     await app.db.transaction(async (tx) => {
       if (mappable.length > 0) {

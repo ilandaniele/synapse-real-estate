@@ -1,10 +1,12 @@
 import bcrypt from "bcryptjs";
 import { and, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
-import { LoginInput, type SessionUser } from "@synapse/contracts";
+import { LoginInput, PasswordChangeInput, type SessionUser } from "@synapse/contracts";
 import { organizationMemberships, organizations, users } from "@synapse/db";
+import { audit } from "../lib/audit";
 import { SESSION_COOKIE, sessionCookieOptions, session, signSession } from "../lib/auth";
-import { unauthorized } from "../lib/errors";
+import { badRequest, unauthorized } from "../lib/errors";
+import { hashPassword, verifyPassword } from "../lib/passwords";
 
 // Compared against when the email is unknown so both failure paths cost one bcrypt verification.
 const DUMMY_HASH = bcrypt.hashSync("not-a-real-password", 10);
@@ -14,9 +16,11 @@ export interface AuthRouteOptions {
 }
 
 export default async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
+  const credentialRateLimit = { rateLimit: { max: opts.loginRateLimit, timeWindow: "1 minute" } };
+
   app.post(
     "/login",
-    { config: { rateLimit: { max: opts.loginRateLimit, timeWindow: "1 minute" } } },
+    { config: credentialRateLimit },
     async (request, reply) => {
       const input = LoginInput.parse(request.body);
       const [row] = await app.db
@@ -36,7 +40,7 @@ export default async function authRoutes(app: FastifyInstance, opts: AuthRouteOp
         .orderBy(organizationMemberships.createdAt)
         .limit(1);
 
-      const valid = await bcrypt.compare(input.password, row?.passwordHash ?? DUMMY_HASH);
+      const valid = await verifyPassword(input.password, row?.passwordHash ?? DUMMY_HASH);
       if (!row || !valid || !row.organizationId || !row.role || !row.organizationName) {
         throw unauthorized("Invalid email or password");
       }
@@ -63,6 +67,24 @@ export default async function authRoutes(app: FastifyInstance, opts: AuthRouteOp
     reply.clearCookie(SESSION_COOKIE, { path: "/" });
     reply.header("Cache-Control", "no-store");
     return { ok: true };
+  });
+
+  /** Changes the password, revokes every other session of the user and re-issues the current one. */
+  app.post("/password", { preHandler: app.requireAuth(), config: credentialRateLimit }, async (request, reply) => {
+    const claims = session(request);
+    const input = PasswordChangeInput.parse(request.body);
+    const [user] = await app.db.select({ passwordHash: users.passwordHash }).from(users).where(eq(users.id, claims.userId));
+    if (!user || !(await verifyPassword(input.currentPassword, user.passwordHash))) {
+      throw badRequest("Current password is incorrect");
+    }
+    const passwordHash = await hashPassword(input.newPassword);
+    await app.db.transaction(async (tx) => {
+      await tx.update(users).set({ passwordHash, sessionsValidAfter: new Date() }).where(eq(users.id, claims.userId));
+      await audit(tx, claims, "user.password_change", "user", claims.userId);
+    });
+    reply.setCookie(SESSION_COOKIE, await signSession(app.config.sessionSecret, claims), sessionCookieOptions(app.config));
+    reply.header("Cache-Control", "no-store");
+    return reply.status(204).send();
   });
 
   app.get("/me", { preHandler: app.requireAuth() }, async (request, reply) => {
