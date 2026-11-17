@@ -94,6 +94,17 @@ NAME=synapse-micro SHAPE=VM.Standard.E2.1.Micro deploy/oracle/launch-a1.sh
 Con 1 GB no se puede construir el stack en la VM: las imágenes se construyen en una máquina x86_64 y se
 copian (`docker save | ssh … docker load`), y la VM necesita swap.
 
+Desplegado así el 2026-11-17 en `synapse-micro`:
+
+| Paso | Resultado |
+|---|---|
+| Swap de 4 GB (`/swapfile`, `vm.swappiness=10`) e iptables 80/443 | hecho |
+| `docker build --platform linux/amd64` local + `docker save \| gzip -1 \| ssh … docker load` | 1,88 GB, 207 s |
+| `pnpm assets:generate` en la VM | unos 20 min (1/8 OCPU); la sesión SSH se cortó, usar `nohup … &` |
+| `pnpm db:seed` (con `nohup`) | completo |
+| `up -d --no-build` | 4 servicios arriba; memoria 500 MB + 737 MB de swap |
+| `https://showroom.134-65-28-81.sslip.io/`, manifiesto, GLB, `https://admin.…/login` | 200; HTTP → 308; HSTS, CSP y `nosniff` presentes |
+
 ### Instalación en la VM
 ```bash
 sudo apt-get update && sudo apt-get install -y docker.io docker-compose-v2 git
