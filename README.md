@@ -61,8 +61,8 @@ pnpm workers          # workers independientes (solo con Postgres real)
 
 Los documentos de análisis originales (`docs/EVIDENCIA_DE_LOS_TRES_VIDEOS.md`,
 `docs/ARQUITECTURA_INMOBILIARIA.md`, `docs/BACKLOG_PRODUCTO_REAL.md`, `docs/LIBRERIAS_Y_VERIFICACION.md`,
-`docs/FUENTES_Y_LICENCIAS.md`) y los fotogramas de `referencias/` se conservan como contexto; los fotogramas
-no son assets publicables.
+`docs/FUENTES_Y_LICENCIAS.md`) se conservan como contexto. Los montajes de fotogramas de `referencias/` son
+material de terceros: quedan solo en copias locales (ignorados por git) y no se publican en el repositorio.
 
 ## Atribuciones
 Mapa: estilo y teselas de [OpenFreeMap](https://openfreemap.org), © OpenMapTiles, datos © colaboradores de

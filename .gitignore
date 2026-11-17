@@ -15,3 +15,4 @@ next-env.d.ts
 *.mp4
 .claude/settings.local.json
 !.env.production.example
+referencias/*.jpg
