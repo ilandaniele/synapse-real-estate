@@ -13,7 +13,7 @@ RETRY_SECONDS="${RETRY_SECONDS:-90}"
 MAX_ATTEMPTS="${MAX_ATTEMPTS:-0}"
 OCI_CONFIG="${OCI_CONFIG:-$HOME/.oci/config}"
 SHAPE="VM.Standard.A1.Flex"
-RETRYABLE='Out of host capacity|Out of capacity|TooManyRequests|"status": 429'
+RETRYABLE='Out of host capacity|Out of capacity|TooManyRequests|"status": 429|timed out|Connection'
 
 log() { printf '[%s] %s\n' "$(date '+%H:%M:%S')" "$*"; }
 fail() { log "ERROR: $*" >&2; exit 1; }
@@ -70,10 +70,15 @@ COMPARTMENT_ID="${COMPARTMENT_ID:-$(tenancy_from_config)}"
 [ -f "$SSH_KEY_FILE" ] || fail "SSH public key not found: $SSH_KEY_FILE"
 SSH_KEY="$(tr -d '\r\n' < "$SSH_KEY_FILE")"
 
-found="$(existing_instance)"
-if [ -n "$found" ] && [ "$found" != "null" ]; then
-  fail "Instance '$NAME' already exists ($found). Not launching a second one."
-fi
+ensure_no_instance() {
+  local found
+  found="$(existing_instance)" || return 1
+  if [ -n "$found" ] && [ "$found" != "null" ]; then
+    fail "Instance '$NAME' already exists ($found). Not launching a second one."
+  fi
+}
+
+ensure_no_instance
 
 SUBNET_ID="$(subnet_id)"
 [ -n "$SUBNET_ID" ] && [ "$SUBNET_ID" != "null" ] \
@@ -88,6 +93,11 @@ log "Launching $NAME ($SHAPE, $OCPUS OCPU, $MEMORY_GB GB) in $AD, retry every ${
 attempt=0
 while :; do
   attempt=$((attempt + 1))
+  if [ "$attempt" -gt 1 ] && ! ensure_no_instance; then
+    log "Attempt $attempt: could not check existing instances. Next try in ${RETRY_SECONDS}s"
+    sleep "$RETRY_SECONDS"
+    continue
+  fi
   if output="$(launch 2>&1)"; then
     instance_id="$(printf '%s' "$output" | tail -n 1 | tr -d '\r')"
     log "RUNNING after $attempt attempt(s): $instance_id"
@@ -98,6 +108,6 @@ while :; do
   if [ "$MAX_ATTEMPTS" -gt 0 ] && [ "$attempt" -ge "$MAX_ATTEMPTS" ]; then
     fail "No capacity after $attempt attempts"
   fi
-  log "Attempt $attempt: no capacity. Next try in ${RETRY_SECONDS}s"
+  log "Attempt $attempt: $(printf '%s' "$output" | grep -Eo "$RETRYABLE" | head -n 1). Next try in ${RETRY_SECONDS}s"
   sleep "$RETRY_SECONDS"
 done

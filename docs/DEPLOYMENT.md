@@ -79,7 +79,8 @@ Variables: `OCPUS` (4), `MEMORY_GB` (24), `NAME` (`synapse-showroom`), `SUBNET_N
 `COMPARTMENT_ID` (por defecto la *tenancy* de `~/.oci/config`).
 
 El script no lanza nada si ya existe una instancia no terminada con el mismo nombre, solo reintenta los
-errores de capacidad y de límite de peticiones (429), y asigna IP pública. Con menos recursos
+errores de capacidad, de límite de peticiones (429) y de red (timeouts), y antes de cada intento vuelve a
+comprobar que la instancia no exista (un timeout puede haberla creado igual). Asigna IP pública. Con menos recursos
 (`OCPUS=2 MEMORY_GB=12`) suele encontrar capacidad antes; todo queda dentro de Always Free.
 
 ### Instalación en la VM
