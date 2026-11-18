@@ -24,5 +24,6 @@ repositorio público en GitHub.
 - [x] Roadmap Fase 4 — Webhooks de leads firmados para CRM ([WEBHOOKS.md](WEBHOOKS.md), ADR-020).
 - [x] Roadmap Fase 4 — Analítica de recorridos por unidad y estancia, sin datos personales (ADR-021).
 - [x] Roadmap Fase 4 — Reservas con señal y pago simulado; la unidad pasa a reservada al pagar (ADR-022).
+- [x] Stripe Checkout con webhook firmado como proveedor real (ADR-023); cobrar exige cuenta propia.
 
 Detalle de avance, comandos y resultados de tests: [PROGRESS.md](PROGRESS.md).

@@ -450,19 +450,26 @@ export const ReservationInput = LeadInput.pick({ developmentSlug: true, name: tr
   unitId: Uuid,
 });
 export type ReservationInput = z.infer<typeof ReservationInput>;
-/** `checkoutToken` authorises the payment step; it is returned once and only its hash is stored. */
+/**
+ * `checkoutToken` authorises the payment step and the status check; it is returned once and only its hash is stored.
+ * `checkoutUrl` is the hosted payment page (Stripe Checkout), null with the mock provider.
+ */
 export const ReservationCreated = z.object({
   id: Uuid,
   checkoutToken: z.string(),
   unitCode: z.string(),
   depositAmount: Decimal,
   currency: Currency,
+  checkoutUrl: z.string().url().nullable(),
 });
 export type ReservationCreated = z.infer<typeof ReservationCreated>;
 /** The mock provider lets a test or a demo choose the outcome that a real card network would decide. */
 export const MockPaymentInput = z.object({ checkoutToken: z.string().min(20).max(100), outcome: z.enum(["approve", "decline"]) });
 export type MockPaymentInput = z.infer<typeof MockPaymentInput>;
 export const ReservationStatus = z.enum(RESERVATION_STATUSES);
+/** What the buyer sees after returning from the hosted payment page. */
+export const ReservationProgress = z.object({ status: ReservationStatus, unitCode: z.string() });
+export type ReservationProgress = z.infer<typeof ReservationProgress>;
 export const Reservation = z.object({
   id: Uuid,
   developmentId: Uuid,

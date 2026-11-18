@@ -40,7 +40,10 @@ automated test, and the full suites passed after the fixes (see [TESTING.md](TES
   and resolve to public addresses, checked on create and before each send; redirects are not followed and each
   request times out after 5 s. DNS rebinding between the check and the connection is a known limit
   ([WEBHOOKS.md](WEBHOOKS.md)).
-- **Reservations:** only a simulated payment exists; no card data is collected and no money moves. The checkout
+- **Reservations:** card data never reaches our servers: `PAYMENT_PROVIDER=stripe` sends the buyer to Stripe's
+  hosted Checkout, and only the signed webhook (`STRIPE_WEBHOOK_SECRET`, HMAC-SHA256, 5 minute tolerance,
+  constant-time compare) can mark a reservation paid; the return URL and the status endpoint never do. The
+  status endpoint needs the checkout token and answers 404 otherwise. `mock` simulates the payment. The checkout
   token is 32 random bytes stored as sha256 and works only while the reservation is pending. The unit is
   reserved by a conditional update in one transaction, so two payments cannot both win. `PAYMENT_PROVIDER`
   defaults to `none` in production. Creation shares the lead limit (5/min/IP); payments allow 10/min/IP.

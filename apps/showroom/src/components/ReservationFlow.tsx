@@ -8,13 +8,24 @@ import { INTL_LOCALE } from "@synapse/domain";
 import { EmptyState, Price, Spinner } from "@synapse/ui";
 import { useI18n } from "@/i18n/I18nProvider";
 import type { Messages } from "@/i18n/messages";
-import { payDeposit, ReservationError, startReservation, useReservationSettings } from "@/lib/reservations";
+import { payDeposit, redirectToCheckout, ReservationError, startReservation, useReservationSettings } from "@/lib/reservations";
 import { INPUT } from "./LeadForm";
 import { ManifestGate } from "./ManifestGate";
+import { ReservationPaid, ReservationReturn } from "./ReservationReturn";
 import { BTN_PRIMARY } from "./UnitCard";
 
 type Field = "name" | "email" | "phone" | "consent";
-type Step = { name: "form" } | { name: "checkout"; reservation: ReservationCreated } | { name: "paid"; reservation: ReservationCreated };
+type Step =
+  | { name: "form" }
+  | { name: "redirecting"; reservation: ReservationCreated }
+  | { name: "checkout"; reservation: ReservationCreated }
+  | { name: "paid"; reservation: ReservationCreated };
+
+/** Set when Stripe Checkout sends the buyer back (`?reservation=<id>[&cancelled=1]`). */
+export interface CheckoutReturn {
+  reservationId: string;
+  cancelled: boolean;
+}
 
 const BTN_OUTLINE = "inline-flex min-h-11 items-center justify-center rounded-md border border-slate-400 px-6 text-sm font-semibold hover:bg-slate-100";
 
@@ -171,16 +182,22 @@ function MockCheckout({ reservation, onPaid }: { reservation: ReservationCreated
   );
 }
 
-function ReservationPage({ manifest, slug }: { manifest: DevelopmentManifest; slug: string }) {
+function ReservationPage({ manifest, slug, returned }: { manifest: DevelopmentManifest; slug: string; returned?: CheckoutReturn }) {
   const { locale, t } = useI18n();
   const settings = useReservationSettings();
   const [step, setStep] = useState<Step>({ name: "form" });
+
+  function onCreated(reservation: ReservationCreated) {
+    if (!reservation.checkoutUrl) return setStep({ name: "checkout", reservation });
+    setStep({ name: "redirecting", reservation });
+    redirectToCheckout(reservation, reservation.checkoutUrl);
+  }
   const unit = manifest.units.find((u) => u.slug === slug);
 
   if (!unit) return <EmptyState title={t.common.unitNotFound} description={t.sheet.notPublished} />;
   if (settings.isPending) return <Spinner label={t.common.loading} />;
   const offered = settings.data?.enabled && settings.data.depositAmount;
-  const available = unit.status === "AVAILABLE" || step.name !== "form";
+  const available = unit.status === "AVAILABLE" || step.name !== "form" || Boolean(returned);
   const deposit = step.name === "form" ? { amount: settings.data?.depositAmount ?? "0", currency: unit.currency } : { amount: step.reservation.depositAmount, currency: step.reservation.currency };
 
   return (
@@ -201,15 +218,16 @@ function ReservationPage({ manifest, slug }: { manifest: DevelopmentManifest; sl
             <Price amount={deposit.amount} currency={deposit.currency} locale={INTL_LOCALE[locale]} className="font-semibold" />
           </p>
           <div className="mt-6 rounded-xl bg-white p-6 shadow-sm">
-            {step.name === "form" ? (
-              <ReservationForm developmentSlug={manifest.development.slug} unit={unit} onCreated={(reservation) => setStep({ name: "checkout", reservation })} />
+            {returned ? (
+              <ReservationReturn reservationId={returned.reservationId} cancelled={returned.cancelled} retryHref={`/reservar/${unit.slug}`} />
+            ) : step.name === "form" ? (
+              <ReservationForm developmentSlug={manifest.development.slug} unit={unit} onCreated={onCreated} />
+            ) : step.name === "redirecting" ? (
+              <Spinner label={t.reservation.redirecting} />
             ) : step.name === "checkout" ? (
               <MockCheckout reservation={step.reservation} onPaid={() => setStep({ name: "paid", reservation: step.reservation })} />
             ) : (
-              <div role="status" data-testid="reservation-paid" className="text-emerald-900">
-                <p className="text-lg font-semibold">{t.reservation.paidTitle(step.reservation.unitCode)}</p>
-                <p className="mt-1 text-sm">{t.reservation.paidText}</p>
-              </div>
+              <ReservationPaid unitCode={step.reservation.unitCode} />
             )}
           </div>
         </>
@@ -218,6 +236,6 @@ function ReservationPage({ manifest, slug }: { manifest: DevelopmentManifest; sl
   );
 }
 
-export function ReservationRoute({ slug }: { slug: string }) {
-  return <ManifestGate>{(manifest) => <ReservationPage manifest={manifest} slug={slug} />}</ManifestGate>;
+export function ReservationRoute({ slug, returned }: { slug: string; returned?: CheckoutReturn }) {
+  return <ManifestGate>{(manifest) => <ReservationPage manifest={manifest} slug={slug} returned={returned} />}</ManifestGate>;
 }

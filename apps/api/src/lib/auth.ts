@@ -7,6 +7,7 @@ import { organizationMemberships, users, type Db } from "@synapse/db";
 import type { ObjectStorage } from "@synapse/storage";
 import type { Config } from "../config";
 import type { Mailer } from "./mailer";
+import type { PaymentGateway } from "./stripe";
 import { forbidden, unauthorized } from "./errors";
 
 export const SESSION_COOKIE = "synapse_session";
@@ -25,6 +26,8 @@ declare module "fastify" {
     storage: ObjectStorage;
     /** Null in production without SMTP_URL: email features answer 503. */
     mailer: Mailer | null;
+    /** Null unless PAYMENT_PROVIDER=stripe (or a test injects a gateway). */
+    paymentGateway: PaymentGateway | null;
     /** preHandler factory: authenticates the session cookie and (optionally) checks an RBAC action. */
     requireAuth: (action?: Action) => (request: FastifyRequest) => Promise<void>;
   }

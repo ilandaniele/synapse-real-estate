@@ -184,3 +184,22 @@ Formato corto: contexto, decisión, consecuencias. Estado: Aceptada salvo indica
   del endpoint `mock-payment`, y gestionar reembolsos. El manifiesto público es una instantánea: la unidad sigue
   apareciendo como disponible hasta la siguiente publicación, aunque el API ya rechaza reservarla (409). Las
   reservas pendientes no caducan solas.
+
+## ADR-023 Stripe Checkout como proveedor de pago real
+- **Contexto**: ADR-022 dejó la reserva con un pago simulado. Para cobrar señales de verdad hace falta un
+  proveedor que tome los datos de tarjeta sin que pasen por nuestro servidor.
+- **Decisión**: `PAYMENT_PROVIDER=stripe` crea una sesión de Stripe Checkout alojada por la API REST
+  (form-encoded, sin SDK, timeout 10 s) con la señal en unidades menores, el email del comprador y el id de la
+  reserva en `metadata`. El showroom redirige a esa página; Stripe devuelve al comprador a
+  `SHOWROOM_PUBLIC_URL/reservar/<slug>?reservation=<id>` y la página consulta
+  `GET /reservations/:id/status` con el token de checkout guardado en `sessionStorage`. El pago solo se confirma
+  por el webhook `POST /reservations/stripe/webhook`, firmado con `STRIPE_WEBHOOK_SECRET` (HMAC-SHA256 sobre
+  `t.body`, 5 min de tolerancia, comparación en tiempo constante); la URL de retorno nunca marca nada como
+  pagado. `completed`/`async_payment_succeeded` con `payment_status: paid` liquidan la reserva con la misma
+  transacción que el mock; `expired`/`async_payment_failed` la marcan `FAILED`. Los reenvíos son idempotentes.
+  Si Stripe falla al crear la sesión, la reserva queda `FAILED` y el API responde 502.
+- **Consecuencias**: hace falta una cuenta de Stripe y registrar el webhook en su panel; sin ella se usa `mock`.
+  Los tests usan una pasarela falsa inyectada y, si `STRIPE_MOCK_URL` apunta a `stripe/stripe-mock`, validan la
+  petición real contra la API. Un pago que llega cuando otra reserva ya se llevó la unidad deja la reserva
+  `FAILED` y registra un aviso: el reembolso se hace a mano desde el panel de Stripe. Un checkout cancelado
+  queda `PENDING` hasta que Stripe envía `checkout.session.expired` (24 h por defecto).

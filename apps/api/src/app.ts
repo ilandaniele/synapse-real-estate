@@ -12,6 +12,7 @@ import { decorateAuth } from "./lib/auth";
 import { errorHandler, forbidden, notFoundHandler } from "./lib/errors";
 import { logMailer, smtpMailer, type Mailer } from "./lib/mailer";
 import { registerMetrics } from "./lib/metrics";
+import { stripeGateway, type PaymentGateway } from "./lib/stripe";
 import { buildOpenApiDocument } from "./lib/openapi";
 import authRoutes from "./routes/auth";
 import healthRoutes from "./routes/health";
@@ -44,6 +45,8 @@ export interface BuildAppOptions {
   storage?: ObjectStorage;
   /** Defaults to SMTP when `smtpUrl` is set, else the log outside production, else no email. */
   mailer?: Mailer;
+  /** Defaults to Stripe Checkout when `paymentProvider` is "stripe"; tests inject a fake. */
+  paymentGateway?: PaymentGateway;
   /** Per-IP requests/minute. Defaults: global 300, login 10, leads 5. */
   rateLimit?: { global?: number; login?: number; leads?: number; visits?: number; payments?: number };
   logger?: boolean;
@@ -99,6 +102,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     loginRateLimit: 10,
     paymentProvider: "mock",
     reservationDeposit: "3000.00",
+    showroomPublicUrl: "http://localhost:3000",
     ...options.config,
     storageDir: options.storageDir,
   };
@@ -115,6 +119,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   const storage = options.storage ?? new LocalStorage(options.storageDir);
   app.decorate("storage", storage);
   app.decorate("mailer", options.mailer ?? defaultMailer(config, app));
+  app.decorate("paymentGateway", options.paymentGateway ?? (config.stripe ? stripeGateway(config.stripe.apiUrl, config.stripe.secretKey) : null));
   decorateAuth(app);
   app.setErrorHandler(errorHandler);
   app.setNotFoundHandler(notFoundHandler);
@@ -168,7 +173,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
       await api.register(invitationAcceptRoutes, { prefix: "/auth", credentialRateLimit: limits.login });
       await api.register(passwordResetRoutes, { prefix: "/auth", credentialRateLimit: limits.login });
       await api.register(publicRoutes, { prefix: "/public", leadRateLimit: limits.leads, visitRateLimit: limits.visits });
-      await api.register(reservationRoutes, { prefix: "/public/reservations", createRateLimit: limits.leads, paymentRateLimit: limits.payments });
+      await api.register(reservationRoutes, { prefix: "/public/reservations", createRateLimit: limits.leads, paymentRateLimit: limits.payments, statusRateLimit: limits.visits });
       await api.register(uploadRoutes);
       await api.register(
         async (admin) => {

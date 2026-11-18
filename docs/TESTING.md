@@ -25,7 +25,7 @@ pnpm 9.15.9) on 2026-11-15. Nothing here is projected.
 | `workers/render-processing` | unit tests | 5 |
 | `packages/storage` | local and S3 drivers | 15 (2 need `S3_TEST_ENDPOINT`) |
 | `packages/cubemap` | `src/cubemap.test.ts` | 5 |
-| `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security`, `deploy-config`, `content`, `members`, `storage-s3`, `observability`, `invitations`, `mailpit`, `publication-history`, `publication-diff.unit`, `webhooks`, `visits`, `reservations` | 153 (3 need `S3_TEST_ENDPOINT`, 1 needs `MAILPIT_SMTP_URL`) |
+| `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security`, `deploy-config`, `content`, `members`, `storage-s3`, `observability`, `invitations`, `mailpit`, `publication-history`, `publication-diff.unit`, `webhooks`, `visits`, `reservations`, `reservations-stripe` | 167 (3 need `S3_TEST_ENDPOINT`, 1 needs `MAILPIT_SMTP_URL`, 2 need `STRIPE_MOCK_URL`, e.g. `docker run -d -p 12111:12111 stripe/stripe-mock:v0.197.0`) |
 | `apps/showroom` | `src/lib/kiosk.test.ts`, `src/lib/analytics.test.ts`, `src/i18n/resolve-locale.test.ts` | 10 |
 | **Total** | | **249 passed, 0 failed, 6 skipped without `S3_TEST_ENDPOINT` and `MAILPIT_SMTP_URL`** (run 2026-11-18) |
 
@@ -93,7 +93,7 @@ Specs (`tests/e2e`):
 | `flow-e-admin-content` | Gallery item with an uploaded image, point of interest with a coordinate error then fixed, floor-plan list; owner creates a VIEWER member who cannot see «Miembros», gets a wrong-current-password error, changes the password and logs in with it |
 | `flow-f-invitations` | Needs `E2E_SMTP_URL` (Mailpit). Owner invites a SALES member, the link is read from Mailpit, the invitee accepts and appears in «Miembros»; then «¿Olvidaste tu contraseña?», reset link from Mailpit, the old password fails and the new one works |
 | `flow-h-analytics` | Visiting Villa 6's sheet and tour sends visit events (204); the admin «Analítica» page lists V6 and its rooms, also over the last 7 days |
-| `flow-i-reservation` | From Villa 5's sheet «Reservar con señal»: empty form shows 3 errors; a declined simulated payment shows an error, an approved one confirms V5; the admin «Reservas» page, filtered by «Pagada», lists V5 |
+| `flow-i-reservation` | From Villa 5's sheet «Reservar con señal»: empty form shows 3 errors; a declined simulated payment shows an error, an approved one confirms V5; the admin «Reservas» page, filtered by «Pagada», lists V5. Two more tests intercept the API to act as Stripe: the form redirects to the returned `checkoutUrl` and the return page polls the status with the checkout token until PAID; a cancelled return shows a notice and a retry link back to the form |
 | `flow-g-webhooks` | Owner creates a webhook to a local receiver from «Integraciones», the secret is shown once; a public lead arrives signed (HMAC checked in the test); the delivery log shows «Entregado»; the webhook is deleted |
 | `csp` | Masterplan, tour and location pages log no Content Security Policy violations (catches the production CSP blocking the GLB decoder's WebAssembly) |
 | `kiosk` | Kiosk mode with Playwright's simulated clock: after 90 s idle the warning appears and 15 s later the showroom returns home with the search cleared; «Seguir navegando» cancels it; the mode persists across pages and `?kiosk=0` turns it off; no reset outside kiosk mode; the manifest opens fullscreen in kiosk mode |

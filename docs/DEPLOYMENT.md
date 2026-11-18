@@ -111,6 +111,16 @@ migración `0007_reservations` corre sola al arrancar el API. Después se añadi
 `{"enabled":true,"depositAmount":"3000.00"}`, `/reservar/villa-5` y `/reservations` del admin responden 200 y
 `/api/v1/admin/reservations` sin sesión responde 401. No se hizo una reserva de prueba en producción.
 
+Para cobrar con Stripe (ADR-023), con una cuenta propia:
+1. En el panel de Stripe, crear el endpoint de webhook
+   `https://<SHOWROOM_HOST>/api/v1/public/reservations/stripe/webhook` con los eventos
+   `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
+   `checkout.session.async_payment_failed` y `checkout.session.expired`.
+2. En `.env.production`: `PAYMENT_PROVIDER=stripe`, `STRIPE_SECRET_KEY` (`sk_live_…` o una clave restringida
+   `rk_live_…` con permiso de escritura en Checkout Sessions), `STRIPE_WEBHOOK_SECRET` (`whsec_…` del endpoint) y
+   `SHOWROOM_PUBLIC_URL=https://<SHOWROOM_HOST>`. El API no arranca si falta alguna.
+3. Reiniciar solo el API. Probar primero con claves `sk_test_…` y una tarjeta de prueba de Stripe.
+
 ### Instalación en la VM
 ```bash
 sudo apt-get update && sudo apt-get install -y docker.io docker-compose-v2 git

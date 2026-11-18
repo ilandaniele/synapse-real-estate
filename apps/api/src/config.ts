@@ -26,8 +26,14 @@ const Env = z.object({
   // Logins, invitation accepts and password resets per IP per minute.
   LOGIN_RATE_LIMIT: z.coerce.number().int().min(1).max(1000).default(10),
   // Online reservations. Unset: the mock provider outside production, none (reservations off) in production.
-  PAYMENT_PROVIDER: z.enum(["none", "mock"]).optional(),
+  PAYMENT_PROVIDER: z.enum(["none", "mock", "stripe"]).optional(),
   RESERVATION_DEPOSIT: z.string().refine(isValidDecimalAmount, "must be a decimal amount").default("3000.00"),
+  // Stripe Checkout, required when PAYMENT_PROVIDER=stripe. STRIPE_API_URL points at stripe-mock in tests.
+  STRIPE_SECRET_KEY: z.union([z.literal(""), z.string().regex(/^(sk|rk)_(test|live)_/)]).default(""),
+  STRIPE_WEBHOOK_SECRET: z.union([z.literal(""), z.string().startsWith("whsec_")]).default(""),
+  STRIPE_API_URL: z.string().url().default("https://api.stripe.com"),
+  // Public https URL of the showroom (https://<SHOWROOM_HOST>); Stripe sends the buyer back here.
+  SHOWROOM_PUBLIC_URL: z.union([z.literal(""), z.string().url()]).default(""),
 });
 
 export interface Config {
@@ -47,9 +53,17 @@ export interface Config {
   loginRateLimit: number;
   paymentProvider: PaymentProvider;
   reservationDeposit: string;
+  stripe?: StripeConfig;
+  showroomPublicUrl: string;
 }
 
-export type PaymentProvider = "none" | "mock";
+export type PaymentProvider = "none" | "mock" | "stripe";
+
+export interface StripeConfig {
+  secretKey: string;
+  webhookSecret: string;
+  apiUrl: string;
+}
 
 export const defaultMediaBaseUrl = (publicApiUrl: string) => `${publicApiUrl}/media`;
 
@@ -71,6 +85,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, warn: (message:
   }
   const publicApiUrl = e.PUBLIC_API_URL.replace(/\/+$/, "");
   if (isProd && e.SMTP_URL && !e.ADMIN_PUBLIC_URL) throw new Error("ADMIN_PUBLIC_URL is required in production when SMTP_URL is set");
+  const paymentProvider = e.PAYMENT_PROVIDER ?? (isProd ? "none" : "mock");
+  if (paymentProvider === "stripe" && (!e.STRIPE_SECRET_KEY || !e.STRIPE_WEBHOOK_SECRET)) {
+    throw new Error("STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET are required when PAYMENT_PROVIDER=stripe");
+  }
+  if (paymentProvider === "stripe" && isProd && !e.SHOWROOM_PUBLIC_URL) throw new Error("SHOWROOM_PUBLIC_URL is required in production with Stripe");
   return {
     isProd,
     port: e.API_PORT,
@@ -86,7 +105,12 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, warn: (message:
     mailFrom: e.MAIL_FROM,
     adminPublicUrl: (e.ADMIN_PUBLIC_URL || "http://localhost:3001").replace(/\/+$/, ""),
     loginRateLimit: e.LOGIN_RATE_LIMIT,
-    paymentProvider: e.PAYMENT_PROVIDER ?? (isProd ? "none" : "mock"),
+    paymentProvider,
     reservationDeposit: e.RESERVATION_DEPOSIT,
+    stripe:
+      paymentProvider === "stripe"
+        ? { secretKey: e.STRIPE_SECRET_KEY, webhookSecret: e.STRIPE_WEBHOOK_SECRET, apiUrl: e.STRIPE_API_URL.replace(/\/+$/, "") }
+        : undefined,
+    showroomPublicUrl: (e.SHOWROOM_PUBLIC_URL || "http://localhost:3000").replace(/\/+$/, ""),
   };
 }
