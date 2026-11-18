@@ -18,7 +18,7 @@ pnpm 9.15.9) on 2026-11-15. Nothing here is projected.
 |---|---|---|
 | `packages/domain` | `src/domain.test.ts` | 19 |
 | `packages/assets` | `src/glb.test.ts` | 3 |
-| `packages/db` | `test/db.test.ts` | 2 |
+| `packages/db` | `test/db.test.ts`, `test/copy-database.test.ts` | 5 |
 | `packages/3d-engine` | `src/helpers.test.ts` | 14 |
 | `packages/tour-engine` | `src/geometry.test.ts`, `src/tour-navigator.test.ts`, `src/panorama-source.test.ts` | 18 |
 | `tools/cad-importer` | `test/cad-importer.test.ts`, `test/ifc.test.ts` | 11 |

@@ -104,8 +104,9 @@ Masterplan times include software WebGL. Expect real GPUs to be faster, but this
   with `'wasm-unsafe-eval'` and covered by `tests/e2e/csp.spec.ts`.
 - Panoramas are cut into multiresolution cube tiles (512 px tiles, faces 512–4096 px). Scenes created from a
   media URL instead of a processed asset still load the single equirect image.
-- Postgres is tested (API suite, seed, backup/restore and an API + worker smoke), but the Postgres compose
-  stack was not brought up on the VM. Redis/BullMQ is untested. S3 is tested against local RustFS only.
+- The VM runs on Postgres since 2026-11-18, with the PGlite data copied over by `db:copy-from-pglite`, a
+  separate asset worker and daily backups (BACKUPS.md). Redis/BullMQ is untested. S3 is tested against local
+  RustFS only.
 - The deployed VM has no SMTP configured. Owners share invite and reset links by hand from the admin (ADR-024);
   the self-service «¿Olvidaste tu contraseña?» answers 503 there until SMTP is set.
 - The deployed VM runs reservations with `PAYMENT_PROVIDER=mock` (simulated checkout, no money moves). Stripe

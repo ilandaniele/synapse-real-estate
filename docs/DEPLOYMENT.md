@@ -115,6 +115,12 @@ Redespliegue del 2026-11-18 con Stripe Checkout y enlaces copiables sin SMTP (co
 `PAYMENT_PROVIDER=mock` y sin SMTP. El showroom, el manifiesto y `/login` del admin responden 200, y
 `/api/v1/admin/members` sin sesión responde 401. No se generaron invitaciones ni enlaces en producción.
 
+Paso a Postgres del 2026-11-18 (commit `9571fef`): la VM corre ahora
+`docker compose -f docker-compose.prod.yml -f docker-compose.postgres.yml`, con los datos de PGlite copiados a Postgres, el `asset-worker` aparte y backups diarios en
+`~/synapse/backups`. El volumen PGlite `synapse_data` se conserva como vuelta atrás. Detalle y pruebas en
+[BACKUPS.md](BACKUPS.md#en-la-vm-el-2026-11-18). Desde entonces todos los comandos `docker compose` de la VM
+llevan los dos `-f`.
+
 Para cobrar con Stripe (ADR-023), con una cuenta propia:
 1. En el panel de Stripe, crear el endpoint de webhook
    `https://<SHOWROOM_HOST>/api/v1/public/reservations/stripe/webhook` con los eventos
