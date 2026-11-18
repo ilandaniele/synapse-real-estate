@@ -4,9 +4,14 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
 import { PasswordResetRequest } from "@synapse/contracts";
-import { api } from "@/lib/api";
+import { api, ApiRequestError } from "@/lib/api";
 import { AuthCard, AuthNotice } from "@/components/AuthCard";
 import { Button, ErrorBanner, TextField } from "@/components/ui";
+
+const NO_EMAIL_MESSAGE = "El envío de correos no está configurado. Pide a un propietario de tu organización un enlace para restablecer la contraseña desde «Miembros».";
+
+const requestError = (error: unknown) =>
+  error instanceof ApiRequestError && error.status === 503 ? new Error(NO_EMAIL_MESSAGE) : error;
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -34,7 +39,7 @@ export default function ForgotPasswordPage() {
       ) : (
         <form onSubmit={submit} noValidate className="flex flex-col gap-3" data-testid="forgot-form">
           <TextField label="Email" type="email" autoComplete="username" value={email} error={localError} testId="forgot-email" onChange={(e) => setEmail(e.target.value)} />
-          <ErrorBanner error={request.error} testId="forgot-error" />
+          <ErrorBanner error={requestError(request.error)} testId="forgot-error" />
           <Button type="submit" variant="primary" disabled={request.isPending} data-testid="forgot-submit">
             {request.isPending ? "Enviando…" : "Enviar enlace"}
           </Button>

@@ -21,8 +21,13 @@ sha256 hash of each token.
 | `MAIL_FROM` | `Synapse <no-reply@synapse.local>` | Sender |
 | `ADMIN_PUBLIC_URL` | `http://localhost:3001` | Base of the links. Required in production when `SMTP_URL` is set |
 
-In production without `SMTP_URL`, inviting and requesting a reset answer **503** `SERVICE_UNAVAILABLE`, so no
-link is created that nobody can receive.
+In production without `SMTP_URL`:
+- Inviting still works. The response carries `inviteLink` once, and the admin shows it with a Copy button so
+  the owner can send it through another channel. It is not shown again and is not in the invitation list.
+- The self-service reset («¿Olvidaste tu contraseña?») answers **503** `SERVICE_UNAVAILABLE`. The page tells the
+  user to ask an owner.
+- An owner can open a member in «Miembros» and generate a one-time reset link (1 hour) to hand over. This is
+  refused with 409 `MEMBER_IN_OTHER_ORGANIZATIONS` when the user also belongs to another organization (ADR-024).
 
 ## Local testing with Mailpit
 
@@ -48,5 +53,5 @@ pnpm build && cd tests && E2E_SMTP_URL=smtp://localhost:1025 npx playwright test
 ## Production
 
 Use any SMTP provider. Set the three variables in `.env.production` (see `.env.production.example`) and
-restart the API. The VM deployed on 2026-11-17 has no SMTP configured, so invitations and resets answer 503
-there until it is set.
+restart the API. The deployed VM has no SMTP configured, so it uses the copyable links described above until
+it is set.

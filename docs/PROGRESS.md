@@ -106,7 +106,8 @@ Masterplan times include software WebGL. Expect real GPUs to be faster, but this
   media URL instead of a processed asset still load the single equirect image.
 - Postgres is tested (API suite, seed, backup/restore and an API + worker smoke), but the Postgres compose
   stack was not brought up on the VM. Redis/BullMQ is untested. S3 is tested against local RustFS only.
-- The deployed VM has no SMTP configured, so invitations and password resets answer 503 there.
+- The deployed VM has no SMTP configured. Owners share invite and reset links by hand from the admin (ADR-024);
+  the self-service «¿Olvidaste tu contraseña?» answers 503 there until SMTP is set.
 - The deployed VM runs reservations with `PAYMENT_PROVIDER=mock` (simulated checkout, no money moves). Stripe
   Checkout is integrated (ADR-023) and tested against `stripe-mock`, but charging needs a Stripe account, which
   this project does not have; see [DEPLOYMENT.md](DEPLOYMENT.md).

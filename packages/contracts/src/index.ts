@@ -291,6 +291,11 @@ export const Invitation = z.object({
   createdAt: IsoDate,
 });
 export type Invitation = z.infer<typeof Invitation>;
+/** `inviteLink` is set only when no SMTP server is configured, so the inviter can share it by hand. */
+export const InvitationCreated = Invitation.extend({ inviteLink: z.string().url().nullable() });
+export type InvitationCreated = z.infer<typeof InvitationCreated>;
+export const PasswordResetLink = z.object({ resetLink: z.string().url(), expiresAt: IsoDate });
+export type PasswordResetLink = z.infer<typeof PasswordResetLink>;
 export const InvitationInput = z.object({ email: Email, role: Role });
 export type InvitationInput = z.infer<typeof InvitationInput>;
 export const InvitationPreview = z.object({ email: z.string(), role: Role, organizationName: z.string(), expiresAt: IsoDate });

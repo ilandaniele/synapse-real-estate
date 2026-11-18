@@ -25,7 +25,7 @@ pnpm 9.15.9) on 2026-11-15. Nothing here is projected.
 | `workers/render-processing` | unit tests | 5 |
 | `packages/storage` | local and S3 drivers | 15 (2 need `S3_TEST_ENDPOINT`) |
 | `packages/cubemap` | `src/cubemap.test.ts` | 5 |
-| `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security`, `deploy-config`, `content`, `members`, `storage-s3`, `observability`, `invitations`, `mailpit`, `publication-history`, `publication-diff.unit`, `webhooks`, `visits`, `reservations`, `reservations-stripe` | 167 (3 need `S3_TEST_ENDPOINT`, 1 needs `MAILPIT_SMTP_URL`, 2 need `STRIPE_MOCK_URL`, e.g. `docker run -d -p 12111:12111 stripe/stripe-mock:v0.197.0`) |
+| `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security`, `deploy-config`, `content`, `members`, `storage-s3`, `observability`, `invitations`, `mailpit`, `publication-history`, `publication-diff.unit`, `webhooks`, `visits`, `reservations`, `reservations-stripe`, `member-reset-link` | 171 (3 need `S3_TEST_ENDPOINT`, 1 needs `MAILPIT_SMTP_URL`, 2 need `STRIPE_MOCK_URL`, e.g. `docker run -d -p 12111:12111 stripe/stripe-mock:v0.197.0`) |
 | `apps/showroom` | `src/lib/kiosk.test.ts`, `src/lib/analytics.test.ts`, `src/i18n/resolve-locale.test.ts` | 10 |
 | **Total** | | **249 passed, 0 failed, 6 skipped without `S3_TEST_ENDPOINT` and `MAILPIT_SMTP_URL`** (run 2026-11-18) |
 
@@ -35,8 +35,10 @@ limit, magic-byte checks on uploads, DWG rejection, IFC conversion and approval,
 changes and removed members on live sessions, the Origin check on writes and the absence of `/docs` in
 production. `deploy-config.test.ts` covers relative media URLs and the production guard of the demo seed and the `ADMIN_PUBLIC_URL` rules. `invitations.test.ts` covers invitations
 and password resets: no token in responses or in clear in the database, single use, expiry, revocation,
-cross-organization 404, 202 for unknown emails, session revocation, 503 without SMTP in production and the
-rate limit. `mailpit.test.ts` sends a real email over SMTP and reads it back from Mailpit ([EMAIL.md](EMAIL.md)).
+cross-organization 404, 202 for unknown emails, session revocation, the copyable invite link and the 503 of
+self-service reset without SMTP in production, and the rate limit. `member-reset-link.test.ts` covers the
+owner-issued reset link: single use, audit, 401/403, cross-organization 404 and the 409 for users in two
+organizations. `mailpit.test.ts` sends a real email over SMTP and reads it back from Mailpit ([EMAIL.md](EMAIL.md)).
 
 `packages/ui`, `packages/contracts`, `workers/*` and `apps/admin` have no unit tests of their own. `apps/showroom`
 has only the kiosk-mode and locale-resolution tests. Contracts are exercised through the API tests; the apps are covered by E2E.
@@ -91,7 +93,7 @@ Specs (`tests/e2e`):
 | `flow-c-admin-publish` | Admin creates villa V9, publishes version 2 and the public site shows it; the diff of v2 lists V9 as added; restoring v1 shows V9 as removed, creates v3 «restaurada de v1» and the public site drops V9; VIEWER sees no write actions; bad login shows an error |
 | `flow-d-hotspot-editor` | Create a hotspot by clicking the panorama, set its target, preview, publish, and navigate with it on the public tour |
 | `flow-e-admin-content` | Gallery item with an uploaded image, point of interest with a coordinate error then fixed, floor-plan list; owner creates a VIEWER member who cannot see «Miembros», gets a wrong-current-password error, changes the password and logs in with it |
-| `flow-f-invitations` | Needs `E2E_SMTP_URL` (Mailpit). Owner invites a SALES member, the link is read from Mailpit, the invitee accepts and appears in «Miembros»; then «¿Olvidaste tu contraseña?», reset link from Mailpit, the old password fails and the new one works |
+| `flow-f-invitations` | Needs `E2E_SMTP_URL` (Mailpit). Owner invites a SALES member, the link is read from Mailpit, the invitee accepts and appears in «Miembros»; then «¿Olvidaste tu contraseña?», reset link from Mailpit, the old password fails and the new one works. A second test generates a reset link from «Miembros» for the SALES user, uses it, and logs in with the new password |
 | `flow-h-analytics` | Visiting Villa 6's sheet and tour sends visit events (204); the admin «Analítica» page lists V6 and its rooms, also over the last 7 days |
 | `flow-i-reservation` | From Villa 5's sheet «Reservar con señal»: empty form shows 3 errors; a declined simulated payment shows an error, an approved one confirms V5; the admin «Reservas» page, filtered by «Pagada», lists V5. Two more tests intercept the API to act as Stripe: the form redirects to the returned `checkoutUrl` and the return page polls the status with the checkout token until PAID; a cancelled return shows a notice and a retry link back to the form |
 | `flow-g-webhooks` | Owner creates a webhook to a local receiver from «Integraciones», the secret is shown once; a public lead arrives signed (HMAC checked in the test); the delivery log shows «Entregado»; the webhook is deleted |

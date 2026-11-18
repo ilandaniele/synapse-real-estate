@@ -1,11 +1,11 @@
 import { and, asc, eq, gt, isNull } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
-import { InvitationInput, type Invitation } from "@synapse/contracts";
+import { InvitationInput, type Invitation, type InvitationCreated } from "@synapse/contracts";
 import { invitations, organizations, users } from "@synapse/db";
 import { audit } from "../../lib/audit";
 import { session } from "../../lib/auth";
 import { invitationEmail, tokenLink } from "../../lib/emails";
-import { conflict, HttpError, notFound, serviceUnavailable } from "../../lib/errors";
+import { conflict, HttpError, notFound } from "../../lib/errors";
 import { IdParams } from "../../lib/params";
 import { expiresIn, newToken } from "../../lib/tokens";
 
@@ -43,12 +43,14 @@ export default async function invitationRoutes(app: FastifyInstance) {
     return rows.map(toInvitation);
   });
 
-  /** Invites someone without an account; they choose name and password from the emailed link. */
+  /**
+   * Invites someone without an account; they choose name and password from the link. The link is emailed, or
+   * returned once in the response when no SMTP server is configured.
+   */
   app.post("/invitations", { preHandler: app.requireAuth("member:manage") }, async (request, reply) => {
     const actor = session(request);
     const input = InvitationInput.parse(request.body);
     const mailer = app.mailer;
-    if (!mailer) throw serviceUnavailable("Email is not configured");
     const email = input.email.toLowerCase();
 
     const [existing] = await app.db
@@ -80,6 +82,8 @@ export default async function invitationRoutes(app: FastifyInstance) {
     });
 
     const link = tokenLink(app.config.adminPublicUrl, "accept-invite", token);
+    reply.header("Cache-Control", "no-store");
+    if (!mailer) return reply.status(201).send({ ...toInvitation(row), inviteLink: link } satisfies InvitationCreated);
     try {
       await mailer.send(invitationEmail(email, existing.organizationName, input.role, link));
     } catch (error) {
@@ -87,7 +91,7 @@ export default async function invitationRoutes(app: FastifyInstance) {
       await app.db.delete(invitations).where(eq(invitations.id, row.id));
       throw new HttpError(502, "MAIL_FAILED", "The invitation email could not be sent");
     }
-    return reply.status(201).send(toInvitation(row));
+    return reply.status(201).send({ ...toInvitation(row), inviteLink: null } satisfies InvitationCreated);
   });
 
   app.delete("/invitations/:id", { preHandler: app.requireAuth("member:manage") }, async (request, reply) => {

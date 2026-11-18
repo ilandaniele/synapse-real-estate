@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { Invitation, InvitationPreview, SessionUser } from "@synapse/contracts";
+import { Invitation, InvitationCreated, InvitationPreview, SessionUser } from "@synapse/contracts";
 import { auditEvents, invitations, passwordResets } from "@synapse/db";
 import type { MailMessage } from "../src/lib/mailer";
 import { ADMIN, createTestContext, EMAILS, PASSWORD, type TestContext } from "./helpers";
@@ -39,6 +39,7 @@ function tokenFromLastMail(page: string): string {
 async function invite(email: string, role = "EDITOR") {
   const res = await send("POST", `${ADMIN}/invitations`, owner, { email, role });
   expect(res.statusCode, res.body).toBe(201);
+  expect(res.json().inviteLink).toBeNull();
   return { invitation: Invitation.parse(res.json()), token: tokenFromLastMail("accept-invite") };
 }
 
@@ -114,11 +115,20 @@ describe("invitations", () => {
     expect((await send("POST", `${AUTH}/invitations/accept`, undefined, { token: weak.token, name: "W", password: "short" })).statusCode).toBe(400);
   });
 
-  it("answers 503 when email is not configured", async () => {
-    const noMail = await createTestContext({ config: { isProd: true } });
+  it("returns the link to the inviter when email is not configured, and self-service reset answers 503", async () => {
+    const noMail = await createTestContext({ config: { isProd: true, adminPublicUrl: "https://admin.example.test" } });
     try {
       const cookie = await noMail.login(EMAILS.owner);
-      expect((await noMail.app.inject({ method: "POST", url: `${ADMIN}/invitations`, headers: { cookie }, payload: { email: "n@a.test", role: "VIEWER" } })).statusCode).toBe(503);
+      const res = await noMail.app.inject({ method: "POST", url: `${ADMIN}/invitations`, headers: { cookie }, payload: { email: "n@a.test", role: "VIEWER" } });
+      expect(res.statusCode, res.body).toBe(201);
+      expect(res.headers["cache-control"]).toBe("no-store");
+      const created = InvitationCreated.parse(res.json());
+      const token = created.inviteLink?.match(/^https:\/\/admin\.example\.test\/accept-invite#token=([\w-]+)$/)?.[1];
+      expect(token).toBeDefined();
+      const preview = await noMail.app.inject({ method: "POST", url: `${AUTH}/invitations/preview`, payload: { token } });
+      expect(InvitationPreview.parse(preview.json())).toMatchObject({ email: "n@a.test", role: "VIEWER" });
+      const listed = (await noMail.app.inject({ method: "GET", url: `${ADMIN}/invitations`, headers: { cookie } })).body;
+      expect(listed).not.toContain(token);
       expect((await noMail.app.inject({ method: "POST", url: `${AUTH}/password-reset/request`, payload: { email: EMAILS.viewer } })).statusCode).toBe(503);
     } finally {
       await noMail.close();

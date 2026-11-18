@@ -2,13 +2,14 @@
 
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { InvitationInput, type Invitation } from "@synapse/contracts";
+import { InvitationInput, type InvitationCreated } from "@synapse/contracts";
 import type { Role } from "@synapse/domain";
 import { api } from "@/lib/api";
 import { keys, useInvitations } from "@/lib/queries";
 import { formatDateTime, ROLE_LABELS } from "@/lib/format";
 import { apiFieldErrors, zodFieldErrors, type FieldErrors } from "@/lib/forms";
 import { Button, Card, ErrorBanner, Modal, QueryBoundary, SelectField, TableShell, TD, TextField, TH } from "@/components/ui";
+import { CopyableLink } from "@/components/CopyableLink";
 
 export function PendingInvitations() {
   const invitations = useInvitations();
@@ -68,12 +69,25 @@ export function InviteDialog({ onClose, roleOptions }: { onClose: () => void; ro
   const [clientErrors, setClientErrors] = useState<FieldErrors>({});
 
   const invite = useMutation({
-    mutationFn: (input: InvitationInput) => api<Invitation>("/admin/invitations", { method: "POST", body: input }),
-    onSuccess: () => {
+    mutationFn: (input: InvitationInput) => api<InvitationCreated>("/admin/invitations", { method: "POST", body: input }),
+    onSuccess: (created) => {
       void queryClient.invalidateQueries({ queryKey: keys.invitations });
-      onClose();
+      if (!created.inviteLink) onClose();
     },
   });
+
+  if (invite.data?.inviteLink) {
+    return (
+      <Modal title="Invitación creada" onClose={onClose} testId="invite-dialog">
+        <CopyableLink
+          label={`Enlace de invitación para ${invite.data.email}`}
+          link={invite.data.inviteLink}
+          hint="No hay servidor de correo configurado. Envíale este enlace por un canal seguro: es de un solo uso, vence en 7 días y no se volverá a mostrar."
+          testId="invite-link"
+        />
+      </Modal>
+    );
+  }
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -97,7 +111,7 @@ export function InviteDialog({ onClose, roleOptions }: { onClose: () => void; ro
           autoComplete="off"
           value={email}
           error={errors.email}
-          hint="Recibirá un enlace de un solo uso, válido 7 días, para crear su contraseña."
+          hint="Recibirá un enlace de un solo uso, válido 7 días, para crear su contraseña. Sin servidor de correo, te lo mostramos para que se lo envíes."
           testId="invite-field-email"
           onChange={(e) => setEmail(e.target.value)}
         />

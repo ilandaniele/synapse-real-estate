@@ -25,5 +25,6 @@ repositorio público en GitHub.
 - [x] Roadmap Fase 4 — Analítica de recorridos por unidad y estancia, sin datos personales (ADR-021).
 - [x] Roadmap Fase 4 — Reservas con señal y pago simulado; la unidad pasa a reservada al pagar (ADR-022).
 - [x] Stripe Checkout con webhook firmado como proveedor real (ADR-023); cobrar exige cuenta propia.
+- [x] Sin SMTP, enlaces de invitación y de restablecimiento copiables desde el admin (ADR-024).
 
 Detalle de avance, comandos y resultados de tests: [PROGRESS.md](PROGRESS.md).

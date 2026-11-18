@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { MemberInput, type Member } from "@synapse/contracts";
+import { MemberInput, type Member, type PasswordResetLink } from "@synapse/contracts";
 import { ROLES, type Role } from "@synapse/domain";
 import { EmptyState } from "@synapse/ui";
 import { api, ApiRequestError } from "@/lib/api";
@@ -12,12 +12,17 @@ import { formatDateTime, ROLE_LABELS } from "@/lib/format";
 import { apiFieldErrors, zodFieldErrors, type FieldErrors } from "@/lib/forms";
 import { ConfirmDelete } from "@/components/content";
 import { InviteDialog, PendingInvitations } from "@/components/Invitations";
+import { CopyableLink } from "@/components/CopyableLink";
 import { Button, ErrorBanner, Modal, PageHeader, QueryBoundary, SelectField, TableShell, TD, TextField, TH } from "@/components/ui";
 
-const LAST_OWNER_MESSAGE = "La organización debe tener al menos un propietario.";
+const MEMBER_ERROR_MESSAGES: Record<string, string> = {
+  LAST_OWNER: "La organización debe tener al menos un propietario.",
+  MEMBER_IN_OTHER_ORGANIZATIONS: "Este usuario también pertenece a otra organización: debe restablecer la contraseña desde «¿Olvidaste tu contraseña?».",
+};
 
 function memberError(error: unknown): unknown {
-  return error instanceof ApiRequestError && error.code === "LAST_OWNER" ? new Error(LAST_OWNER_MESSAGE) : error;
+  const message = error instanceof ApiRequestError ? MEMBER_ERROR_MESSAGES[error.code] : undefined;
+  return message ? new Error(message) : error;
 }
 
 function RoleOptions() {
@@ -176,6 +181,31 @@ function CreateMemberDialog({ onClose, onCreated }: { onClose: () => void; onCre
   );
 }
 
+function ResetLinkSection({ member }: { member: Member }) {
+  const issue = useMutation({
+    mutationFn: () => api<PasswordResetLink>(`/admin/members/${member.id}/password-reset-link`, { method: "POST" }),
+  });
+  return (
+    <div className="mt-4 flex flex-col gap-2 border-t border-gray-200 pt-4">
+      {issue.data ? (
+        <CopyableLink
+          label="Enlace para restablecer la contraseña"
+          link={issue.data.resetLink}
+          hint="Envíalo por un canal seguro. Es de un solo uso, vence en 1 hora y cierra las sesiones abiertas del miembro."
+          testId="member-reset-link"
+        />
+      ) : (
+        <div>
+          <Button disabled={issue.isPending} onClick={() => issue.mutate()} data-testid="member-reset-link-create">
+            Generar enlace para restablecer contraseña
+          </Button>
+        </div>
+      )}
+      <ErrorBanner error={memberError(issue.error)} testId="member-reset-link-error" />
+    </div>
+  );
+}
+
 function ManageMemberDialog({ member, onClose, onDeleted }: { member: Member; onClose: () => void; onDeleted: () => void }) {
   const isSelf = useUser().email === member.email;
   return (
@@ -184,6 +214,7 @@ function ManageMemberDialog({ member, onClose, onDeleted }: { member: Member; on
         {member.name} · {ROLE_LABELS[member.role]}
       </p>
       {isSelf ? <p className="mt-2 text-sm text-gray-600">Esta es tu cuenta: si te quitas, perderás el acceso.</p> : null}
+      <ResetLinkSection member={member} />
       <ConfirmDelete
         subject={`a ${member.email} de la organización`}
         buttonLabel="Quitar miembro"

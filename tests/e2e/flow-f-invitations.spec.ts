@@ -71,4 +71,30 @@ test.describe("Flujo F — invitación y recuperación de contraseña por email"
     await login(invitee, email, `${NEW_PASSWORD}-2`);
     await expect(invitee).not.toHaveURL(/\/login/);
   });
+
+  test("un propietario genera un enlace de restablecimiento desde «Miembros»", async ({ page, browser }) => {
+    const email = `enlace-${Date.now()}@example.test`;
+    const password = "handed-over-e2e-password-1";
+    await adminLogin(page);
+    await page.goto(`${ADMIN}/members`);
+    await page.getByTestId("member-create-open").click();
+    await page.getByTestId("member-field-email").fill(email);
+    await page.getByTestId("member-field-name").fill("Enlace E2E");
+    await page.getByTestId("member-field-role").selectOption("SALES");
+    await page.getByTestId("member-field-password").fill(NEW_PASSWORD);
+    await page.getByTestId("member-save").click();
+    const row = page.getByTestId("member-row").filter({ hasText: email });
+    await row.getByTestId("member-manage").click();
+    await page.getByTestId("member-reset-link-create").click();
+    const link = await page.getByTestId("member-reset-link-value").inputValue();
+    expect(link).toMatch(new RegExp(`^${ADMIN}/reset-password#token=[\\w-]+$`));
+
+    const member = await browser.newPage();
+    await member.goto(link);
+    await member.getByTestId("reset-password").fill(password);
+    await member.getByTestId("reset-submit").click();
+    await expect(member.getByTestId("reset-done")).toBeVisible();
+    await login(member, email, password);
+    await expect(member).not.toHaveURL(/\/login/);
+  });
 });

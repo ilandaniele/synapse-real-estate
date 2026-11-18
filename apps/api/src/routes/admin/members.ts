@@ -1,13 +1,17 @@
 import { and, asc, count, eq } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import type { FastifyInstance } from "fastify";
-import { MemberInput, MemberPatch, type Member } from "@synapse/contracts";
+import { MemberInput, MemberPatch, type Member, type PasswordResetLink } from "@synapse/contracts";
 import type { Role } from "@synapse/domain";
-import { organizationMemberships, users, type Db } from "@synapse/db";
+import { organizationMemberships, passwordResets, users, type Db } from "@synapse/db";
 import { audit, type Executor } from "../../lib/audit";
 import { session } from "../../lib/auth";
 import { conflict, isUniqueViolation, notFound } from "../../lib/errors";
 import { IdParams } from "../../lib/params";
 import { hashPassword } from "../../lib/passwords";
+import { tokenLink } from "../../lib/emails";
+import { expiresIn, newToken } from "../../lib/tokens";
+import { PASSWORD_RESET_TTL_MS } from "../password-reset";
 
 const MEMBER_LIST_LIMIT = 200;
 
@@ -90,6 +94,36 @@ export default async function memberRoutes(app: FastifyInstance) {
       await audit(tx, actor, "member.update", "member", id, { from: member.role, to: role });
     });
     return toMember({ ...member, role });
+  });
+
+  /**
+   * Issues a one-time reset link for a member to share by hand when there is no SMTP server. Refused for users
+   * who also belong to another organization, so an owner cannot take over an account outside their own.
+   */
+  app.post("/members/:id/password-reset-link", { preHandler: app.requireAuth("member:manage") }, async (request, reply) => {
+    const actor = session(request);
+    const { id } = IdParams.parse(request.params);
+    const anyMembership = alias(organizationMemberships, "any_membership");
+    const [target] = await app.db
+      .select({ userId: organizationMemberships.userId, organizations: count(anyMembership.id) })
+      .from(organizationMemberships)
+      .innerJoin(anyMembership, eq(anyMembership.userId, organizationMemberships.userId))
+      .where(and(eq(organizationMemberships.id, id), eq(organizationMemberships.organizationId, actor.organizationId)))
+      .groupBy(organizationMemberships.userId);
+    if (!target) throw notFound("Member");
+    if (target.organizations > 1) {
+      throw conflict("This user also belongs to another organization and must reset the password from the login page", "MEMBER_IN_OTHER_ORGANIZATIONS");
+    }
+
+    const { token, tokenHash } = newToken();
+    const expiresAt = expiresIn(PASSWORD_RESET_TTL_MS);
+    await app.db.transaction(async (tx) => {
+      await tx.insert(passwordResets).values({ userId: target.userId, tokenHash, expiresAt });
+      await audit(tx, actor, "member.password_reset_link", "member", id);
+    });
+    reply.header("Cache-Control", "no-store");
+    const body: PasswordResetLink = { resetLink: tokenLink(app.config.adminPublicUrl, "reset-password", token), expiresAt: expiresAt.toISOString() };
+    return reply.status(201).send(body);
   });
 
   /** Removes the membership; the user account goes too when it belongs to no other organization. */

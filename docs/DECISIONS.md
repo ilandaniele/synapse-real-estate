@@ -203,3 +203,15 @@ Formato corto: contexto, decisión, consecuencias. Estado: Aceptada salvo indica
   petición real contra la API. Un pago que llega cuando otra reserva ya se llevó la unidad deja la reserva
   `FAILED` y registra un aviso: el reembolso se hace a mano desde el panel de Stripe. Un checkout cancelado
   queda `PENDING` hasta que Stripe envía `checkout.session.expired` (24 h por defecto).
+
+## ADR-024 Enlaces copiables cuando no hay SMTP
+- **Contexto**: sin servidor de correo, invitar y restablecer contraseñas respondía 503 y el equipo no podía
+  sumar miembros ni recuperar cuentas en la VM desplegada.
+- **Decisión**: sin `SMTP_URL`, `POST /admin/invitations` devuelve el enlace una sola vez en `inviteLink` y el
+  admin lo muestra con un botón Copiar. Un propietario puede generar desde «Miembros» un enlace de
+  restablecimiento de 1 hora para un miembro (`POST /admin/members/:id/password-reset-link`). Se rechaza con 409
+  si el usuario pertenece a otra organización, para que un propietario no tome una cuenta ajena a la suya. Las
+  respuestas son `no-store` y quedan auditadas. El «¿Olvidaste tu contraseña?» sigue respondiendo 503 sin SMTP,
+  porque no hay canal seguro para entregar el enlace a quien lo pide.
+- **Consecuencias**: el propietario es responsable de enviar el enlace por un canal seguro. Con SMTP el
+  comportamiento no cambia y el enlace nunca vuelve en la respuesta.

@@ -61,8 +61,9 @@ Errors always use the `ApiError` shape `{error: {code, message, details?}}`. Bod
 | POST | /admin/jobs/:id/review | job:create | `{decision: approve|reject, note?}`; approving a GLB persists the matched mesh -> unit mappings and publishes the file under `published/` |
 | GET | /admin/dashboard | read | counts by status, leads 30 d, last publication, jobs by status |
 | GET | /admin/developments/:id/analytics | development:read | `?days=7|30|90` (default 30, else 400) -> `{days, units[{id, code, name, views}], scenes[{id, name, unitCode, views}]}`, top 20 of each, most viewed first, UTC days; another org's id is 404 |
-| GET/POST | /admin/invitations | member:manage | pending invitations; POST `{email, role}` emails a 7-day link, 409 `USER_EXISTS` / `INVITATION_PENDING`, 503 without SMTP in production. The token is never returned |
+| GET/POST | /admin/invitations | member:manage | pending invitations; POST `{email, role}` emails a 7-day link and returns `inviteLink: null`; without SMTP it returns the link once in `inviteLink` (`no-store`). 409 `USER_EXISTS` / `INVITATION_PENDING`. The list never returns tokens |
 | DELETE | /admin/invitations/:id | member:manage | revokes a pending invitation; another org's id is 404 |
+| POST | /admin/members/:id/password-reset-link | member:manage | **201** `{resetLink, expiresAt}` (1 h, single use, `no-store`) to hand over by hand; 404 for another org's member, 409 `MEMBER_IN_OTHER_ORGANIZATIONS` if the user belongs to more than one organization |
 | GET | /admin/webhooks | integration:manage | newest first, max 50; never includes the secret |
 | POST | /admin/webhooks | integration:manage | `{url, description?}` -> **201** with `secret` (`whsec_…`), shown only here; 400 for a non-http(s) URL, and in production for http or a host that resolves to a private address; audited |
 | DELETE | /admin/webhooks/:id | integration:manage | 204; deletes its deliveries too; another org's id is 404; audited |
