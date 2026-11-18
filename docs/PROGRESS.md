@@ -36,7 +36,8 @@ from a real run.
   `/health/ready` and token-protected Prometheus `/metrics` ([BACKUPS.md](BACKUPS.md)).
 - Publication diff and rollback: compare any two versions per section; restoring creates a new version that
   keeps current unit status and price (ADR-018).
-- Asynchronous ingestion pipeline with manual review. DWG, IFC, FBX and OBJ are rejected explicitly.
+- Asynchronous ingestion pipeline with manual review. IFC is converted to a GLB of simple volumes per building
+  with `web-ifc` and waits for review (ADR-019). DWG, FBX and OBJ are rejected explicitly.
   Render without a configured backend fails explicitly.
 - Engine bugs found during integration and fixed in the engines:
   - double hotspot removal;

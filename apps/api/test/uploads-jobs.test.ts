@@ -6,6 +6,7 @@ import { createRequire } from "node:module";
 import type SharpFn from "sharp";
 import { Asset, Job } from "@synapse/contracts";
 import { assets, claimJob, developments, importJobs, panoramaAssets, renderJobs, unitMeshMappings } from "@synapse/db";
+import { buildIfc } from "../../../tools/cad-importer/test/ifc-fixture";
 import { processJob } from "../../../workers/asset-processing/src/process";
 import { NO_RENDER_BACKEND_MESSAGE, processRenderJob, type PanoramaRenderer } from "../../../workers/render-processing/src/index";
 import { ADMIN, buildGlb, createTestContext, EMAILS, uploadFile, type TestContext } from "./helpers";
@@ -155,6 +156,39 @@ describe("import jobs", () => {
 
     const again = await ctx.app.inject({ method: "POST", url: `${ADMIN}/jobs/${jobId}/review`, headers: { cookie: editor }, payload: { decision: "approve" } });
     expect(again.statusCode).toBe(409);
+  });
+
+  it("IFC is converted to a GLB that waits for review; approval publishes it with the building mappings", async () => {
+    const { putRes, assetId } = await uploadFile(ctx, editor, "villas.ifc", Buffer.from(buildIfc(["Villa_01", "Villa_02"])));
+    expect(putRes!.statusCode).toBe(200);
+    const jobId = ((await queueImport(assetId!, ctx.fx.devA)).json() as { id: string }).id;
+    const mappingsOfDev = () => ctx.db.select().from(unitMeshMappings).where(eq(unitMeshMappings.developmentId, ctx.fx.devA));
+    const mappingsBefore = await mappingsOfDev();
+
+    const { outcome } = await claimAndProcess();
+    expect(outcome).toMatchObject({ status: "REQUIRES_REVIEW", result: { kind: "ifc", buildings: ["Villa_01", "Villa_02"], elementCount: 2 } });
+    const result = (outcome as { result: { glbPath: string; suggestions: { meshName: string; unitId: string | null }[] } }).result;
+    expect(result.glbPath).toBe(`processed/${ctx.fx.orgA}/${assetId}.glb`);
+    expect(result.suggestions.find((s) => s.meshName === "Villa_01")).toMatchObject({ unitId: ctx.fx.unitA1 });
+    expect(await mappingsOfDev()).toEqual(mappingsBefore);
+
+    const approved = await ctx.app.inject({ method: "POST", url: `${ADMIN}/jobs/${jobId}/review`, headers: { cookie: editor }, payload: { decision: "approve" } });
+    expect(approved.statusCode).toBe(200);
+    const villa01 = (await mappingsOfDev()).find((m) => m.meshName === "Villa_01");
+    expect(villa01).toMatchObject({ unitId: ctx.fx.unitA1, modelAssetId: (outcome as { result: { modelAssetId: string } }).result.modelAssetId });
+    const [dev] = await ctx.db.select().from(developments).where(eq(developments.id, ctx.fx.devA));
+    expect(dev!.modelPath).toBe(`published/${ctx.fx.orgA}/${assetId}.glb`);
+    const served = await ctx.app.inject({ method: "GET", url: `/media/${dev!.modelPath}` });
+    expect(served.statusCode).toBe(200);
+    expect(served.rawPayload.subarray(0, 4).toString()).toBe("glTF");
+  });
+
+  it("an IFC without 3D geometry fails permanently", async () => {
+    const { assetId } = await uploadFile(ctx, editor, "empty.ifc", Buffer.from(buildIfc([])));
+    await queueImport(assetId!, ctx.fx.devA);
+    const { outcome } = await claimAndProcess();
+    expect(outcome.status).toBe("FAILED");
+    expect("error" in outcome && outcome.error).toMatch(/Invalid IFC: IFC has no 3D geometry/);
   });
 
   it("invalid GLB structure fails permanently", async () => {

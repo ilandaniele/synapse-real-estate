@@ -42,3 +42,9 @@ Aunque resulten interesantes técnicamente, **el parecido del nombre no los iden
 - HDRI "Kloofendal 48d Partly Cloudy (Pure Sky)", Poly Haven — https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky
   - Licencia CC0. Se descarga a `storage/hdri/` (ignorado por git) y solo se usa como cielo del render offline
     (`RENDER_HDRI`). No se redistribuye en el repositorio.
+
+## Dependencias con licencia no permisiva
+- `web-ifc` 0.0.78 — https://github.com/ThatOpen/engine_web-ifc — licencia MPL-2.0. Se usa sin modificar como
+  dependencia de `tools/cad-importer` para leer IFC. MPL-2.0 es copyleft por archivo: solo obliga a publicar cambios
+  hechos a los archivos de `web-ifc`, no al código propio que lo importa. No se ha modificado ni copiado su código.
+- `@gltf-transform/core` 4.5 — MIT. Escribe el GLB convertido.

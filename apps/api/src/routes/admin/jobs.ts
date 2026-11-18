@@ -125,19 +125,21 @@ export default async function jobRoutes(app: FastifyInstance) {
   });
 
   /**
-   * Approving a GLB import persists the suggested mesh -> unit mappings (only those that matched a unit) and
-   * publishes a copy of the model under published/<org>/ so it can be served; nothing happens without approval.
+   * Approving a GLB or IFC import persists the suggested mesh -> unit mappings (only those that matched a unit) and
+   * publishes a copy of the model (the uploaded GLB, or the GLB converted from the IFC) under published/<org>/ so it
+   * can be served; nothing happens without approval.
    */
   async function applyApprovedGlb(organizationId: string, job: JobRow): Promise<number> {
-    const result = (job.result ?? {}) as { kind?: string; modelAssetId?: string; suggestions?: GlbSuggestion[] };
-    if (result.kind !== "glb" || !job.developmentId || !job.assetId) return 0;
+    const result = (job.result ?? {}) as { kind?: string; modelAssetId?: string; glbPath?: string; suggestions?: GlbSuggestion[] };
+    if ((result.kind !== "glb" && result.kind !== "ifc") || !job.developmentId || !job.assetId) return 0;
     const developmentId = job.developmentId;
     const mappable = (result.suggestions ?? []).filter((s): s is { meshName: string; unitId: string } => s.unitId !== null);
 
     const [asset] = await app.db.select().from(assets).where(and(eq(assets.id, job.assetId), eq(assets.organizationId, organizationId)));
+    const modelSource = result.kind === "ifc" ? result.glbPath : asset?.storagePath;
     const publishedRelative = `published/${organizationId}/${job.assetId}.glb`;
-    if (asset?.storagePath) {
-      await app.storage.copy(asset.storagePath, publishedRelative);
+    if (modelSource) {
+      await app.storage.copy(modelSource, publishedRelative);
     }
     await app.db.transaction(async (tx) => {
       if (mappable.length > 0) {
@@ -154,7 +156,7 @@ export default async function jobRoutes(app: FastifyInstance) {
           })),
         );
       }
-      if (asset?.storagePath) {
+      if (modelSource) {
         await tx
           .update(developments)
           .set({ modelPath: publishedRelative })

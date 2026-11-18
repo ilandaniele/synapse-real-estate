@@ -69,7 +69,7 @@ export default function AssetsPage() {
     <>
       <PageHeader title="Activos" description="Modelos GLB/glTF y panoramas equirrectangulares del showroom." />
       <div role="note" data-testid="asset-notice" className="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-        DWG, IFC, FBX y OBJ no se convierten automáticamente: exporte a GLB/glTF o panorama equirectangular 2:1. Los DXF solo se inspeccionan como referencia y no se generan renders fotorrealistas
+        DWG, FBX y OBJ no se convierten automáticamente: exporte a GLB/glTF o panorama equirectangular 2:1. Los IFC se convierten a volúmenes simples sin texturas y esperan revisión. Los DXF solo se inspeccionan como referencia y no se generan renders fotorrealistas
         automáticos; todo resultado pasa por revisión manual.
       </div>
       <div className="grid gap-4 lg:grid-cols-[22rem_1fr]">

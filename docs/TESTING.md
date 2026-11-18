@@ -21,17 +21,17 @@ pnpm 9.15.9) on 2026-11-15. Nothing here is projected.
 | `packages/db` | `test/db.test.ts` | 2 |
 | `packages/3d-engine` | `src/helpers.test.ts` | 14 |
 | `packages/tour-engine` | `src/geometry.test.ts`, `src/tour-navigator.test.ts`, `src/panorama-source.test.ts` | 18 |
-| `tools/cad-importer` | `test/cad-importer.test.ts` | 7 |
+| `tools/cad-importer` | `test/cad-importer.test.ts`, `test/ifc.test.ts` | 11 |
 | `workers/render-processing` | unit tests | 5 |
 | `packages/storage` | local and S3 drivers | 15 (2 need `S3_TEST_ENDPOINT`) |
 | `packages/cubemap` | `src/cubemap.test.ts` | 5 |
-| `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security`, `deploy-config`, `content`, `members`, `storage-s3`, `observability`, `invitations`, `mailpit`, `publication-history`, `publication-diff.unit` | 123 (3 need `S3_TEST_ENDPOINT`, 1 needs `MAILPIT_SMTP_URL`) |
+| `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security`, `deploy-config`, `content`, `members`, `storage-s3`, `observability`, `invitations`, `mailpit`, `publication-history`, `publication-diff.unit` | 125 (3 need `S3_TEST_ENDPOINT`, 1 needs `MAILPIT_SMTP_URL`) |
 | `apps/showroom` | `src/lib/kiosk.test.ts`, `src/i18n/resolve-locale.test.ts` | 8 |
-| **Total** | | **213 passed, 0 failed, 6 skipped without `S3_TEST_ENDPOINT` and `MAILPIT_SMTP_URL`** (run 2026-11-18) |
+| **Total** | | **219 passed, 0 failed, 6 skipped without `S3_TEST_ENDPOINT` and `MAILPIT_SMTP_URL`** (run 2026-11-18) |
 
 The API tests start the real Fastify app with an in-memory PGlite database and cover 401, 403, 404, 409,
 413, 415 and 429 responses, cross-organization access (IDOR), the role matrix, the lead honeypot and rate
-limit, magic-byte checks on uploads, DWG rejection and versioned publishing. `security.test.ts` covers role
+limit, magic-byte checks on uploads, DWG rejection, IFC conversion and approval, and versioned publishing. `security.test.ts` covers role
 changes and removed members on live sessions, the Origin check on writes and the absence of `/docs` in
 production. `deploy-config.test.ts` covers relative media URLs and the production guard of the demo seed and the `ADMIN_PUBLIC_URL` rules. `invitations.test.ts` covers invitations
 and password resets: no token in responses or in clear in the database, single use, expiry, revocation,

@@ -10,6 +10,8 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@synapse/domain": "workspace:*"
+    "@gltf-transform/core": "^4.5.1",
+    "@synapse/domain": "workspace:*",
+    "web-ifc": "0.0.78"
   }
 }

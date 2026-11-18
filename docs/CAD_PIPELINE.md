@@ -23,7 +23,7 @@ asíncrono). Nunca está en el camino crítico de una visita pública.
 | JPEG/PNG no 2:1 | magic bytes | Rechazo: "Panorama must be 2:1 equirectangular" | `FAILED` |
 | DXF | `0 SECTION` | Inspección: capas, cantidad de entidades, extensión. **No genera 3D** | `REQUIRES_REVIEW` |
 | DWG | `AC10xx` | Mensaje: formato no soportado, exportar a GLB/glTF | `FAILED` |
-| IFC | `ISO-10303-21` | Igual que DWG | `FAILED` |
+| IFC | `ISO-10303-21` | Convierte la geometría 3D a GLB con `web-ifc`: un nodo raíz por `IfcBuilding` (con su nombre), un hijo por elemento; sugiere mapeo `Villa_NN` → unidad. Sin geometría: `Invalid IFC` | `REQUIRES_REVIEW` |
 | FBX / OBJ | firma / texto | Igual que DWG | `FAILED` |
 
 ## Lo que este pipeline NO hace
@@ -32,6 +32,18 @@ asíncrono). Nunca está en el camino crítico de una visita pública.
 - No modela interiores, no asigna materiales ni ilumina escenas.
 - No publica nada: todo resultado pasa por revisión y luego por una publicación explícita.
 
+## IFC: qué se convierte y qué no
+- Se convierte solo la geometría teselada que `web-ifc` produce para cada elemento, con su posición real en metros
+  e Y hacia arriba. El GLB queda en `processed/<org>/<assetId>.glb` y no se usa hasta que alguien aprueba el job;
+  al aprobar se copia a `published/<org>/` y pasa a ser el modelo del desarrollo.
+- Materiales: solo el color de superficie del IFC (un material por color; transparente si alfa < 1). Sin texturas,
+  sin iluminación ni UVs.
+- Agrupación: el nombre del `IfcBuilding` es el nombre del nodo raíz. Para que el mapeo sugiera unidades, el
+  edificio debe llamarse `Villa_NN` o con el código de la unidad. Los elementos fuera de un edificio van al nodo
+  `Site`.
+- No se simplifican mallas: un IFC de proyecto completo puede dar un GLB pesado. Revisar el tamaño y la escena
+  antes de aprobar; si hace falta, optimizar en Blender y subir el GLB.
+
 ## Camino recomendado para un estudio
 1. Modelar en la herramienta CAD/BIM habitual (Revit, ArchiCAD, SketchUp, Blender).
 2. Exportar el masterplan a GLB nombrando el nodo raíz de cada unidad `Villa_NN` (o el código de unidad).
@@ -39,6 +51,5 @@ asíncrono). Nunca está en el camino crítico de una visita pública.
 4. Subir GLB y panoramas en Admin → Assets, revisar el job, aprobar mapeo, publicar.
 
 ## Extensión futura
-- Adaptador IFC con `web-ifc` (MPL-2.0) para extraer volúmenes simples → GLB, con revisión manual.
 - Conversión DXF 2D → extrusión de muros básica para maquetas, marcada como "boceto".
-- Ambos requieren validación de licencia antes de incorporarse (ver `FUENTES_Y_LICENCIAS.md`).
+- Requiere validación de licencia antes de incorporarse (ver `FUENTES_Y_LICENCIAS.md`).

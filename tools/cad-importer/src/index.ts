@@ -1,5 +1,7 @@
 import type { FileKind } from "@synapse/domain";
 
+export * from "./ifc";
+
 export const DXF_REFERENCE_NOTE = "DXF parsed for reference only; geometry not converted to 3D automatically";
 
 export function unsupportedFormatMessage(kind: FileKind | string): string {

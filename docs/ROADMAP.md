@@ -26,7 +26,8 @@
 ## Fase 3 — Pipeline de contenido
 - [x] Render worker con Blender CLI (panoramas equirect desde GLB + preset de cámaras). Ya existía:
   `workers/render-processing` y [RENDER_PIPELINE.md](RENDER_PIPELINE.md).
-- Importador IFC básico con `web-ifc` y revisión manual.
+- [x] Importador IFC básico con `web-ifc` y revisión manual. Hecho el 2026-11-18: IFC → GLB por edificio, mapeo
+  sugerido y publicación del GLB al aprobar (ADR-019, [CAD_PIPELINE.md](CAD_PIPELINE.md)).
 - [x] Versionado y diff visual de publicaciones; rollback desde admin. Hecho el 2026-11-18: diff por sección
   entre dos versiones y restauración como versión nueva que conserva estado y precio actuales (ADR-018).
 

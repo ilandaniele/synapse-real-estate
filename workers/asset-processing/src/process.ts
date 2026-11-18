@@ -2,7 +2,15 @@ import { NodeIO } from "@gltf-transform/core";
 import { and, eq, sql } from "drizzle-orm";
 import sharp from "sharp";
 import { buildCubeTiles, decodeEquirect } from "@synapse/cubemap";
-import { inspectDxf, inspectGlb, suggestMeshMappings, unsupportedFormatMessage, DXF_REFERENCE_NOTE } from "@synapse/cad-importer";
+import {
+  convertIfcToGlb,
+  inspectDxf,
+  inspectGlb,
+  suggestMeshMappings,
+  unsupportedFormatMessage,
+  DXF_REFERENCE_NOTE,
+  IFC_REVIEW_NOTE,
+} from "@synapse/cad-importer";
 import { assets, importJobs, modelAssets, panoramaAssets, units, type Db, type JobLog, type JobRow } from "@synapse/db";
 import { detectFileKind, retryDelayMs } from "@synapse/domain";
 import type { ObjectStorage } from "@synapse/storage";
@@ -77,10 +85,12 @@ async function run(db: Db, job: JobRow, storage: ObjectStorage, log: (l: JobLog[
       return processPanorama(db, job, asset.id, bytes, storage, log);
     case "dxf":
       return processDxf(bytes, log);
+    case "ifc":
+      return processIfc(db, job, asset.id, bytes, storage, log);
     case null:
       throw new PermanentFailure("Unrecognized file signature");
     default:
-      // DWG / IFC / FBX / OBJ / glTF-JSON / PDF / SVG / WebP: never pretend a conversion happened.
+      // DWG / FBX / OBJ / glTF-JSON / PDF / SVG / WebP: never pretend a conversion happened.
       throw new PermanentFailure(unsupportedFormatMessage(kind));
   }
 }
@@ -100,16 +110,72 @@ async function processGlb(
     throw new PermanentFailure(`Invalid GLB: ${error instanceof Error ? error.message : String(error)}`);
   }
   log("info", `GLB valid: ${info.nodeNames.length} named nodes, ${info.meshCount} meshes, ${info.materialCount} materials`);
+  const stats = { meshCount: info.meshCount, materialCount: info.materialCount, sceneCount: info.sceneCount };
+  const { modelAssetId, suggestions } = await recordModel(db, job, assetId, info.nodeNames, stats, log);
 
+  return {
+    status: "REQUIRES_REVIEW",
+    result: {
+      kind: "glb",
+      modelAssetId,
+      nodeCount: info.nodeNames.length,
+      meshCount: info.meshCount,
+      suggestions,
+      note: "Mesh -> unit mappings are suggestions; a human must approve them.",
+    },
+  };
+}
+
+/** Converts IFC geometry to a GLB under processed/; the GLB is only used by the showroom after a human approves it. */
+async function processIfc(
+  db: Db,
+  job: JobRow,
+  assetId: string,
+  bytes: Uint8Array,
+  storage: ObjectStorage,
+  log: (l: JobLog["level"], m: string) => void,
+): Promise<JobOutcome> {
+  let conversion: Awaited<ReturnType<typeof convertIfcToGlb>>;
+  try {
+    conversion = await convertIfcToGlb(bytes);
+  } catch (error) {
+    throw new PermanentFailure(`Invalid IFC: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  const info = inspectGlb(conversion.glb);
+  if (!info.ok) throw new PermanentFailure(`IFC conversion produced an invalid GLB: ${info.error}`);
+  const glbPath = processedPath(job.organizationId, `${assetId}.glb`);
+  await storage.write(glbPath, Buffer.from(conversion.glb), "model/gltf-binary");
+  log("info", `IFC converted: ${conversion.buildings.length} buildings, ${conversion.elementCount} elements, ${conversion.triangleCount} triangles`);
+  log("warn", IFC_REVIEW_NOTE);
+
+  const stats = { meshCount: info.meshCount, materialCount: info.materialCount, triangleCount: conversion.triangleCount };
+  const { modelAssetId, suggestions } = await recordModel(db, job, assetId, info.nodeNames, stats, log);
+  return {
+    status: "REQUIRES_REVIEW",
+    result: {
+      kind: "ifc",
+      modelAssetId,
+      glbPath,
+      buildings: conversion.buildings,
+      elementCount: conversion.elementCount,
+      triangleCount: conversion.triangleCount,
+      suggestions,
+      note: IFC_REVIEW_NOTE,
+    },
+  };
+}
+
+async function recordModel(
+  db: Db,
+  job: JobRow,
+  assetId: string,
+  nodeNames: string[],
+  stats: Record<string, unknown>,
+  log: (l: JobLog["level"], m: string) => void,
+) {
   const [model] = await db
     .insert(modelAssets)
-    .values({
-      organizationId: job.organizationId,
-      assetId,
-      developmentId: job.developmentId,
-      nodeNames: info.nodeNames,
-      stats: { meshCount: info.meshCount, materialCount: info.materialCount, sceneCount: info.sceneCount },
-    })
+    .values({ organizationId: job.organizationId, assetId, developmentId: job.developmentId, nodeNames, stats })
     .returning();
 
   const unitRows = job.developmentId
@@ -119,20 +185,9 @@ async function processGlb(
         .where(and(eq(units.developmentId, job.developmentId), eq(units.organizationId, job.organizationId)))
     : [];
   const unitByCode = new Map(unitRows.map((u) => [u.code, u.id]));
-  const suggestions = suggestMeshMappings(info.nodeNames).map((s) => ({ ...s, unitId: unitByCode.get(s.unitCode) ?? null }));
+  const suggestions = suggestMeshMappings(nodeNames).map((s) => ({ ...s, unitId: unitByCode.get(s.unitCode) ?? null }));
   log("info", `${suggestions.length} mesh -> unit mappings suggested; ${suggestions.filter((s) => !s.unitId).length} without a matching unit`);
-
-  return {
-    status: "REQUIRES_REVIEW",
-    result: {
-      kind: "glb",
-      modelAssetId: model?.id,
-      nodeCount: info.nodeNames.length,
-      meshCount: info.meshCount,
-      suggestions,
-      note: "Mesh -> unit mappings are suggestions; a human must approve them.",
-    },
-  };
+  return { modelAssetId: model?.id, suggestions };
 }
 
 async function processPanorama(

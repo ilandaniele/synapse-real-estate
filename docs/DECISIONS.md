@@ -132,3 +132,14 @@ Formato corto: contexto, decisión, consecuencias. Estado: Aceptada salvo indica
 - **Consecuencias**: restaurar nunca devuelve a la venta una villa vendida ni muestra un precio viejo. Un medio
   borrado del storage después de la versión N rompe esa imagen o panorama en la versión restaurada; no se
   comprueba la existencia de cada archivo. El diff no compara binarios, solo URLs y campos.
+
+## ADR-019 Importador IFC con web-ifc: volúmenes simples, siempre con revisión
+- **Contexto**: la Fase 3 pedía un importador IFC básico. IFC es abierto (ISO 16739) y existe una librería MPL-2.0
+  que lo lee en Node (`web-ifc`), a diferencia de DWG.
+- **Decisión**: el worker convierte la geometría a GLB con `web-ifc` y `@gltf-transform/core`, agrupada por
+  `IfcBuilding`, y deja el job en `REQUIRES_REVIEW` con edificios, elementos, triángulos y el mapeo sugerido. El GLB
+  vive en `processed/` hasta que alguien aprueba; la aprobación usa el mismo camino que un GLB subido (copia a
+  `published/`, mapeos y `modelPath`). Solo colores de superficie, sin texturas ni simplificación.
+- **Consecuencias**: un estudio puede subir el IFC del proyecto sin exportar a mano, pero el resultado es una maqueta
+  de volúmenes, no un modelo de showroom final. Para que el mapeo funcione, cada edificio se nombra `Villa_NN` en el
+  software BIM. Un IFC grande puede producir un GLB pesado. `web-ifc` está en versión 0.x; fijamos 0.0.78.
