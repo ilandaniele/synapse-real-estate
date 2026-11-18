@@ -9,7 +9,8 @@
 - Assets demo generados por código.
 
 ## Fase 2 — Producción
-- Adaptador de storage S3/R2 con presigned URLs reales y CDN delante de `/media`.
+- [x] Adaptador de storage S3/R2 con presigned URLs reales y CDN delante de `/media`. Hecho el 2026-11-17
+  ([STORAGE.md](STORAGE.md)); probado contra RustFS local, no contra R2/AWS reales.
 - Panoramas multirresolución en teselas cubemap.
 - Postgres gestionado, backups automáticos, observabilidad (logs estructurados + métricas).
 - Gestión de usuarios e invitaciones por organización; recuperación de contraseña por email.

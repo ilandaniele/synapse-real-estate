@@ -275,7 +275,13 @@ export const UploadRequest = z.object({
   size: z.number().int().positive(),
   contentType: z.string().max(100),
 });
-export const UploadTicket = z.object({ assetId: Uuid, uploadUrl: z.string(), expiresAt: IsoDate });
+export const UploadTicket = z.object({
+  assetId: Uuid,
+  uploadUrl: z.string(),
+  expiresAt: IsoDate,
+  /** True when the PUT goes straight to object storage: the client must then call `POST /admin/assets/:id/complete`. */
+  requiresCompletion: z.boolean(),
+});
 
 export const Asset = z.object({
   id: Uuid,

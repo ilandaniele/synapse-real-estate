@@ -4,6 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { jwtVerify, SignJWT } from "jose";
 import { can, ROLES, type Action, type Role } from "@synapse/domain";
 import { organizationMemberships, users, type Db } from "@synapse/db";
+import type { ObjectStorage } from "@synapse/storage";
 import type { Config } from "../config";
 import { forbidden, unauthorized } from "./errors";
 
@@ -20,6 +21,7 @@ declare module "fastify" {
   interface FastifyInstance {
     db: Db;
     config: Config;
+    storage: ObjectStorage;
     /** preHandler factory: authenticates the session cookie and (optionally) checks an RBAC action. */
     requireAuth: (action?: Action) => (request: FastifyRequest) => Promise<void>;
   }

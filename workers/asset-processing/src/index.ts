@@ -1,5 +1,6 @@
 import path from "node:path";
 import { createDb, migrate, REPO_ROOT } from "@synapse/db";
+import { storageFromEnv } from "@synapse/storage";
 import { runAssetWorker } from "./loop";
 
 export { processJob, type JobOutcome } from "./process";
@@ -13,15 +14,15 @@ async function main() {
     );
     return;
   }
-  const storageDir = path.resolve(REPO_ROOT, process.env.STORAGE_DIR ?? "./storage");
+  const storage = storageFromEnv(process.env, path.resolve(REPO_ROOT, process.env.STORAGE_DIR ?? "./storage"));
   const handle = await createDb();
   await migrate(handle.db);
   const controller = new AbortController();
   const stop = () => controller.abort();
   process.on("SIGINT", stop);
   process.on("SIGTERM", stop);
-  console.log(`[asset-worker] polling IMPORT jobs every 2 s (storage: ${storageDir})`);
-  await runAssetWorker(handle.db, storageDir, controller.signal);
+  console.log(`[asset-worker] polling IMPORT jobs every 2 s (storage: ${storage.driver})`);
+  await runAssetWorker(handle.db, storage, controller.signal);
   await handle.close();
   console.log("[asset-worker] stopped");
 }

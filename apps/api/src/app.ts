@@ -6,7 +6,8 @@ import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
 import type { Db } from "@synapse/db";
-import { loadConfig, type Config } from "./config";
+import { LocalStorage, type ObjectStorage } from "@synapse/storage";
+import { defaultMediaBaseUrl, loadConfig, type Config } from "./config";
 import { decorateAuth } from "./lib/auth";
 import { errorHandler, forbidden, notFoundHandler } from "./lib/errors";
 import { buildOpenApiDocument } from "./lib/openapi";
@@ -28,6 +29,8 @@ export interface BuildAppOptions {
   db: Db;
   storageDir: string;
   config?: Partial<Omit<Config, "storageDir">>;
+  /** Defaults to files under `storageDir`, served by the API at /media/. */
+  storage?: ObjectStorage;
   /** Per-IP requests/minute. Defaults: global 300, login 10, leads 5. */
   rateLimit?: { global?: number; login?: number; leads?: number };
   logger?: boolean;
@@ -42,13 +45,35 @@ function redactedRequest(request: FastifyRequest) {
   return { method: request.method, url: request.url.replace(/([?&]token=)[^&]*/g, "$1[REDACTED]"), reqId: request.id };
 }
 
+/** Serves public prefixes of local storage; with S3 a CDN in front of the bucket serves them instead. */
+async function registerLocalMedia(app: FastifyInstance, root: string) {
+  await app.register(fastifyStatic, {
+    root,
+    prefix: "/media/",
+    // Raw uploads (CAD files, unprocessed panoramas) are private; processed/published/demo outputs are public.
+    allowedPath: (pathName) => !pathName.startsWith("/uploads"),
+    dotfiles: "deny",
+    index: false,
+    list: false,
+    setHeaders(reply, filePath) {
+      reply.header("Cross-Origin-Resource-Policy", "cross-origin");
+      reply.header("Cache-Control", MEDIA_CACHE);
+      if (filePath.toLowerCase().endsWith(".svg")) {
+        reply.header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; sandbox");
+      }
+    },
+  });
+}
+
 export async function buildApp(options: BuildAppOptions): Promise<FastifyInstance> {
+  const publicApiUrl = options.config?.publicApiUrl ?? "http://localhost:4000";
   const config: Config = {
     isProd: false,
     port: 4000,
     databaseUrl: "",
     sessionSecret: TEST_SECRET,
-    publicApiUrl: "http://localhost:4000",
+    publicApiUrl,
+    mediaBaseUrl: defaultMediaBaseUrl(publicApiUrl),
     corsOrigins: ["http://localhost:3000", "http://localhost:3001"],
     trustProxy: false,
     ...options.config,
@@ -64,6 +89,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
   app.decorate("db", options.db);
   app.decorate("config", config);
+  const storage = options.storage ?? new LocalStorage(options.storageDir);
+  app.decorate("storage", storage);
   decorateAuth(app);
   app.setErrorHandler(errorHandler);
   app.setNotFoundHandler(notFoundHandler);
@@ -106,22 +133,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     await app.register(swaggerUi, { routePrefix: "/docs" });
   }
 
-  await app.register(fastifyStatic, {
-    root: options.storageDir,
-    prefix: "/media/",
-    // Raw uploads (CAD files, unprocessed panoramas) are private; processed/published/demo outputs are public.
-    allowedPath: (pathName) => !pathName.startsWith("/uploads"),
-    dotfiles: "deny",
-    index: false,
-    list: false,
-    setHeaders(reply, filePath) {
-      reply.header("Cross-Origin-Resource-Policy", "cross-origin");
-      reply.header("Cache-Control", MEDIA_CACHE);
-      if (filePath.toLowerCase().endsWith(".svg")) {
-        reply.header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; sandbox");
-      }
-    },
-  });
+  if (storage instanceof LocalStorage) await registerLocalMedia(app, storage.root);
 
   app.get("/health", async () => ({ status: "ok" as const }));
 

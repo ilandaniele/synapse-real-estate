@@ -31,7 +31,8 @@ Las licencias se revisaron contra [FUENTES_Y_LICENCIAS.md](FUENTES_Y_LICENCIAS.m
 | Assets | @gltf-transform/core + functions | 4.5.1 | MIT | Generar e inspeccionar GLB |
 | Tests | vitest | 5.1.0 | MIT | Unit e integración |
 | Tests | @playwright/test | 1.65.1 | Apache-2.0 | E2E y regresión visual |
-| Infra | PostgreSQL 17, MinIO | Docker | PostgreSQL / AGPL-3.0 (solo como servicio) | docker-compose |
+| Infra | PostgreSQL 17, RustFS 1.0.6 (S3 local) | Docker | PostgreSQL / Apache-2.0 | docker-compose |
+| Storage | `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner` | ^3 | Apache-2.0 | `packages/storage` |
 
 ## Herramientas externas opcionales
 - **FFmpeg 8.1** — usado solo para extraer fotogramas de los videos de referencia durante el análisis.

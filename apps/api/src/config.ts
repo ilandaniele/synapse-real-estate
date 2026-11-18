@@ -11,6 +11,8 @@ const Env = z.object({
   STORAGE_DIR: z.string().default("./storage"),
   // Empty means relative /media and /api URLs, for a proxy that serves the API on each app's own origin.
   PUBLIC_API_URL: z.union([z.literal(""), z.string().url()]).default("http://localhost:4000"),
+  // Public base for media (a CDN in front of the bucket or of /media). Empty means `${PUBLIC_API_URL}/media`.
+  MEDIA_PUBLIC_URL: z.union([z.literal(""), z.string().url()]).default(""),
   CORS_ORIGINS: z.string().default("http://localhost:3000,http://localhost:3001"),
   TRUST_PROXY: z.enum(["true", "false"]).default("false"),
 });
@@ -22,9 +24,12 @@ export interface Config {
   sessionSecret: string;
   storageDir: string;
   publicApiUrl: string;
+  mediaBaseUrl: string;
   corsOrigins: string[];
   trustProxy: boolean;
 }
+
+export const defaultMediaBaseUrl = (publicApiUrl: string) => `${publicApiUrl}/media`;
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env, warn: (message: string) => void = console.warn): Config {
   const parsed = Env.safeParse(env);
@@ -42,13 +47,15 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, warn: (message:
     secret = randomBytes(32).toString("hex");
     warn("[api] SESSION_SECRET missing or shorter than 32 chars: using a random per-process secret (sessions reset on restart).");
   }
+  const publicApiUrl = e.PUBLIC_API_URL.replace(/\/+$/, "");
   return {
     isProd,
     port: e.API_PORT,
     databaseUrl: e.DATABASE_URL,
     sessionSecret: secret,
     storageDir: path.resolve(REPO_ROOT, e.STORAGE_DIR),
-    publicApiUrl: e.PUBLIC_API_URL.replace(/\/+$/, ""),
+    publicApiUrl,
+    mediaBaseUrl: e.MEDIA_PUBLIC_URL.replace(/\/+$/, "") || defaultMediaBaseUrl(publicApiUrl),
     corsOrigins: e.CORS_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean),
     trustProxy: e.TRUST_PROXY === "true",
   };

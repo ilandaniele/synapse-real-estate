@@ -93,7 +93,8 @@ Visual baselines live in `tests/e2e/a11y-touch-visual.spec.ts-snapshots/`. They 
 
 - Two-finger pinch zoom. Playwright has no multi-touch API; one-finger swipe (through CDP) and tap are covered.
 - Real GPU rendering. E2E uses SwiftShader.
-- Postgres, Redis and S3 backends. All runs use PGlite and local storage.
+- Postgres and Redis backends. All runs use PGlite. The S3 driver is tested against local RustFS only when
+  `S3_TEST_ENDPOINT` is set (see [STORAGE.md](STORAGE.md)); real R2/AWS is not tested.
 - Load testing. The app runs locally only; there is no deployed target.
 - Screen-reader output. Accessibility checks are keyboard and ARIA attributes only.
 

@@ -30,7 +30,7 @@ async function queueImport(assetId: string, developmentId?: string, cookie = edi
 async function claimAndProcess() {
   const job = await claimJob(ctx.db, "IMPORT");
   if (!job) throw new Error("no job claimed");
-  const outcome = await processJob(ctx.db, job, ctx.storageDir);
+  const outcome = await processJob(ctx.db, job, ctx.app.storage);
   return { job, outcome };
 }
 
@@ -56,6 +56,7 @@ describe("upload flow", () => {
     expect(row!.status).toBe("REJECTED");
     expect(row!.rejectionReason).toBeTruthy();
     expect(existsSync(path.join(ctx.storageDir, "uploads", ctx.fx.orgA, `${assetId}.part`))).toBe(false);
+    expect(existsSync(path.join(ctx.storageDir, "uploads", ctx.fx.orgA, assetId!))).toBe(false);
   });
 
   it("rejects unsupported extensions and oversize declarations at ticket time", async () => {
@@ -254,7 +255,7 @@ describe("render jobs", () => {
     const [rendered] = await ctx.db.select().from(assets).where(eq(assets.id, views[0]!.assetId));
     expect(rendered).toMatchObject({ filename: "living.jpg", status: "UPLOADED", kind: "jpeg" });
     const [importJob] = await ctx.db.select().from(importJobs).where(eq(importJobs.assetId, rendered!.id));
-    const imported = await processJob(ctx.db, importJob!, ctx.storageDir);
+    const imported = await processJob(ctx.db, importJob!, ctx.app.storage);
     expect(imported).toMatchObject({ status: "COMPLETED", result: { kind: "panorama" } });
   });
 

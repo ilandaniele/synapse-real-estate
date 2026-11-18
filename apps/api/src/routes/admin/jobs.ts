@@ -9,7 +9,6 @@ import { session } from "../../lib/auth";
 import { badRequest, conflict, notFound } from "../../lib/errors";
 import { jobToContract } from "../../lib/mappers";
 import { IdParams } from "../../lib/params";
-import { copyToPublished } from "../../lib/storage";
 
 const ReviewInput = z.object({ decision: z.enum(["approve", "reject"]), note: z.string().max(500).optional() });
 
@@ -138,7 +137,7 @@ export default async function jobRoutes(app: FastifyInstance) {
     const [asset] = await app.db.select().from(assets).where(and(eq(assets.id, job.assetId), eq(assets.organizationId, organizationId)));
     const publishedRelative = `published/${organizationId}/${job.assetId}.glb`;
     if (asset?.storagePath) {
-      await copyToPublished(app.config.storageDir, asset.storagePath, publishedRelative);
+      await app.storage.copy(asset.storagePath, publishedRelative);
     }
     await app.db.transaction(async (tx) => {
       if (mappable.length > 0) {

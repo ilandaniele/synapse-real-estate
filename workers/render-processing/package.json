@@ -11,6 +11,7 @@
   "dependencies": {
     "@synapse/domain": "workspace:*",
     "@synapse/db": "workspace:*",
+    "@synapse/storage": "workspace:*",
     "drizzle-orm": "^0.45.4"
   }
 }

@@ -22,6 +22,19 @@ describe("relative public API URL", () => {
   });
 });
 
+describe("MEDIA_PUBLIC_URL", () => {
+  const config = loadConfig({ PUBLIC_API_URL: "https://api.example.test", MEDIA_PUBLIC_URL: "https://cdn.example.test/" }, quiet);
+
+  it("builds media URLs on the CDN and reads them back", () => {
+    expect(mediaUrl(config, "published/org/a.jpg")).toBe("https://cdn.example.test/published/org/a.jpg");
+    expect(toStoredPath(config, "https://cdn.example.test/published/org/a.jpg")).toBe("published/org/a.jpg");
+  });
+
+  it("defaults to the API's /media", () => {
+    expect(loadConfig({ PUBLIC_API_URL: "https://api.example.test" }, quiet).mediaBaseUrl).toBe("https://api.example.test/media");
+  });
+});
+
 describe("seed guard", () => {
   const strong = "a-long-random-seed-password";
 

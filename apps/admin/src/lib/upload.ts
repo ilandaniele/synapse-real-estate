@@ -82,7 +82,7 @@ export function putWithProgress(url: string, file: File, contentType: string, on
   });
 }
 
-/** Validates, requests an upload ticket and PUTs the file. Resolves with the new asset id. */
+/** Validates, requests an upload ticket, PUTs the file and confirms it when the ticket asks. Resolves with the new asset id. */
 export async function uploadAsset(file: File, onProgress: (fraction: number) => void): Promise<string> {
   const check = validateFileForUpload(file);
   if (!check.ok || !check.kind) throw new Error(check.message ?? "Archivo no válido");
@@ -93,6 +93,7 @@ export async function uploadAsset(file: File, onProgress: (fraction: number) => 
     body: { filename: file.name, size: file.size, contentType },
   });
   await putWithProgress(ticket.uploadUrl, file, contentType, onProgress);
+  if (ticket.requiresCompletion) await api(`/admin/assets/${ticket.assetId}/complete`, { method: "POST" });
   return ticket.assetId;
 }
 

@@ -1,5 +1,3 @@
-import { copyFile, mkdir } from "node:fs/promises";
-import path from "node:path";
 import { jwtVerify, SignJWT } from "jose";
 import { FILE_KINDS, type FileKind } from "@synapse/domain";
 import type { Config } from "../config";
@@ -8,19 +6,19 @@ export const UPLOAD_TOKEN_TTL_SECONDS = 600;
 
 const key = (secret: string) => new TextEncoder().encode(secret);
 
-/** Stored paths are relative to STORAGE_DIR; external http(s) URLs are kept as-is. */
+/** Stored paths are storage keys (e.g. `processed/<org>/<id>.jpg`); external http(s) URLs are kept as-is. */
 export function mediaUrl(config: Config, stored: string): string;
 export function mediaUrl(config: Config, stored: string | null): string | null;
 export function mediaUrl(config: Config, stored: string | null): string | null {
   if (!stored) return null;
   if (/^https?:\/\//i.test(stored)) return stored;
-  return `${config.publicApiUrl}/media/${stored.replace(/^\/+/, "")}`;
+  return `${config.mediaBaseUrl}/${stored.replace(/^\/+/, "")}`;
 }
 
-/** Inverse of mediaUrl for client-provided URLs: returns a storage-relative path or an external URL; null if unsafe. */
+/** Inverse of mediaUrl for client-provided URLs: returns a storage key or an external URL; null if unsafe. */
 export function toStoredPath(config: Config, input: string): string | null {
   let value = input.trim();
-  const prefix = `${config.publicApiUrl}/media/`;
+  const prefix = `${config.mediaBaseUrl}/`;
   if (value.startsWith(prefix)) value = value.slice(prefix.length);
   else if (value.startsWith("/media/")) value = value.slice("/media/".length);
   else if (/^https:\/\//i.test(value)) return value;
@@ -30,20 +28,6 @@ export function toStoredPath(config: Config, input: string): string | null {
 }
 
 export const uploadPath = (organizationId: string, assetId: string) => `uploads/${organizationId}/${assetId}`;
-
-export function resolveInside(storageDir: string, relative: string): string {
-  const root = path.resolve(storageDir);
-  const full = path.resolve(root, relative);
-  if (full !== root && !full.startsWith(root + path.sep)) throw new Error("Path escapes STORAGE_DIR");
-  return full;
-}
-
-/** Copies a private upload to a public path under STORAGE_DIR (e.g. published/<org>/...), creating folders as needed. */
-export async function copyToPublished(storageDir: string, sourceRelative: string, targetRelative: string): Promise<void> {
-  const target = resolveInside(storageDir, targetRelative);
-  await mkdir(path.dirname(target), { recursive: true });
-  await copyFile(resolveInside(storageDir, sourceRelative), target);
-}
 
 const EXTENSION_KIND: Record<string, FileKind> = {
   glb: "glb",

@@ -25,8 +25,8 @@ docker compose up -d postgres
 # .env: DATABASE_URL=postgres://synapse:synapse@localhost:5432/synapse
 pnpm db:seed && pnpm dev
 ```
-El modo Postgres real no se ejercitó en esta sesión (ver PROGRESS.md). MinIO está en el compose para el
-futuro adaptador S3; el storage actual es disco local (`STORAGE_DIR`).
+El modo Postgres real no se ejercitó en esta sesión (ver PROGRESS.md). El compose trae RustFS (servicio `s3`)
+para probar el driver S3; por defecto el storage es disco local (`STORAGE_DIR`). Ver [STORAGE.md](STORAGE.md).
 
 ## VM única (Oracle Cloud Always Free)
 

@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { assets } from "@synapse/db";
 import { badRequest } from "./errors";
-import { copyToPublished, toStoredPath } from "./storage";
+import { toStoredPath } from "./storage";
 
 const IMAGE_EXTENSION: Record<string, string> = { jpeg: "jpg", png: "png", webp: "webp", svg: "svg" };
 
@@ -25,7 +25,7 @@ export async function resolveImage(
       throw badRequest("imageAssetId must be an uploaded JPEG, PNG, WebP or SVG asset");
     }
     const published = `published/${organizationId}/${asset.id}.${extension}`;
-    await copyToPublished(app.config.storageDir, asset.storagePath, published);
+    await app.storage.copy(asset.storagePath, published);
     return published;
   }
   if (input.imageUrl) {

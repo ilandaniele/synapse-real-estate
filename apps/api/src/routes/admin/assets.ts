@@ -1,24 +1,40 @@
 import { randomUUID } from "node:crypto";
 import { createWriteStream } from "node:fs";
-import { mkdir, open, rename, rm } from "node:fs/promises";
+import { mkdir, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import type { Readable } from "node:stream";
-import { and, desc, eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { UploadRequest, UploadTicket as UploadTicketSchema } from "@synapse/contracts";
 import { assets } from "@synapse/db";
-import { MAX_UPLOAD_BYTES, validateUpload } from "@synapse/domain";
+import { MAX_UPLOAD_BYTES } from "@synapse/domain";
+import { LocalStorage, S3Storage } from "@synapse/storage";
 import { audit } from "../../lib/audit";
 import { session } from "../../lib/auth";
-import { badRequest, conflict, HttpError, notFound, unauthorized } from "../../lib/errors";
+import { badRequest, HttpError, unauthorized } from "../../lib/errors";
 import { assetToContract, iso } from "../../lib/mappers";
-import { kindFromFilename, resolveInside, signUploadToken, UPLOAD_TOKEN_TTL_SECONDS, uploadPath, verifyUploadToken } from "../../lib/storage";
+import { kindFromFilename, signUploadToken, UPLOAD_TOKEN_TTL_SECONDS, uploadPath, verifyUploadToken } from "../../lib/storage";
+import { finalizeUpload, findPendingUpload, rejectUpload } from "../../lib/uploads";
 
 const UploadParams = z.object({ assetId: z.string().uuid() });
+const AssetParams = z.object({ id: z.string().uuid() });
 const UploadQuery = z.object({ token: z.string().min(10) });
 
-/** `POST /assets/uploads` and `GET /assets` (mounted under /api/v1/admin). */
+/** Presigned bucket PUT (S3), or the API's own token-authenticated PUT (local storage). */
+async function uploadUrlFor(app: FastifyInstance, organizationId: string, assetId: string, input: z.infer<typeof UploadRequest>) {
+  if (app.storage instanceof S3Storage) {
+    return app.storage.presignPut(uploadPath(organizationId, assetId), {
+      contentType: input.contentType,
+      size: input.size,
+      expiresInSeconds: UPLOAD_TOKEN_TTL_SECONDS,
+    });
+  }
+  const token = await signUploadToken(app.config, { assetId, organizationId });
+  return `${app.config.publicApiUrl}/api/v1/uploads/${assetId}?token=${encodeURIComponent(token)}`;
+}
+
+/** `POST /assets/uploads`, `POST /assets/:id/complete` and `GET /assets` (mounted under /api/v1/admin). */
 export async function assetAdminRoutes(app: FastifyInstance) {
   app.post("/assets/uploads", { preHandler: app.requireAuth("asset:upload") }, async (request, reply) => {
     const actor = session(request);
@@ -43,13 +59,19 @@ export async function assetAdminRoutes(app: FastifyInstance) {
       });
       await audit(tx, actor, "asset.upload_requested", "asset", id, { kind, size: input.size });
     });
-    const token = await signUploadToken(app.config, { assetId: id, organizationId: actor.organizationId });
     const ticket: z.infer<typeof UploadTicketSchema> = {
       assetId: id,
-      uploadUrl: `${app.config.publicApiUrl}/api/v1/uploads/${id}?token=${encodeURIComponent(token)}`,
+      uploadUrl: await uploadUrlFor(app, actor.organizationId, id, input),
       expiresAt: iso(expiresAt),
+      requiresCompletion: !(app.storage instanceof LocalStorage),
     };
     return reply.status(201).send(ticket);
+  });
+
+  app.post("/assets/:id/complete", { preHandler: app.requireAuth("asset:upload") }, async (request) => {
+    const { id } = AssetParams.parse(request.params);
+    const asset = await findPendingUpload(app, id, session(request).organizationId);
+    return finalizeUpload(app, asset);
   });
 
   app.get("/assets", { preHandler: app.requireAuth("development:read") }, async (request) => {
@@ -64,8 +86,10 @@ export async function assetAdminRoutes(app: FastifyInstance) {
   });
 }
 
-/** `PUT /api/v1/uploads/:assetId?token=` - raw body streaming, authenticated by the signed upload token. */
+/** `PUT /api/v1/uploads/:assetId?token=` - raw body streaming, authenticated by the signed upload token. Local storage only. */
 export async function uploadRoutes(app: FastifyInstance) {
+  const storage = app.storage;
+  if (!(storage instanceof LocalStorage)) return;
   // Raw bodies are streamed to disk instead of buffered; the 1 MB limit applies to every other route.
   app.addContentTypeParser("*", (_request, payload, done) => done(null, payload));
 
@@ -75,25 +99,15 @@ export async function uploadRoutes(app: FastifyInstance) {
     const claims = await verifyUploadToken(app.config, token);
     if (!claims || claims.assetId !== assetId) throw unauthorized("Invalid or expired upload token");
 
-    const [asset] = await app.db
-      .select()
-      .from(assets)
-      .where(and(eq(assets.id, assetId), eq(assets.organizationId, claims.organizationId)));
-    if (!asset) throw notFound("Asset");
-    if (asset.status !== "PENDING_UPLOAD") throw conflict(`Asset is already ${asset.status}`, "UPLOAD_CLOSED");
-    const declaredKind = kindFromFilename(asset.filename);
-    if (!declaredKind) throw badRequest("Unsupported file extension");
-
-    const finalPath = resolveInside(app.config.storageDir, uploadPath(asset.organizationId, asset.id));
+    const asset = await findPendingUpload(app, assetId, claims.organizationId);
+    const finalPath = storage.resolve(uploadPath(asset.organizationId, asset.id));
     const tempPath = `${finalPath}.part`;
     await mkdir(path.dirname(finalPath), { recursive: true });
 
     const reject = async (reason: string, status: number, code: string) => {
       await rm(tempPath, { force: true });
-      await app.db.update(assets).set({ status: "REJECTED", rejectionReason: reason }).where(eq(assets.id, asset.id));
-      await audit(app.db, { userId: asset.uploadedBy, organizationId: asset.organizationId }, "asset.rejected", "asset", asset.id, { reason });
       reply.header("Connection", "close");
-      return new HttpError(status, code, reason);
+      return rejectUpload(app, asset, reason, status, code);
     };
 
     // Manual copy instead of stream.pipeline: pipeline would destroy the request (and its socket) on error,
@@ -126,28 +140,7 @@ export async function uploadRoutes(app: FastifyInstance) {
       throw error;
     }
     if (exceeded) throw await reject(`Upload exceeds the declared size of ${asset.declaredSize} bytes`, 413, "PAYLOAD_TOO_LARGE");
-    if (received !== asset.declaredSize) {
-      throw await reject(`Uploaded ${received} bytes but ${asset.declaredSize} were declared`, 422, "UPLOAD_REJECTED");
-    }
-
-    const handle = await open(tempPath, "r");
-    const head = Buffer.alloc(Math.min(1024, received));
-    try {
-      await handle.read(head, 0, head.length, 0);
-    } finally {
-      await handle.close();
-    }
-    const validation = validateUpload(new Uint8Array(head), received, [declaredKind]);
-    if (!validation.ok) {
-      throw await reject(`File content does not match the declared type ${declaredKind}: ${validation.reason}`, 422, "UPLOAD_REJECTED");
-    }
-
     await rename(tempPath, finalPath);
-    const [updated] = await app.db
-      .update(assets)
-      .set({ status: "UPLOADED", size: received, kind: validation.kind, storagePath: uploadPath(asset.organizationId, asset.id) })
-      .where(eq(assets.id, asset.id))
-      .returning();
-    return assetToContract(updated!);
+    return finalizeUpload(app, asset);
   });
 }

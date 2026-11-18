@@ -14,5 +14,6 @@ repositorio público en GitHub.
   ([DEPLOYMENT.md](DEPLOYMENT.md)); código en `github.com/ilandaniele/synapse-real-estate`.
 
 - [x] Roadmap Fase 2 — Modo kiosko para pantallas táctiles ([KIOSK.md](KIOSK.md)).
+- [x] Roadmap Fase 2 — Storage S3/R2 con subida presignada ([STORAGE.md](STORAGE.md)).
 
 Detalle de avance, comandos y resultados de tests: [PROGRESS.md](PROGRESS.md).

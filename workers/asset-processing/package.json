@@ -12,6 +12,7 @@
   "dependencies": {
     "@synapse/domain": "workspace:*",
     "@synapse/db": "workspace:*",
+    "@synapse/storage": "workspace:*",
     "@synapse/cad-importer": "workspace:*",
     "drizzle-orm": "^0.45.4",
     "sharp": "^0.35.5",

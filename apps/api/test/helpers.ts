@@ -214,7 +214,7 @@ async function seedFixtures(db: Db): Promise<Fixtures> {
   };
 }
 
-export async function createTestContext(options: Partial<Pick<BuildAppOptions, "rateLimit" | "config">> = {}): Promise<TestContext> {
+export async function createTestContext(options: Partial<Pick<BuildAppOptions, "rateLimit" | "config" | "storage">> = {}): Promise<TestContext> {
   const handle: DbHandle = await createDb("memory://");
   await migrate(handle.db);
   const storageDir = mkdtempSync(path.join(tmpdir(), "synapse-api-test-"));
@@ -222,6 +222,7 @@ export async function createTestContext(options: Partial<Pick<BuildAppOptions, "
     db: handle.db,
     storageDir,
     config: options.config,
+    storage: options.storage,
     rateLimit: { global: 100_000, login: 100_000, leads: 100_000, ...options.rateLimit },
   });
   await app.ready();

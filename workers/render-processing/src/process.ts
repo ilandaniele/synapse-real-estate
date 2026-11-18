@@ -1,9 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { copyFile, mkdir, mkdtemp, rm, stat } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { and, eq, sql } from "drizzle-orm";
 import { assets, importJobs, renderJobs, REPO_ROOT, type Db, type JobLog, type JobRow } from "@synapse/db";
+import { storageFromEnv, type ObjectStorage } from "@synapse/storage";
 import { blenderPath, blenderRenderer, renderSettings, type Log, type PanoramaRenderer, type RenderedView } from "./blender";
 
 export const NO_RENDER_BACKEND_MESSAGE =
@@ -61,15 +62,19 @@ async function run(db: Db, job: JobRow, env: NodeJS.ProcessEnv, render: Panorama
   if (asset.status !== "UPLOADED" || !asset.storagePath) throw new Error(`Asset is ${asset.status}, expected UPLOADED`);
   if (asset.kind !== "glb") throw new Error(`Only GLB models can be rendered, got ${asset.kind ?? "unknown"}`);
 
-  const storageDir = path.resolve(REPO_ROOT, env.STORAGE_DIR ?? "./storage");
+  const storage = storageFromEnv(env, path.resolve(REPO_ROOT, env.STORAGE_DIR ?? "./storage"));
   const settings = renderSettings(env);
-  const outputDir = await mkdtemp(path.join(tmpdir(), "synapse-render-"));
+  const workDir = await mkdtemp(path.join(tmpdir(), "synapse-render-"));
+  const inputFile = path.join(workDir, "input.glb");
+  const outputDir = path.join(workDir, "out");
   try {
+    await writeFile(inputFile, await storage.read(asset.storagePath));
+    await mkdir(outputDir);
     log("info", `Rendering ${asset.filename} at ${settings.width}x${settings.width / 2}, ${settings.samples} samples on ${settings.device}`);
     const started = Date.now();
-    const views = await render({ inputFile: path.join(storageDir, asset.storagePath), outputDir, settings }, log);
+    const views = await render({ inputFile, outputDir, settings }, log);
     if (views.length === 0) throw new Error("Render produced no images");
-    const registered = await registerViews(db, job, storageDir, views);
+    const registered = await registerViews(db, job, storage, views);
     log("info", `${registered.length} panorama(s) queued for import`);
     return {
       status: "REQUIRES_REVIEW",
@@ -84,20 +89,18 @@ async function run(db: Db, job: JobRow, env: NodeJS.ProcessEnv, render: Panorama
       },
     };
   } finally {
-    await rm(outputDir, { recursive: true, force: true });
+    await rm(workDir, { recursive: true, force: true });
   }
 }
 
-async function registerViews(db: Db, job: JobRow, storageDir: string, views: RenderedView[]) {
-  const uploadsDir = path.join(storageDir, "uploads", job.organizationId);
-  await mkdir(uploadsDir, { recursive: true });
+async function registerViews(db: Db, job: JobRow, storage: ObjectStorage, views: RenderedView[]) {
   const rows = await Promise.all(
     views.map(async (view) => {
       const id = randomUUID();
       const storagePath = uploadPath(job.organizationId, id);
-      await copyFile(view.file, path.join(storageDir, storagePath));
-      const { size } = await stat(view.file);
-      return { view, asset: { id, storagePath, size } };
+      const image = await readFile(view.file);
+      await storage.write(storagePath, image, "image/jpeg");
+      return { view, asset: { id, storagePath, size: image.length } };
     }),
   );
 

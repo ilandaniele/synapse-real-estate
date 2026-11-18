@@ -34,9 +34,9 @@ Formato corto: contexto, decisión, consecuencias. Estado: Aceptada salvo indica
 - **Consecuencias**: transaccional con el resto de datos. Si el volumen crece, migrar a BullMQ manteniendo el contrato `Job`.
 
 ## ADR-007 Almacenamiento local con URLs de subida firmadas (interfaz compatible con S3)
-- **Contexto**: uploads grandes no deben pasar por JSON; producción usará S3/R2/MinIO.
+- **Contexto**: uploads grandes no deben pasar por JSON; producción usará S3/R2.
 - **Decisión**: el API emite una URL PUT firmada (JWT, 10 min) a su propio endpoint; el archivo se valida por tamaño declarado y magic bytes; archivos inválidos se borran y el asset queda `REJECTED`.
-- **Consecuencias**: el adaptador S3 implementará el mismo contrato emitiendo presigned URLs reales.
+- **Consecuencias**: el adaptador S3 implementará el mismo contrato emitiendo presigned URLs reales (hecho en ADR-013).
 
 ## ADR-008 Publicaciones versionadas como snapshot JSON
 - **Contexto**: el showroom público no debe ver ediciones a medias; se necesita rollback y cache.
@@ -62,3 +62,8 @@ Formato corto: contexto, decisión, consecuencias. Estado: Aceptada salvo indica
 - **Contexto**: admin en otro origen (puerto 3001) consume el API.
 - **Decisión**: cookie `synapse_session` httpOnly, SameSite=Lax, firmada HS256 con `jose`; CORS con lista explícita y credenciales.
 - **Consecuencias**: en producción admin y API deben compartir dominio registrable (o usar un proxy) para que SameSite=Lax funcione.
+
+## ADR-013 Adaptador de storage S3/R2 con subida presignada y paso de completado
+- **Contexto**: producción necesita bucket + CDN; el disco local no escala ni sobrevive a la VM.
+- **Decisión**: `packages/storage` define `ObjectStorage` con dos drivers, `LocalStorage` y `S3Storage` (AWS SDK v3, Apache-2.0), elegidos con `STORAGE_DRIVER`. Con S3 el ticket trae una URL PUT presignada con tamaño y content-type firmados, y el admin llama `POST /admin/assets/:id/complete`; ambos caminos terminan en la misma validación (tamaño + magic bytes). Las URLs de media usan `MEDIA_PUBLIC_URL`. En local se usa RustFS (Apache-2.0) porque MinIO dejó de publicar imágenes.
+- **Consecuencias**: el bucket necesita CORS para el origen del admin y la CDN no debe exponer `uploads/`. Workers y API comparten el driver. Detalle en [STORAGE.md](STORAGE.md).

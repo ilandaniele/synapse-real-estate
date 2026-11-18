@@ -1,11 +1,10 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
 import { NodeIO } from "@gltf-transform/core";
 import { and, eq, sql } from "drizzle-orm";
 import sharp from "sharp";
 import { inspectDxf, inspectGlb, suggestMeshMappings, unsupportedFormatMessage, DXF_REFERENCE_NOTE } from "@synapse/cad-importer";
 import { assets, importJobs, modelAssets, panoramaAssets, units, type Db, type JobLog, type JobRow } from "@synapse/db";
 import { detectFileKind, retryDelayMs } from "@synapse/domain";
+import type { ObjectStorage } from "@synapse/storage";
 
 export type JobOutcome =
   | { status: "COMPLETED" | "REQUIRES_REVIEW"; result: Record<string, unknown> }
@@ -14,26 +13,19 @@ export type JobOutcome =
 
 class PermanentFailure extends Error {}
 
-/** Output paths below STORAGE_DIR, relative with forward slashes (publicly servable under /media/). */
+/** Output storage keys (publicly servable under the media base URL). */
 const processedPath = (organizationId: string, name: string) => `processed/${organizationId}/${name}`;
-
-function resolveInside(storageDir: string, relative: string): string {
-  const root = path.resolve(storageDir);
-  const full = path.resolve(root, relative);
-  if (full !== root && !full.startsWith(root + path.sep)) throw new Error("Storage path escapes STORAGE_DIR");
-  return full;
-}
 
 /**
  * Processes one claimed IMPORT job and persists the outcome (status, error, result, logs).
  * Never pretends success: unsupported formats and invalid files end FAILED with an explicit message.
  */
-export async function processJob(db: Db, job: JobRow, storageDir: string): Promise<JobOutcome> {
+export async function processJob(db: Db, job: JobRow, storage: ObjectStorage): Promise<JobOutcome> {
   const logs: JobLog[] = [];
   const log = (level: JobLog["level"], message: string) => logs.push({ at: new Date().toISOString(), level, message });
   let outcome: JobOutcome;
   try {
-    outcome = await run(db, job, storageDir, log);
+    outcome = await run(db, job, storage, log);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (error instanceof PermanentFailure) {
@@ -63,7 +55,7 @@ export async function processJob(db: Db, job: JobRow, storageDir: string): Promi
   return outcome;
 }
 
-async function run(db: Db, job: JobRow, storageDir: string, log: (l: JobLog["level"], m: string) => void): Promise<JobOutcome> {
+async function run(db: Db, job: JobRow, storage: ObjectStorage, log: (l: JobLog["level"], m: string) => void): Promise<JobOutcome> {
   if (!job.assetId) throw new PermanentFailure("Job has no asset");
   const [asset] = await db
     .select()
@@ -72,7 +64,7 @@ async function run(db: Db, job: JobRow, storageDir: string, log: (l: JobLog["lev
   if (!asset) throw new PermanentFailure("Asset not found");
   if (asset.status !== "UPLOADED" || !asset.storagePath) throw new PermanentFailure(`Asset is ${asset.status}, expected UPLOADED`);
 
-  const bytes = new Uint8Array(await readFile(resolveInside(storageDir, asset.storagePath)));
+  const bytes = new Uint8Array(await storage.read(asset.storagePath));
   const kind = detectFileKind(bytes);
   log("info", `Processing ${asset.filename} (${bytes.byteLength} bytes, detected ${kind ?? "unknown"})`);
 
@@ -81,7 +73,7 @@ async function run(db: Db, job: JobRow, storageDir: string, log: (l: JobLog["lev
       return processGlb(db, job, asset.id, bytes, log);
     case "jpeg":
     case "png":
-      return processPanorama(db, job, asset.id, bytes, storageDir, log);
+      return processPanorama(db, job, asset.id, bytes, storage, log);
     case "dxf":
       return processDxf(bytes, log);
     case null:
@@ -147,7 +139,7 @@ async function processPanorama(
   job: JobRow,
   assetId: string,
   bytes: Uint8Array,
-  storageDir: string,
+  storage: ObjectStorage,
   log: (l: JobLog["level"], m: string) => void,
 ): Promise<JobOutcome> {
   let width: number;
@@ -164,8 +156,6 @@ async function processPanorama(
   }
   log("info", `Equirectangular ${width}x${height}`);
 
-  const dir = resolveInside(storageDir, processedPath(job.organizationId, ""));
-  await mkdir(dir, { recursive: true });
   const outputs = {
     imagePath: processedPath(job.organizationId, `${assetId}.jpg`),
     previewPath: processedPath(job.organizationId, `${assetId}-preview.jpg`),
@@ -174,9 +164,9 @@ async function processPanorama(
   // Re-encoding strips metadata and guarantees a browser-safe JPEG.
   const source = () => sharp(bytes).rotate();
   await Promise.all([
-    source().resize({ width: 8192, withoutEnlargement: true }).jpeg({ quality: 85 }).toBuffer().then((b) => writeFile(resolveInside(storageDir, outputs.imagePath), b)),
-    source().resize(1024, 512, { fit: "fill" }).jpeg({ quality: 80 }).toBuffer().then((b) => writeFile(resolveInside(storageDir, outputs.previewPath), b)),
-    source().resize(320, 180, { fit: "cover" }).jpeg({ quality: 75 }).toBuffer().then((b) => writeFile(resolveInside(storageDir, outputs.thumbnailPath), b)),
+    source().resize({ width: 8192, withoutEnlargement: true }).jpeg({ quality: 85 }).toBuffer().then((b) => storage.write(outputs.imagePath, b, "image/jpeg")),
+    source().resize(1024, 512, { fit: "fill" }).jpeg({ quality: 80 }).toBuffer().then((b) => storage.write(outputs.previewPath, b, "image/jpeg")),
+    source().resize(320, 180, { fit: "cover" }).jpeg({ quality: 75 }).toBuffer().then((b) => storage.write(outputs.thumbnailPath, b, "image/jpeg")),
   ]);
 
   const [pano] = await db

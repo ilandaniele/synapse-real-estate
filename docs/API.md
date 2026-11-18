@@ -12,7 +12,7 @@ Errors always use the `ApiError` shape `{error: {code, message, details?}}`. Bod
 |---|---|---|---|
 | GET | /health | public | `{status:"ok"}` |
 | GET | /docs, /docs/json | public, not in production | Swagger UI / OpenAPI 3.0 generated from the Zod contracts |
-| GET | /media/* | public | Static from STORAGE_DIR. `uploads/` is never served. 7 d cache, nosniff |
+| GET | /media/* | public | Local storage only (`STORAGE_DRIVER=local`). Static from STORAGE_DIR. `uploads/` is never served. 7 d cache, nosniff. With S3, media URLs use `MEDIA_PUBLIC_URL` |
 | POST | /api/v1/auth/login | public | 10/min/IP; 401 identical for wrong email or password |
 | POST | /api/v1/auth/logout | public | clears cookie |
 | GET | /api/v1/auth/me | session | SessionUser |
@@ -36,8 +36,9 @@ Errors always use the `ApiError` shape `{error: {code, message, details?}}`. Bod
 | GET | /admin/leads | lead:read | `?developmentId&unitId&page&pageSize` -> `{items,total,page,pageSize}` |
 | GET | /admin/leads/:id | lead:read | extra endpoint, not in the original contract list |
 | GET | /admin/leads/export.csv | lead:export | every cell quoted, `=+-@\t\r` prefixed with `'`; audited; max 10 000 rows |
-| POST | /admin/assets/uploads | asset:upload | 201 ticket `{assetId, uploadUrl, expiresAt}`; token valid 10 min; 413 if declared size over the per-kind limit |
-| PUT | /api/v1/uploads/:assetId?token= | upload token | raw body streamed to disk; 413 over declared size; 422 `UPLOAD_REJECTED` for size mismatch or magic-byte mismatch (asset marked REJECTED) |
+| POST | /admin/assets/uploads | asset:upload | 201 ticket `{assetId, uploadUrl, expiresAt, requiresCompletion}`; URL valid 10 min; 413 if declared size over the per-kind limit. With S3, `uploadUrl` is a presigned bucket PUT and `requiresCompletion` is true |
+| PUT | /api/v1/uploads/:assetId?token= | upload token | local storage only; raw body streamed to disk; 413 over declared size; 422 `UPLOAD_REJECTED` for size mismatch or magic-byte mismatch (asset marked REJECTED) |
+| POST | /admin/assets/:id/complete | asset:upload | S3 flow, after the presigned PUT: same size and magic-byte checks, 200 asset; 409 `UPLOAD_MISSING` before the file arrives, 409 `UPLOAD_CLOSED` if no longer pending, 422 `UPLOAD_REJECTED` |
 | GET | /admin/assets | read | |
 | POST | /admin/jobs | job:create | `{kind: IMPORT|RENDER, assetId, developmentId?}`; asset must be UPLOADED |
 | GET | /admin/jobs, /admin/jobs/:id | read | |
