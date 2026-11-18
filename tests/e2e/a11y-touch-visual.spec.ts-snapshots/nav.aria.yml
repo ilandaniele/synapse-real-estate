@@ -1,0 +1,15 @@
+- navigation "Principal":
+  - link "Inicio":
+    - /url: /
+  - link "Masterplan":
+    - /url: /masterplan
+  - link "Áreas":
+    - /url: /areas
+  - link "Unidades":
+    - /url: /unidades
+  - link "Galería":
+    - /url: /galeria
+  - link "Ubicación":
+    - /url: /ubicacion
+  - link "Contacto":
+    - /url: /contacto

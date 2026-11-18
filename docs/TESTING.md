@@ -102,10 +102,14 @@ Specs (`tests/e2e`):
 | `csp` | Masterplan, tour and location pages log no Content Security Policy violations (catches the production CSP blocking the GLB decoder's WebAssembly) |
 | `kiosk` | Kiosk mode with Playwright's simulated clock: after 90 s idle the warning appears and 15 s later the showroom returns home with the search cleared; «Seguir navegando» cancels it; the mode persists across pages and `?kiosk=0` turns it off; no reset outside kiosk mode; the manifest opens fullscreen in kiosk mode |
 | `i18n` | Switch to English: `lang`, menu, heading, unit count, status filter and page title change, the choice survives a reload, and switching back restores Spanish; with no cookie an `en-US` browser gets English |
-| `a11y-touch-visual` | Tab through the main menu with visible focus; select a villa with the keyboard; mobile menu, tap a villa, swipe the panorama and tap a hotspot; 15 visual baselines (5 pages × 3 projects, 3D canvas masked) |
+| `a11y-touch-visual` | Tab through the main menu with visible focus; select a villa with the keyboard; accessibility-tree snapshots (what a screen reader is given) of the main menu, Villa 3's card and the contact form with its errors; mobile menu, tap a villa, swipe the panorama and tap a hotspot; a two-finger pinch zooms the masterplan in (the gap between the V1 and V7 labels grows); 15 visual baselines (5 pages × 3 projects, 3D canvas masked) |
 
-**Last full run (2026-11-18, after Stripe Checkout and the copyable links): 49 passed, 0 failed, 0 skipped,
-1.9 min**, with `E2E_SHOWROOM_PORT=3002` and `E2E_SMTP_URL=smtp://localhost:1025`.
+**Last full run (2026-11-18, after the pinch and screen-reader tests): 53 passed, 0 failed, 0 skipped,
+2.1 min**, on PGlite, with `E2E_SHOWROOM_PORT=3002` and `E2E_SMTP_URL=smtp://localhost:1025`. The pinch test was
+also checked the other way: with a scale of 1 (no pinch) it fails, the label gap stays at 169 px.
+
+Previous full run (2026-11-18, after Stripe Checkout and the copyable links): 49 passed, 0 failed, 0 skipped,
+1.9 min, with `E2E_SHOWROOM_PORT=3002` and `E2E_SMTP_URL=smtp://localhost:1025`.
 
 Previous full run (2026-11-18, after reservations): 46 passed, 0 failed, 0 skipped, 2.1 min, with
 `E2E_SHOWROOM_PORT=3002` and `E2E_SMTP_URL=smtp://localhost:1025`.
@@ -145,15 +149,47 @@ It failed before the fix and passed after it. See the local stack test in [DEPLO
 Visual baselines live in `tests/e2e/a11y-touch-visual.spec.ts-snapshots/`. They are platform-specific
 (`-win32`). Update them only on purpose, with `npx playwright test --update-snapshots`.
 
+### E2E on Postgres
+
+`E2E_DATABASE_URL` points the API that Playwright starts at a Postgres database instead of PGlite; the seed
+runs against it first. Run 2026-11-18 against a throwaway Postgres 17 container:
+
+```bash
+docker run -d --name synapse-pg-e2e -p 5439:5432 -e POSTGRES_USER=synapse -e POSTGRES_PASSWORD=e2e -e POSTGRES_DB=synapse postgres:17
+E2E_DATABASE_URL=postgres://synapse:e2e@localhost:5439/synapse E2E_SHOWROOM_PORT=3002 E2E_SMTP_URL=smtp://localhost:1025 pnpm test:e2e
+```
+
+Result: 49 passed, 0 failed, 0 skipped, 2.0 min (the suite before the pinch and screen-reader tests).
+
+## Load test
+
+`pnpm --filter @synapse/e2e test:load` (`tests/load/load-test.ts`, no dependencies) sends requests from
+`CONCURRENCY` workers (default 20) for `DURATION_S` seconds (default 20) to `BASE_URL` (default
+`http://localhost:4000`): `/health`, the public manifest, the hero image and the masterplan GLB. It prints
+status counts and p50/p95/p99 per path and exits 1 on any 5xx or network error. It is meant for a local stack;
+do not point it at the deployed VM without agreeing on it first.
+
+Run 2026-11-18 against the local API (`pnpm --filter @synapse/api start`, PGlite, one process):
+
+| Path | Statuses | p50 | p95 | p99 |
+|---|---|---|---|---|
+| `/health` | 200×10509 | 2.3 ms | 7.5 ms | 11.1 ms |
+| manifest | 200×300, 429×10213 | 1.9 ms | 6.8 ms | 11.5 ms |
+| `/media/demo/hero.jpg` | 200×10518 | 9.6 ms | 18.2 ms | 27.5 ms |
+| `/media/demo/models/masterplan.glb` | 200×10519 | 20.8 ms | 35.5 ms | 56.5 ms |
+
+42 059 requests, about 2 100 req/s, 0 failures. The manifest answers 429 after 300 requests in the minute:
+that is the per-IP rate limit, which holds under load. Media and `/health` are outside the limit. The numbers
+are from a development laptop with client and server on the same machine; the 1/8 OCPU VM will be much slower.
+
 ## Not automated
 
-- Two-finger pinch zoom. Playwright has no multi-touch API; one-finger swipe (through CDP) and tap are covered.
 - Real GPU rendering. E2E uses SwiftShader.
-- Redis backend. Postgres is covered by the API suite with `PG_TEST_URL` and the backup test in
-  [BACKUPS.md](BACKUPS.md); E2E runs on PGlite. The S3 driver is tested against local RustFS only when
-  `S3_TEST_ENDPOINT` is set (see [STORAGE.md](STORAGE.md)); real R2/AWS is not tested.
-- Load testing. The app runs locally only; there is no deployed target.
-- Screen-reader output. Accessibility checks are keyboard and ARIA attributes only.
+- Redis. There is no Redis backend to test: the job queue is a Postgres table on purpose (ADR-006). The S3
+  driver is tested against local RustFS only when `S3_TEST_ENDPOINT` is set (see [STORAGE.md](STORAGE.md));
+  real R2/AWS is not tested.
+- Listening with a real screen reader (NVDA, VoiceOver). The tests check the accessibility tree a screen reader
+  receives, not how a given reader speaks it.
 
 ## Notes for writing new E2E tests
 

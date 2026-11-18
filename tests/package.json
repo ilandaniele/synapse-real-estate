@@ -6,7 +6,8 @@
   "scripts": {
     "test": "playwright test",
     "test:visual": "playwright test --grep @visual",
-    "typecheck": "tsc -p ."
+    "typecheck": "tsc -p .",
+    "test:load": "node load/load-test.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.1"

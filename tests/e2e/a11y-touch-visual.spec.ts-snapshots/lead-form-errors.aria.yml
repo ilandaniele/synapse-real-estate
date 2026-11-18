@@ -1,0 +1,25 @@
+- form "Solicitar información":
+  - text: Nombre
+  - textbox "Nombre" [invalid]
+  - alert: Escribe tu nombre (mínimo 2 caracteres).
+  - text: Correo electrónico
+  - textbox "Correo electrónico" [invalid]
+  - alert: Escribe un correo electrónico válido.
+  - text: Teléfono (opcional)
+  - textbox "Teléfono (opcional)"
+  - text: Unidad de interés (opcional)
+  - combobox "Unidad de interés (opcional)":
+    - option "Ninguna en concreto" [selected]
+    - option "Villa 1 (V1)"
+    - option "Villa 2 (V2)"
+    - option "Villa 3 (V3)"
+    - option "Villa 4 (V4)"
+    - option "Villa 5 (V5)"
+    - option "Villa 6 (V6)"
+    - option "Villa 7 (V7)"
+  - text: Mensaje (opcional)
+  - textbox "Mensaje (opcional)"
+  - checkbox "Acepto que se traten mis datos para atender esta solicitud de información." [invalid]
+  - text: Acepto que se traten mis datos para atender esta solicitud de información.
+  - alert: Debes aceptar el tratamiento de tus datos para enviar la solicitud.
+  - button "Solicitar información"

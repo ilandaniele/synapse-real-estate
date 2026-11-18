@@ -1,0 +1,15 @@
+- region "Resumen de Villa 3":
+  - paragraph: Unidad V3
+  - heading "Villa 3" [level=2]
+  - button "Cerrar resumen de la unidad"
+  - text: /Disponible \d+\.\d+ €/
+  - term: Superficie interior
+  - definition: /\d+ m²/
+  - term: Parcela
+  - definition: /\d+ m²/
+  - term: Dormitorios
+  - definition: "4"
+  - term: Baños
+  - definition: "3"
+  - link "Ver ficha":
+    - /url: /unidades/villa-3

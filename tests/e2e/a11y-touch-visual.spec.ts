@@ -29,6 +29,27 @@ test.describe("Accesibilidad por teclado", () => {
   });
 });
 
+test.describe("Lector de pantalla", () => {
+  test("el menú principal se anuncia con sus enlaces", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByRole("navigation").first()).toMatchAriaSnapshot({ name: "nav.aria.yml" });
+  });
+
+  test("la ficha de una villa anuncia nombre, estado, datos y acciones", async ({ page }) => {
+    await page.goto("/masterplan");
+    await waitForMasterplan(page);
+    await page.getByTestId("unit-row-V3").click();
+    await expect(page.getByTestId("unit-card")).toMatchAriaSnapshot({ name: "unit-card.aria.yml" });
+  });
+
+  test("el formulario de contacto anuncia campos y errores", async ({ page }) => {
+    await page.goto("/contacto");
+    const form = page.getByTestId("lead-form");
+    await page.getByTestId("lead-submit").click();
+    await expect(form).toMatchAriaSnapshot({ name: "lead-form-errors.aria.yml" });
+  });
+});
+
 test.describe("Táctil @touch", () => {
   test("menú móvil, tap en villa y tour con tap en hotspot", async ({ page, isMobile }) => {
     test.skip(!isMobile, "mobile project only");

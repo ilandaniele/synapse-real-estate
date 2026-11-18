@@ -105,15 +105,15 @@ Masterplan times include software WebGL. Expect real GPUs to be faster, but this
 - Panoramas are cut into multiresolution cube tiles (512 px tiles, faces 512–4096 px). Scenes created from a
   media URL instead of a processed asset still load the single equirect image.
 - The VM runs on Postgres since 2026-11-18, with the PGlite data copied over by `db:copy-from-pglite`, a
-  separate asset worker and daily backups (BACKUPS.md). Redis/BullMQ is untested. S3 is tested against local
-  RustFS only.
+  separate asset worker and daily backups (BACKUPS.md). The job queue is a Postgres table (ADR-006), so there is
+  no Redis. S3 is tested against local RustFS only.
 - The deployed VM has no SMTP configured. Owners share invite and reset links by hand from the admin (ADR-024);
   the self-service «¿Olvidaste tu contraseña?» answers 503 there until SMTP is set.
 - The deployed VM runs reservations with `PAYMENT_PROVIDER=mock` (simulated checkout, no money moves). Stripe
   Checkout is integrated (ADR-023) and tested against `stripe-mock`, but charging needs a Stripe account, which
   this project does not have; see [DEPLOYMENT.md](DEPLOYMENT.md).
-- Not automated: pinch zoom, real GPU rendering, load tests and screen-reader output. See
-  [TESTING.md](TESTING.md).
+- Not automated: real GPU rendering and listening with a real screen reader. Pinch zoom, accessibility-tree
+  snapshots and a local load test are covered; see [TESTING.md](TESTING.md).
 - Only the interface is translated. Content entered in the admin (unit and room names, descriptions, points of
   interest) is shown in the language it was written in.
 - The demo data is fictitious. Real panoramas and models from the client are the next improvement.
