@@ -9,7 +9,7 @@ repositorio público en GitHub.
 - [x] Fase 3 — Monorepo: paquetes `domain` y `contracts` con tests.
 - [x] Fase 5 — Showroom, admin, API, workers, assets.
 - [x] Fase 6 — Seguridad: sin hallazgos críticos ni altos; medios corregidos ([SECURITY.md](SECURITY.md)).
-- [x] Fase 7 — Tests E2E y rendimiento: 131 unit/integración y 30 E2E en verde ([TESTING.md](TESTING.md)).
+- [x] Fase 7 — Tests E2E y rendimiento: 149 unit/integración y 32 E2E en verde (2026-11-17) ([TESTING.md](TESTING.md)).
 - [x] Fase 8 — Entrega: VM gratuita con Docker Compose + Caddy en `https://showroom.134-65-28-81.sslip.io/`
   ([DEPLOYMENT.md](DEPLOYMENT.md)); código en `github.com/ilandaniele/synapse-real-estate`.
 
