@@ -16,6 +16,7 @@ const NAV = [
   { slug: "dashboard", href: "/", label: "Resumen" },
   { slug: "developments", href: "/developments", label: "Desarrollos" },
   { slug: "leads", href: "/leads", label: "Leads" },
+  { slug: "analytics", href: "/analytics", label: "Analítica" },
   { slug: "assets", href: "/assets", label: "Activos" },
   { slug: "jobs", href: "/jobs", label: "Procesos" },
   { slug: "members", href: "/members", label: "Miembros" },

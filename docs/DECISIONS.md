@@ -156,3 +156,15 @@ Formato corto: contexto, decisión, consecuencias. Estado: Aceptada salvo indica
   al menos una vez: el receptor descarta duplicados por el `id` del evento. La comprobación SSRF no fija la IP
   resuelta, así que un DNS rebinding sigue siendo posible ([WEBHOOKS.md](WEBHOOKS.md)). Rotar el secreto es crear
   otro webhook y borrar el viejo.
+
+## ADR-021 Analítica de recorridos con contadores agregados y sin datos personales
+- **Contexto**: la Fase 4 pide saber qué unidades y estancias se visitan más. Una herramienta externa de
+  analítica exigiría banner de cookies, tratamiento de datos de terceros y una CSP más abierta.
+- **Decisión**: el showroom envía un evento `UNIT` al abrir una ficha o seleccionar una villa en el masterplan, y
+  un evento `SCENE` al entrar en cada estancia del tour. El API suma 1 al contador del día (UTC) con un único
+  `insert … on conflict do update`, solo si el destino es una unidad listada o una escena del desarrollo. No se
+  guarda IP, cookie, user agent ni identificador de visitante, y el showroom no envía nada con Do Not Track o
+  Global Privacy Control. El admin muestra el top 20 de unidades y estancias en 7, 30 o 90 días.
+- **Consecuencias**: no hay sesiones, embudos ni visitantes únicos; una persona que recarga cuenta dos veces. El
+  endpoint público responde 204 aunque el destino no exista, para no revelar ids. La tabla crece una fila por
+  destino y día, acotada por el número de unidades y escenas.

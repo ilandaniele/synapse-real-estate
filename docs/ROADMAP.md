@@ -34,5 +34,6 @@
 ## Fase 4 — Comercial
 - [x] Integración CRM con webhooks de leads firmados y reintentos. Hecho el 2026-11-18 (ADR-020,
   [WEBHOOKS.md](WEBHOOKS.md)).
-- [ ] Analítica de recorridos: qué unidades y estancias se visitan más.
+- [x] Analítica de recorridos: qué unidades y estancias se visitan más. Hecho el 2026-11-18: contadores diarios
+  agregados por unidad y estancia, sin datos personales, y página «Analítica» en el admin (ADR-021).
 - [ ] Reservas con señal online.

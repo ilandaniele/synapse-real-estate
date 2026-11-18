@@ -9,6 +9,7 @@ import { INTL_LOCALE } from "@synapse/domain";
 import { useI18n } from "@/i18n/I18nProvider";
 import { formatArea } from "@/lib/format";
 import { sortUnits, unitHasTour } from "@/lib/manifest";
+import { trackVisit } from "@/lib/analytics";
 import { useShowroomStore } from "@/lib/store";
 import { LeadForm } from "./LeadForm";
 import { ManifestGate } from "./ManifestGate";
@@ -24,6 +25,11 @@ function UnitSheet({ manifest, slug }: { manifest: DevelopmentManifest; slug: st
   useEffect(() => {
     if (unit) selectUnit(unit.code);
   }, [unit, selectUnit]);
+
+  const unitId = unit?.id;
+  useEffect(() => {
+    if (unitId) trackVisit("UNIT", unitId);
+  }, [unitId]);
 
   if (!unit) {
     return (

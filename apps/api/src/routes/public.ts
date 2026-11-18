@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { and, desc, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
-import { DevelopmentManifest, LeadInput } from "@synapse/contracts";
-import { developments, leads, publications, units } from "@synapse/db";
+import { DevelopmentManifest, LeadInput, VisitEventInput } from "@synapse/contracts";
+import { developments, leads, publications, recordVisit, units } from "@synapse/db";
 import { isPubliclyVisible } from "@synapse/domain";
 import { hashIp } from "../lib/auth";
 import { badRequest, notFound } from "../lib/errors";
@@ -11,6 +11,7 @@ import { SlugParams } from "../lib/params";
 
 export interface PublicRouteOptions {
   leadRateLimit: number;
+  visitRateLimit: number;
 }
 
 export default async function publicRoutes(app: FastifyInstance, opts: PublicRouteOptions) {
@@ -88,6 +89,15 @@ export default async function publicRoutes(app: FastifyInstance, opts: PublicRou
         });
       });
       return reply.status(201).send({ id });
+    },
+  );
+
+  app.post(
+    "/visits",
+    { config: { rateLimit: { max: opts.visitRateLimit, timeWindow: "1 minute" } } },
+    async (request, reply) => {
+      await recordVisit(app.db, VisitEventInput.parse(request.body));
+      return reply.status(204).send();
     },
   );
 }

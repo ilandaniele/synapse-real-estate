@@ -21,6 +21,7 @@ import publicRoutes from "./routes/public";
 import { assetAdminRoutes, uploadRoutes } from "./routes/admin/assets";
 import dashboardRoutes from "./routes/admin/dashboard";
 import webhookRoutes from "./routes/admin/webhooks";
+import analyticsRoutes from "./routes/admin/analytics";
 import developmentRoutes from "./routes/admin/developments";
 import publicationRoutes from "./routes/admin/publications";
 import invitationRoutes from "./routes/admin/invitations";
@@ -42,7 +43,7 @@ export interface BuildAppOptions {
   /** Defaults to SMTP when `smtpUrl` is set, else the log outside production, else no email. */
   mailer?: Mailer;
   /** Per-IP requests/minute. Defaults: global 300, login 10, leads 5. */
-  rateLimit?: { global?: number; login?: number; leads?: number };
+  rateLimit?: { global?: number; login?: number; leads?: number; visits?: number };
   logger?: boolean;
 }
 
@@ -97,7 +98,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     ...options.config,
     storageDir: options.storageDir,
   };
-  const limits = { global: 300, login: config.loginRateLimit, leads: 5, ...options.rateLimit };
+  const limits = { global: 300, login: config.loginRateLimit, leads: 5, visits: 120, ...options.rateLimit };
 
   const app = Fastify({
     logger: options.logger ? { serializers: { req: redactedRequest } } : false,
@@ -162,7 +163,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
       await api.register(authRoutes, { prefix: "/auth", loginRateLimit: limits.login });
       await api.register(invitationAcceptRoutes, { prefix: "/auth", credentialRateLimit: limits.login });
       await api.register(passwordResetRoutes, { prefix: "/auth", credentialRateLimit: limits.login });
-      await api.register(publicRoutes, { prefix: "/public", leadRateLimit: limits.leads });
+      await api.register(publicRoutes, { prefix: "/public", leadRateLimit: limits.leads, visitRateLimit: limits.visits });
       await api.register(uploadRoutes);
       await api.register(
         async (admin) => {
@@ -180,6 +181,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
           await admin.register(jobRoutes);
           await admin.register(dashboardRoutes);
           await admin.register(webhookRoutes);
+          await admin.register(analyticsRoutes);
         },
         { prefix: "/admin" },
       );

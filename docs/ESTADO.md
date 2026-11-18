@@ -22,5 +22,6 @@ repositorio público en GitHub.
 - [x] Roadmap Fase 3 — Diff de publicaciones y rollback desde el admin (ADR-018).
 - [x] Roadmap Fase 3 — Importador IFC → GLB con `web-ifc` y revisión manual (ADR-019).
 - [x] Roadmap Fase 4 — Webhooks de leads firmados para CRM ([WEBHOOKS.md](WEBHOOKS.md), ADR-020).
+- [x] Roadmap Fase 4 — Analítica de recorridos por unidad y estancia, sin datos personales (ADR-021).
 
 Detalle de avance, comandos y resultados de tests: [PROGRESS.md](PROGRESS.md).

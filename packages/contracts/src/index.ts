@@ -418,3 +418,27 @@ export const WebhookDelivery = z.object({
   createdAt: IsoDate,
 });
 export type WebhookDelivery = z.infer<typeof WebhookDelivery>;
+
+export const VISIT_KINDS = ["UNIT", "SCENE"] as const;
+export const ANALYTICS_RANGES = [7, 30, 90] as const;
+/** Sent by the showroom when a visitor opens a unit sheet or a tour scene. */
+export const VisitEventInput = z.object({
+  developmentSlug: Slug,
+  kind: z.enum(VISIT_KINDS),
+  targetId: Uuid,
+});
+export type VisitEventInput = z.infer<typeof VisitEventInput>;
+export const AnalyticsQuery = z.object({
+  days: z.coerce
+    .number()
+    .int()
+    .refine((value) => (ANALYTICS_RANGES as readonly number[]).includes(value), "days must be 7, 30 or 90")
+    .default(30),
+});
+export type AnalyticsQuery = z.infer<typeof AnalyticsQuery>;
+export const VisitAnalytics = z.object({
+  days: z.number().int(),
+  units: z.array(z.object({ id: Uuid, code: z.string(), name: z.string(), views: z.number().int() })),
+  scenes: z.array(z.object({ id: Uuid, name: z.string(), unitCode: z.string().nullable(), views: z.number().int() })),
+});
+export type VisitAnalytics = z.infer<typeof VisitAnalytics>;

@@ -227,7 +227,7 @@ export async function createTestContext(options: Partial<Pick<BuildAppOptions, "
     config: options.config,
     storage: options.storage,
     mailer: options.mailer,
-    rateLimit: { global: 100_000, login: 100_000, leads: 100_000, ...options.rateLimit },
+    rateLimit: { global: 100_000, login: 100_000, leads: 100_000, visits: 100_000, ...options.rateLimit },
   });
   await app.ready();
   const fx = await seedFixtures(handle.db);

@@ -25,9 +25,9 @@ pnpm 9.15.9) on 2026-11-15. Nothing here is projected.
 | `workers/render-processing` | unit tests | 5 |
 | `packages/storage` | local and S3 drivers | 15 (2 need `S3_TEST_ENDPOINT`) |
 | `packages/cubemap` | `src/cubemap.test.ts` | 5 |
-| `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security`, `deploy-config`, `content`, `members`, `storage-s3`, `observability`, `invitations`, `mailpit`, `publication-history`, `publication-diff.unit`, `webhooks` | 135 (3 need `S3_TEST_ENDPOINT`, 1 needs `MAILPIT_SMTP_URL`) |
-| `apps/showroom` | `src/lib/kiosk.test.ts`, `src/i18n/resolve-locale.test.ts` | 8 |
-| **Total** | | **229 passed, 0 failed, 6 skipped without `S3_TEST_ENDPOINT` and `MAILPIT_SMTP_URL`** (run 2026-11-18) |
+| `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security`, `deploy-config`, `content`, `members`, `storage-s3`, `observability`, `invitations`, `mailpit`, `publication-history`, `publication-diff.unit`, `webhooks`, `visits` | 141 (3 need `S3_TEST_ENDPOINT`, 1 needs `MAILPIT_SMTP_URL`) |
+| `apps/showroom` | `src/lib/kiosk.test.ts`, `src/lib/analytics.test.ts`, `src/i18n/resolve-locale.test.ts` | 10 |
+| **Total** | | **237 passed, 0 failed, 6 skipped without `S3_TEST_ENDPOINT` and `MAILPIT_SMTP_URL`** (run 2026-11-18) |
 
 The API tests start the real Fastify app with an in-memory PGlite database and cover 401, 403, 404, 409,
 413, 415 and 429 responses, cross-organization access (IDOR), the role matrix, the lead honeypot and rate
@@ -92,14 +92,17 @@ Specs (`tests/e2e`):
 | `flow-d-hotspot-editor` | Create a hotspot by clicking the panorama, set its target, preview, publish, and navigate with it on the public tour |
 | `flow-e-admin-content` | Gallery item with an uploaded image, point of interest with a coordinate error then fixed, floor-plan list; owner creates a VIEWER member who cannot see «Miembros», gets a wrong-current-password error, changes the password and logs in with it |
 | `flow-f-invitations` | Needs `E2E_SMTP_URL` (Mailpit). Owner invites a SALES member, the link is read from Mailpit, the invitee accepts and appears in «Miembros»; then «¿Olvidaste tu contraseña?», reset link from Mailpit, the old password fails and the new one works |
+| `flow-h-analytics` | Visiting Villa 6's sheet and tour sends visit events (204); the admin «Analítica» page lists V6 and its rooms, also over the last 7 days |
 | `flow-g-webhooks` | Owner creates a webhook to a local receiver from «Integraciones», the secret is shown once; a public lead arrives signed (HMAC checked in the test); the delivery log shows «Entregado»; the webhook is deleted |
 | `csp` | Masterplan, tour and location pages log no Content Security Policy violations (catches the production CSP blocking the GLB decoder's WebAssembly) |
 | `kiosk` | Kiosk mode with Playwright's simulated clock: after 90 s idle the warning appears and 15 s later the showroom returns home with the search cleared; «Seguir navegando» cancels it; the mode persists across pages and `?kiosk=0` turns it off; no reset outside kiosk mode; the manifest opens fullscreen in kiosk mode |
 | `i18n` | Switch to English: `lang`, menu, heading, unit count, status filter and page title change, the choice survives a reload, and switching back restores Spanish; with no cookie an `en-US` browser gets English |
 | `a11y-touch-visual` | Tab through the main menu with visible focus; select a villa with the keyboard; mobile menu, tap a villa, swipe the panorama and tap a hotspot; 15 visual baselines (5 pages × 3 projects, 3D canvas masked) |
 
-**Last full run (2026-11-18, after lead webhooks): 44 passed, 0 failed, 0 skipped, 2.0 min**, with
-`E2E_SHOWROOM_PORT=3002` and `E2E_SMTP_URL=smtp://localhost:1025`. The run before it had 42 passed and 2 failed:
+**Last full run (2026-11-18, after tour analytics): 45 passed, 0 failed, 0 skipped, 2.3 min**, with
+`E2E_SHOWROOM_PORT=3002` and `E2E_SMTP_URL=smtp://localhost:1025`.
+
+Previous full run (2026-11-18, after lead webhooks): 44 passed, 0 failed, 0 skipped, 2.0 min. The run before it had 42 passed and 2 failed:
 `flow-f` and the new `flow-g` got «Too many requests» on login, because seven admin flows log in from the same IP.
 The E2E API now starts with `LOGIN_RATE_LIMIT=60`; the default stays 10 and the limit itself is covered by the API
 security tests.

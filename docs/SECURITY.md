@@ -40,6 +40,9 @@ automated test, and the full suites passed after the fixes (see [TESTING.md](TES
   and resolve to public addresses, checked on create and before each send; redirects are not followed and each
   request times out after 5 s. DNS rebinding between the check and the connection is a known limit
   ([WEBHOOKS.md](WEBHOOKS.md)).
+- **Analytics privacy:** visits are stored only as daily counters per unit or room. No IP, cookie, user agent
+  or visitor id is kept, and the showroom sends nothing when Do Not Track or Global Privacy Control is on. The
+  public endpoint is rate limited to 120/min/IP and counts only listed units and scenes of the given development.
 
 ## Findings
 

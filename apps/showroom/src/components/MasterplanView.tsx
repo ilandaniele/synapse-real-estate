@@ -9,6 +9,7 @@ import { EmptyState, Price, Spinner } from "@synapse/ui";
 import { useI18n } from "@/i18n/I18nProvider";
 import { applyFilters, hasActiveFilters } from "@/lib/filters";
 import { sortUnits, unitHasTour } from "@/lib/manifest";
+import { trackVisit } from "@/lib/analytics";
 import { useShowroomStore } from "@/lib/store";
 import { UnitCard } from "./UnitCard";
 import { UnitFilters } from "./UnitFilters";
@@ -49,7 +50,11 @@ export function MasterplanView({ manifest }: { manifest: DevelopmentManifest }) 
   const selected = useMemo(() => units.find((u) => u.code === selectedCode) ?? null, [units, selectedCode]);
 
   const onSelect = useCallback(
-    (id: string | null) => selectUnit(units.find((u) => u.id === id)?.code ?? null),
+    (id: string | null) => {
+      const unit = units.find((u) => u.id === id);
+      selectUnit(unit?.code ?? null);
+      if (unit) trackVisit("UNIT", unit.id);
+    },
     [units, selectUnit],
   );
 

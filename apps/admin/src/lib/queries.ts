@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import type { Asset, Development, FloorPlan, GalleryItem, Invitation, Job, Lead, Member, PointOfInterest, Publication, PublicationDiff, Scene, SessionUser, Unit, WebhookDelivery, WebhookEndpoint } from "@synapse/contracts";
+import type { Asset, Development, FloorPlan, GalleryItem, Invitation, Job, Lead, Member, PointOfInterest, Publication, PublicationDiff, Scene, SessionUser, Unit, VisitAnalytics, WebhookDelivery, WebhookEndpoint } from "@synapse/contracts";
 import type { JobStatus, UnitStatus } from "@synapse/domain";
 import { api, ApiRequestError } from "./api";
 
@@ -33,6 +33,7 @@ export const keys = {
   gallery: (devId: string) => ["developments", devId, "gallery"] as const,
   pointsOfInterest: (devId: string) => ["developments", devId, "points-of-interest"] as const,
   publications: (devId: string) => ["developments", devId, "publications"] as const,
+  analytics: (devId: string, days: number) => ["developments", devId, "analytics", days] as const,
   publicationDiff: (devId: string, from: number, to: number) => ["developments", devId, "publications", "diff", from, to] as const,
   scene: (id: string) => ["scenes", id] as const,
   hotspots: (sceneId: string) => ["scenes", sceneId, "hotspots"] as const,
@@ -72,6 +73,13 @@ export const useGallery = (devId: string) =>
 export const usePointsOfInterest = (devId: string) =>
   useQuery({ queryKey: keys.pointsOfInterest(devId), queryFn: () => api<PointOfInterest[]>(`/admin/developments/${devId}/points-of-interest`), retry });
 export const useMembers = () => useQuery({ queryKey: keys.members, queryFn: () => api<Member[]>("/admin/members"), retry });
+export const useVisitAnalytics = (devId: string, days: number) =>
+  useQuery({
+    queryKey: keys.analytics(devId, days),
+    queryFn: () => api<VisitAnalytics>(`/admin/developments/${devId}/analytics?days=${days}`),
+    enabled: !!devId,
+    retry,
+  });
 export const useWebhooks = () => useQuery({ queryKey: keys.webhooks, queryFn: () => api<WebhookEndpoint[]>("/admin/webhooks"), retry });
 export const useWebhookDeliveries = (id: string) =>
   useQuery({ queryKey: keys.webhookDeliveries(id), queryFn: () => api<WebhookDelivery[]>(`/admin/webhooks/${id}/deliveries`), retry });

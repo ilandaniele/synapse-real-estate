@@ -36,6 +36,7 @@ existencia). Cubierto por tests de integración (`apps/api/test`).
 | `audit_events` | Toda acción administrativa mutante |
 | `webhook_endpoints` | URLs de webhook por organización, descripción y secreto HMAC (nunca se devuelve tras crearlo) |
 | `webhook_deliveries` | Una fila por evento y URL: payload, estado `PENDING/DELIVERED/FAILED`, intentos, `next_attempt_at`, último código y error; se borra en cascada con su endpoint. Índice `(status, next_attempt_at)` para la cola |
+| `visit_stats` | Contador agregado de vistas por desarrollo, día (UTC), tipo `UNIT/SCENE` y destino. Único `(development_id, day, kind, target_id)`, que también sirve para filtrar por desarrollo y fecha. Sin IP, cookie ni identificador de visitante |
 | `publications` | Snapshot JSON versionado del manifiesto público (`unique(development_id, version)`); `restored_from_version` indica la versión restaurada |
 
 ## Índices clave

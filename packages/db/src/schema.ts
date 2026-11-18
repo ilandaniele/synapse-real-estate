@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   bigint,
+  date,
   doublePrecision,
   index,
   integer,
@@ -20,6 +21,7 @@ export const unitStatusEnum = pgEnum("unit_status", UNIT_STATUSES);
 export const jobStatusEnum = pgEnum("job_status", JOB_STATUSES);
 export const hotspotTypeEnum = pgEnum("hotspot_type", ["NAVIGATION", "INFO"]);
 export const assetStatusEnum = pgEnum("asset_status", ["PENDING_UPLOAD", "UPLOADED", "REJECTED"]);
+export const visitKindEnum = pgEnum("visit_kind", ["UNIT", "SCENE"]);
 export const webhookDeliveryStatusEnum = pgEnum("webhook_delivery_status", ["PENDING", "DELIVERED", "FAILED"]);
 export const poiCategoryEnum = pgEnum("poi_category", [
   "BEACH",
@@ -533,4 +535,20 @@ export const webhookDeliveries = pgTable(
     index("webhook_deliveries_queue_idx").on(t.status, t.nextAttemptAt),
     index("webhook_deliveries_endpoint_idx").on(t.endpointId, t.createdAt),
   ],
+);
+
+/** Daily view counters per unit or tour scene. Aggregates only: no IP, cookie or visitor id is stored. */
+export const visitStats = pgTable(
+  "visit_stats",
+  {
+    organizationId: orgId(),
+    developmentId: uuid("development_id")
+      .notNull()
+      .references(() => developments.id, { onDelete: "cascade" }),
+    day: date("day", { mode: "string" }).notNull(),
+    kind: visitKindEnum("kind").notNull(),
+    targetId: uuid("target_id").notNull(),
+    views: integer("views").notNull().default(0),
+  },
+  (t) => [unique("visit_stats_target_day_uq").on(t.developmentId, t.day, t.kind, t.targetId)],
 );

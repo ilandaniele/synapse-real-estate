@@ -41,6 +41,9 @@ from a real run.
 - Lead webhooks for CRMs: owners register URLs under «Integraciones»; each lead is sent signed with HMAC-SHA256,
   retried up to 6 times, with a delivery log in the admin and an https/public-address guard in production
   (ADR-020, [WEBHOOKS.md](WEBHOOKS.md)).
+- Tour analytics: the showroom counts views of each unit (sheet or masterplan selection) and each 360 room in
+  daily aggregates, skipping visitors with Do Not Track or Global Privacy Control; the admin «Analítica» page
+  ranks units and rooms over 7, 30 or 90 days (ADR-021).
   Render without a configured backend fails explicitly.
 - Engine bugs found during integration and fixed in the engines:
   - double hotspot removal;

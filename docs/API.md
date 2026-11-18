@@ -24,6 +24,7 @@ Errors always use the `ApiError` shape `{error: {code, message, details?}}`. Bod
 | POST | /api/v1/auth/password-reset/confirm | public | `{token, password}` -> 204; burns every open reset link of the user and revokes their sessions; 400 for an invalid or expired token. 10/min/IP |
 | GET | /api/v1/public/developments/:slug/manifest | public | latest publication; ETag + 304, `Cache-Control: public, max-age=30, stale-while-revalidate=300` |
 | POST | /api/v1/public/leads | public | 5/min/IP; honeypot `website` -> 202 and nothing stored; `consent: true` required; 201 `{id}`; enqueues `lead.created` for the org's webhooks in the same transaction ([WEBHOOKS.md](WEBHOOKS.md)) |
+| POST | /api/v1/public/visits | public | 120/min/IP; `{developmentSlug, kind: UNIT|SCENE, targetId}` adds one view to today's counter; always **204**, also for an unknown slug, an unlisted unit or a target of another development (nothing is counted); 400 for a malformed body. No IP or cookie is stored |
 | GET/POST | /admin/developments | development:read / write | |
 | GET/PATCH/DELETE | /admin/developments/:id | read / write / write | |
 | POST | /admin/developments/:id/publish | development:publish | **201** Publication; 422 `MANIFEST_INVALID`; builds + validates the manifest, excludes UNLISTED units |
@@ -53,6 +54,7 @@ Errors always use the `ApiError` shape `{error: {code, message, details?}}`. Bod
 | POST | /admin/jobs/:id/retry | job:create | only FAILED with attempts left (409 `NOT_RETRYABLE`) |
 | POST | /admin/jobs/:id/review | job:create | `{decision: approve|reject, note?}`; approving a GLB persists the matched mesh -> unit mappings and publishes the file under `published/` |
 | GET | /admin/dashboard | read | counts by status, leads 30 d, last publication, jobs by status |
+| GET | /admin/developments/:id/analytics | development:read | `?days=7|30|90` (default 30, else 400) -> `{days, units[{id, code, name, views}], scenes[{id, name, unitCode, views}]}`, top 20 of each, most viewed first, UTC days; another org's id is 404 |
 | GET/POST | /admin/invitations | member:manage | pending invitations; POST `{email, role}` emails a 7-day link, 409 `USER_EXISTS` / `INVITATION_PENDING`, 503 without SMTP in production. The token is never returned |
 | DELETE | /admin/invitations/:id | member:manage | revokes a pending invitation; another org's id is 404 |
 | GET | /admin/webhooks | integration:manage | newest first, max 50; never includes the secret |

@@ -8,6 +8,7 @@ import type { DevelopmentManifest, Scene } from "@synapse/contracts";
 import { EmptyState } from "@synapse/ui";
 import { FloorPlanMap, PanoramaViewer, SceneStrip, useTour } from "@synapse/tour-engine";
 import { useI18n } from "@/i18n/I18nProvider";
+import { trackVisit } from "@/lib/analytics";
 import { scenesForUnit } from "@/lib/manifest";
 import { useShowroomStore } from "@/lib/store";
 import { ManifestGate } from "./ManifestGate";
@@ -42,6 +43,10 @@ function TourPlayer({ unitName, unitCode, scenes, initialSceneSlug, plan }: Play
 
   // `?scene=<slug>` deep link follows the current room (replace: scene hops must not pile up history).
   const currentSlug = current?.slug;
+  const currentId = current?.id;
+  useEffect(() => {
+    if (currentId) trackVisit("SCENE", currentId);
+  }, [currentId]);
   useEffect(() => {
     if (!currentSlug) return;
     const url = new URL(window.location.href);
