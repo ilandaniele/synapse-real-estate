@@ -1,10 +1,10 @@
 # Despliegue
 
 ## Estado
-El stack de producción para **una VM gratuita** (Oracle Cloud Always Free, ARM) está listo en el repo:
-`Dockerfile`, `docker-compose.prod.yml`, `deploy/Caddyfile` y `.env.production.example`. Todavía no se
-creó ningún recurso remoto. El stack completo se construyó y probó en local (x86_64, Docker Desktop) el
-2026-11-15; ver «Prueba local del stack». Falta construirlo en ARM, que será en la VM.
+El stack de producción para **una VM gratuita** (Oracle Cloud Always Free) está en el repo:
+`Dockerfile`, `docker-compose.prod.yml`, `deploy/Caddyfile` y `.env.production.example`. Se probó en local
+(x86_64, Docker Desktop) el 2026-11-15 y se desplegó el 2026-11-17 en una `VM.Standard.E2.1.Micro`; ver
+«Desplegado así». No hubo capacidad ARM (A1) en `sa-vinhedo-1`, así que no se construyó en ARM.
 
 ## Local (sin Docker)
 ```bash

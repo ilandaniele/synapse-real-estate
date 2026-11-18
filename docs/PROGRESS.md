@@ -75,8 +75,8 @@ Masterplan times include software WebGL. Expect real GPUs to be faster, but this
 
 ## Pending and limitations
 
-- Deployment files for a single free VM (Docker Compose + Caddy) are ready and the full stack was built and
-  smoke-tested locally on x86_64 (image 53 s, 1.88 GB). It has not been built on ARM or deployed yet. See
+- Deployed on 2026-11-17 to an Oracle Cloud Always Free `VM.Standard.E2.1.Micro` (x86_64, 1 GB RAM, 4 GB
+  swap). The image is built off the VM and copied over. ARM (A1) was never available in `sa-vinhedo-1`. See
   [DEPLOYMENT.md](DEPLOYMENT.md).
 - The local Docker test found that the production CSP blocked the masterplan's WebAssembly decoder. Fixed
   with `'wasm-unsafe-eval'` and covered by `tests/e2e/csp.spec.ts`.

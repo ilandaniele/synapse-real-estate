@@ -1,6 +1,7 @@
 # Estado del proyecto
 
-Fase actual: **8 — Entrega local**. El despliegue remoto espera aprobación de costo.
+Fase actual: **8 — Entrega**. Desplegado en Oracle Cloud Always Free (`VM.Standard.E2.1.Micro`) el 2026-11-17;
+repositorio público en GitHub.
 
 - [x] Fase 0 — Bootstrap: repo git local, Node 24, pnpm 9, Docker, FFmpeg disponibles.
 - [x] Fase 1 — Entrevista: omitida por instrucción del proyecto (actuar sin preguntar); supuestos en DECISIONS.md.
@@ -9,6 +10,7 @@ Fase actual: **8 — Entrega local**. El despliegue remoto espera aprobación de
 - [x] Fase 5 — Showroom, admin, API, workers, assets.
 - [x] Fase 6 — Seguridad: sin hallazgos críticos ni altos; medios corregidos ([SECURITY.md](SECURITY.md)).
 - [x] Fase 7 — Tests E2E y rendimiento: 131 unit/integración y 30 E2E en verde ([TESTING.md](TESTING.md)).
-- [ ] Fase 8 — Entrega: local hecha; stack de VM gratuita (Docker Compose + Caddy) listo y probado en local con Docker; falta la VM del usuario.
+- [x] Fase 8 — Entrega: VM gratuita con Docker Compose + Caddy en `https://showroom.134-65-28-81.sslip.io/`
+  ([DEPLOYMENT.md](DEPLOYMENT.md)); código en `github.com/ilandaniele/synapse-real-estate`.
 
 Detalle de avance, comandos y resultados de tests: [PROGRESS.md](PROGRESS.md).
