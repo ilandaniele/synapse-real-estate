@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { isInViewport, swipe, waitForMasterplan, waitForPanorama } from "./helpers";
+import { isInViewport, pinch, swipe, waitForMasterplan, waitForPanorama } from "./helpers";
 
 test.describe("Accesibilidad por teclado", () => {
   test("el menú principal se recorre con Tab y tiene foco visible", async ({ page }) => {
@@ -50,6 +50,20 @@ test.describe("Táctil @touch", () => {
     }
     await hotspot.tap();
     await waitForPanorama(page, "comedor");
+  });
+
+  test("pellizcar con dos dedos acerca el masterplan", async ({ page, isMobile }) => {
+    test.skip(!isMobile, "mobile project only");
+    await page.goto("/masterplan");
+    const canvas = await waitForMasterplan(page);
+    const labelGap = async () => {
+      const [a, b] = await Promise.all(["V1", "V7"].map((code) => page.getByTestId(`masterplan-label-${code}`).boundingBox()));
+      if (!a || !b) throw new Error("masterplan labels have no box");
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    };
+    const before = await labelGap();
+    await pinch(page, canvas, 2.5, { yFraction: 0.2 });
+    await expect.poll(labelGap).toBeGreaterThan(before * 1.2);
   });
 });
 

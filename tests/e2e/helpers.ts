@@ -62,3 +62,30 @@ export async function swipe(page: Page, target: Locator, fraction: number) {
   await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
   await cdp.detach();
 }
+
+/**
+ * Two-finger pinch over `target` through CDP touch events: the fingers start `startGap` px apart on a horizontal
+ * line at `yFraction` of its height and end `startGap * scale` px apart (scale > 1 zooms in).
+ */
+export async function pinch(page: Page, target: Locator, scale: number, { startGap = 80, yFraction = 0.5 } = {}) {
+  const box = await target.boundingBox();
+  if (!box) throw new Error("pinch target has no box");
+  const cdp = await page.context().newCDPSession(page);
+  const centerX = box.x + box.width / 2;
+  const y = box.y + box.height * yFraction;
+  const steps = 10;
+  const fingers = (gap: number) => [
+    { x: centerX - gap / 2, y, id: 0 },
+    { x: centerX + gap / 2, y, id: 1 },
+  ];
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: fingers(startGap) });
+  for (let i = 1; i <= steps; i++) {
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: fingers(startGap * (1 + ((scale - 1) * i) / steps)),
+    });
+  }
+  await page.waitForTimeout(300);
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  await cdp.detach();
+}

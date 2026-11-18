@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * E2E runs against an isolated PGlite database (.data/pglite-e2e) that is re-seeded on every run, so the
+ * E2E runs against an isolated PGlite database (.data/pglite-e2e), or E2E_DATABASE_URL when set, re-seeded on every run, so the
  * flows that create units and publish never touch the local development data.
  *
  * Prerequisites: `pnpm assets:generate` once, and `pnpm build` (showroom/admin are served with `next start`).
@@ -44,7 +44,7 @@ export default defineConfig({
       url: `${API}/health`,
       cwd: "..",
       env: {
-        DATABASE_URL: "pglite://.data/pglite-e2e",
+        DATABASE_URL: process.env.E2E_DATABASE_URL ?? "pglite://.data/pglite-e2e",
         SEED_PASSWORD: "e2e-password-123",
         CORS_ORIGINS: `${SHOWROOM},${ADMIN}`,
         SMTP_URL: process.env.E2E_SMTP_URL ?? "",
