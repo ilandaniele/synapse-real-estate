@@ -107,6 +107,8 @@ Masterplan times include software WebGL. Expect real GPUs to be faster, but this
 - Postgres is tested (API suite, seed, backup/restore and an API + worker smoke), but the Postgres compose
   stack was not brought up on the VM. Redis/BullMQ is untested. S3 is tested against local RustFS only.
 - The deployed VM has no SMTP configured, so invitations and password resets answer 503 there.
+- The deployed VM runs reservations with `PAYMENT_PROVIDER=mock` (simulated checkout, no money moves). A real
+  payment provider (Stripe, Redsys) needs an account and is not integrated.
 - Not automated: pinch zoom, real GPU rendering, load tests and screen-reader output. See
   [TESTING.md](TESTING.md).
 - Only the interface is translated. Content entered in the admin (unit and room names, descriptions, points of

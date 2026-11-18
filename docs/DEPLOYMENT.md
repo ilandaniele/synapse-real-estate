@@ -105,6 +105,12 @@ Desplegado así el 2026-11-17 en `synapse-micro`:
 | `up -d --no-build` | 4 servicios arriba; memoria 500 MB + 737 MB de swap |
 | `https://showroom.134-65-28-81.sslip.io/`, manifiesto, GLB, `https://admin.…/login` | 200; HTTP → 308; HSTS, CSP y `nosniff` presentes |
 
+Redespliegue del 2026-11-18 con reservas (commit `12d4518`): imagen copiada en 228 s y `up -d --no-build`; la
+migración `0007_reservations` corre sola al arrancar el API. Después se añadió `PAYMENT_PROVIDER=mock` a
+`.env.production` y se reinició solo el API. `GET /api/v1/public/reservations/settings` devuelve
+`{"enabled":true,"depositAmount":"3000.00"}`, `/reservar/villa-5` y `/reservations` del admin responden 200 y
+`/api/v1/admin/reservations` sin sesión responde 401. No se hizo una reserva de prueba en producción.
+
 ### Instalación en la VM
 ```bash
 sudo apt-get update && sudo apt-get install -y docker.io docker-compose-v2 git
