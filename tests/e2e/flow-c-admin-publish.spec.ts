@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { ADMIN, adminLogin } from "./helpers";
 
 test.describe("Flujo C — admin crea unidad, publica y el público lo ve", () => {
-  test("crear villa V9, publicar y verla en /unidades", async ({ page }) => {
+  test("crear villa V9, publicar, verla en /unidades y restaurar la versión anterior", async ({ page, browser }) => {
     await adminLogin(page);
     await page.goto(`${ADMIN}/developments`);
     await page.getByTestId("dev-row-lomas-del-faro").click();
@@ -29,6 +29,24 @@ test.describe("Flujo C — admin crea unidad, publica y el público lo ve", () =
     await expect(page.getByTestId("unit-row-V9")).toBeVisible();
     await page.goto("/unidades/villa-9");
     await expect(page.getByTestId("unit-sheet")).toContainText("910.000");
+
+    await page.goto(`${ADMIN}/developments`);
+    await page.getByTestId("dev-row-lomas-del-faro").click();
+    await page.getByTestId("tab-publicar").click();
+    await page.getByTestId("publication-diff-2").click();
+    await expect(page.getByTestId("publication-diff-modal").getByTestId("diff-units-added")).toContainText("Villa 9");
+    await page.keyboard.press("Escape");
+
+    await page.getByTestId("publication-restore-1").click();
+    await expect(page.getByTestId("publication-restore-modal").getByTestId("diff-units-removed")).toContainText("Villa 9");
+    await page.getByTestId("publication-restore-confirm").click();
+    await expect(page.getByTestId("publication-row-3")).toContainText("restaurada de v1");
+
+    const visitor = await browser.newPage({ baseURL: test.info().project.use.baseURL, locale: "es-ES" });
+    await visitor.goto("/unidades");
+    await expect(visitor.getByTestId("unit-row-V6")).toBeVisible();
+    await expect(visitor.getByTestId("unit-row-V9")).toHaveCount(0);
+    await visitor.close();
   });
 
   test("VIEWER no ve acciones de escritura; login inválido muestra error", async ({ page }) => {

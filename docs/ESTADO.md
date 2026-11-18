@@ -19,5 +19,6 @@ repositorio público en GitHub.
 - [x] Roadmap Fase 2 — Postgres, backups y métricas ([BACKUPS.md](BACKUPS.md), ADR-015).
 - [x] Roadmap Fase 2 — Invitaciones y recuperación de contraseña por email ([EMAIL.md](EMAIL.md), ADR-016).
 - [x] Roadmap Fase 2 — i18n es/en del showroom (ADR-017); el contenido del admin sigue en un idioma.
+- [x] Roadmap Fase 3 — Diff de publicaciones y rollback desde el admin (ADR-018).
 
 Detalle de avance, comandos y resultados de tests: [PROGRESS.md](PROGRESS.md).

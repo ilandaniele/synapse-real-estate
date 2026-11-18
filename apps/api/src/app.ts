@@ -21,6 +21,7 @@ import publicRoutes from "./routes/public";
 import { assetAdminRoutes, uploadRoutes } from "./routes/admin/assets";
 import dashboardRoutes from "./routes/admin/dashboard";
 import developmentRoutes from "./routes/admin/developments";
+import publicationRoutes from "./routes/admin/publications";
 import invitationRoutes from "./routes/admin/invitations";
 import floorPlanRoutes from "./routes/admin/floor-plans";
 import galleryRoutes from "./routes/admin/gallery";
@@ -164,6 +165,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
       await api.register(
         async (admin) => {
           await admin.register(developmentRoutes);
+          await admin.register(publicationRoutes);
           await admin.register(unitRoutes);
           await admin.register(sceneRoutes);
           await admin.register(floorPlanRoutes);

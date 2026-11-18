@@ -118,3 +118,17 @@ Formato corto: contexto, decisión, consecuencias. Estado: Aceptada salvo indica
   el admin (nombres de unidades, estancias, descripciones, POIs) sigue en un único idioma, el del manifiesto;
   traducirlo exigiría campos por idioma en la base de datos. Las URLs no llevan idioma, así que un buscador no
   indexa las dos versiones por separado.
+
+## ADR-018 Rollback de publicaciones como nueva versión, conservando el estado comercial actual
+- **Contexto**: la Fase 3 pedía ver qué cambia entre publicaciones y poder volver a una anterior desde el admin.
+  Una publicación es un snapshot JSON del manifiesto; el estado comercial y el precio, en cambio, se actualizan
+  cada día desde ventas.
+- **Decisión**: el historial es de solo anexado. Restaurar la versión N crea una versión nueva con el contenido
+  de N y guarda `restored_from_version = N`; nunca se borra ni se reescribe una fila. Al restaurar se toman el
+  estado, el precio y la moneda actuales de cada unidad, se descartan las unidades que ya no existen o que hoy
+  son `UNLISTED` (con sus estancias, planos y fotos), y el resultado se valida otra vez con `DevelopmentManifest`.
+  Un snapshot que no cumple el contrato actual se rechaza con 422 `SNAPSHOT_INCOMPATIBLE`. El diff compara dos
+  snapshots por sección e id (`GET …/publications/compare`) y el admin lo muestra antes de confirmar.
+- **Consecuencias**: restaurar nunca devuelve a la venta una villa vendida ni muestra un precio viejo. Un medio
+  borrado del storage después de la versión N rompe esa imagen o panorama en la versión restaurada; no se
+  comprueba la existencia de cada archivo. El diff no compara binarios, solo URLs y campos.

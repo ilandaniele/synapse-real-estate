@@ -34,7 +34,7 @@ existencia). Cubierto por tests de integración (`apps/api/test`).
 | `leads` | Contactos: nombre, email, teléfono, mensaje, unidad, consentimiento, `ip_hash` (HMAC, nunca la IP en claro) |
 | `import_jobs`, `render_jobs` | Cola de trabajos: estado, intentos, `run_after`, `locked_at`, logs, resultado |
 | `audit_events` | Toda acción administrativa mutante |
-| `publications` | Snapshot JSON versionado del manifiesto público (`unique(development_id, version)`) |
+| `publications` | Snapshot JSON versionado del manifiesto público (`unique(development_id, version)`); `restored_from_version` indica la versión restaurada |
 
 ## Índices clave
 - `*_org_idx` en todas las tablas de negocio.

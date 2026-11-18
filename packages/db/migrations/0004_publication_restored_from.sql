@@ -1,0 +1,1 @@
+ALTER TABLE "publications" ADD COLUMN "restored_from_version" integer;

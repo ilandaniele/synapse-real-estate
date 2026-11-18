@@ -490,6 +490,7 @@ export const publications = pgTable(
     snapshot: jsonb("snapshot").$type<Record<string, unknown>>().notNull(),
     publishedBy: uuid("published_by").references(() => users.id, { onDelete: "set null" }),
     publishedAt: timestamp("published_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+    restoredFromVersion: integer("restored_from_version"),
   },
   (t) => [index("publications_org_idx").on(t.organizationId), unique("publications_dev_version_uq").on(t.developmentId, t.version)],
 );

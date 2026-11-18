@@ -348,8 +348,37 @@ export const Publication = z.object({
   version: z.number().int(),
   publishedBy: z.string(),
   publishedAt: IsoDate,
+  restoredFromVersion: z.number().int().nullable(),
 });
 export type Publication = z.infer<typeof Publication>;
+
+export const PublicationDiffSection = z.enum(["development", "units", "scenes", "floorPlans", "gallery", "pointsOfInterest"]);
+export type PublicationDiffSection = z.infer<typeof PublicationDiffSection>;
+
+export const FieldChange = z.object({ field: z.string(), before: z.unknown(), after: z.unknown() });
+export type FieldChange = z.infer<typeof FieldChange>;
+
+export const EntityChange = z.object({
+  section: PublicationDiffSection,
+  id: z.string(),
+  label: z.string(),
+  kind: z.enum(["added", "removed", "changed"]),
+  fields: z.array(FieldChange),
+});
+export type EntityChange = z.infer<typeof EntityChange>;
+
+export const PublicationDiff = z.object({
+  from: z.number().int(),
+  to: z.number().int(),
+  changes: z.array(EntityChange),
+});
+export type PublicationDiff = z.infer<typeof PublicationDiff>;
+
+export const CompareQuery = z.object({
+  from: z.coerce.number().int().positive(),
+  to: z.coerce.number().int().positive(),
+});
+export type CompareQuery = z.infer<typeof CompareQuery>;
 
 export const ApiError = z.object({
   error: z.object({ code: z.string(), message: z.string(), details: z.unknown().optional() }),

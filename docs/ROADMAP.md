@@ -24,9 +24,11 @@
   cabecera y cookie ([DECISIONS.md](DECISIONS.md), ADR-017). El contenido cargado en el admin no se traduce.
 
 ## Fase 3 — Pipeline de contenido
-- Render worker con Blender CLI (panoramas equirect desde GLB + preset de cámaras).
+- [x] Render worker con Blender CLI (panoramas equirect desde GLB + preset de cámaras). Ya existía:
+  `workers/render-processing` y [RENDER_PIPELINE.md](RENDER_PIPELINE.md).
 - Importador IFC básico con `web-ifc` y revisión manual.
-- Versionado y diff visual de publicaciones; rollback desde admin.
+- [x] Versionado y diff visual de publicaciones; rollback desde admin. Hecho el 2026-11-18: diff por sección
+  entre dos versiones y restauración como versión nueva que conserva estado y precio actuales (ADR-018).
 
 ## Fase 4 — Comercial
 - Integración CRM (webhooks de leads), reservas con señal online, analítica de recorridos (qué unidades y

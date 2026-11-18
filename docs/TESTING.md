@@ -25,9 +25,9 @@ pnpm 9.15.9) on 2026-11-15. Nothing here is projected.
 | `workers/render-processing` | unit tests | 5 |
 | `packages/storage` | local and S3 drivers | 15 (2 need `S3_TEST_ENDPOINT`) |
 | `packages/cubemap` | `src/cubemap.test.ts` | 5 |
-| `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security`, `deploy-config`, `content`, `members`, `storage-s3`, `observability`, `invitations`, `mailpit` | 114 (3 need `S3_TEST_ENDPOINT`, 1 needs `MAILPIT_SMTP_URL`) |
+| `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security`, `deploy-config`, `content`, `members`, `storage-s3`, `observability`, `invitations`, `mailpit`, `publication-history`, `publication-diff.unit` | 123 (3 need `S3_TEST_ENDPOINT`, 1 needs `MAILPIT_SMTP_URL`) |
 | `apps/showroom` | `src/lib/kiosk.test.ts`, `src/i18n/resolve-locale.test.ts` | 8 |
-| **Total** | | **204 passed, 0 failed, 6 skipped without `S3_TEST_ENDPOINT` and `MAILPIT_SMTP_URL`** (run 2026-11-18) |
+| **Total** | | **213 passed, 0 failed, 6 skipped without `S3_TEST_ENDPOINT` and `MAILPIT_SMTP_URL`** (run 2026-11-18) |
 
 The API tests start the real Fastify app with an in-memory PGlite database and cover 401, 403, 404, 409,
 413, 415 and 429 responses, cross-organization access (IDOR), the role matrix, the lead honeypot and rate
@@ -88,7 +88,7 @@ Specs (`tests/e2e`):
 |---|---|
 | `flow-a-visit` | Villa 6 360 tour: hotspot, room menu, floor plan modal, thumbnails; fast room switches during a transition do not break the viewer; keyboard focus and accessible hotspots |
 | `flow-b-masterplan-lead` | Masterplan, select Villa 6, sheet, tour, another room, back with selection kept, lead submitted; filters synced with the list; lead validation, honeypot and consent |
-| `flow-c-admin-publish` | Admin creates villa V9, publishes version 2 and the public site shows it; VIEWER sees no write actions; bad login shows an error |
+| `flow-c-admin-publish` | Admin creates villa V9, publishes version 2 and the public site shows it; the diff of v2 lists V9 as added; restoring v1 shows V9 as removed, creates v3 «restaurada de v1» and the public site drops V9; VIEWER sees no write actions; bad login shows an error |
 | `flow-d-hotspot-editor` | Create a hotspot by clicking the panorama, set its target, preview, publish, and navigate with it on the public tour |
 | `flow-e-admin-content` | Gallery item with an uploaded image, point of interest with a coordinate error then fixed, floor-plan list; owner creates a VIEWER member who cannot see «Miembros», gets a wrong-current-password error, changes the password and logs in with it |
 | `flow-f-invitations` | Needs `E2E_SMTP_URL` (Mailpit). Owner invites a SALES member, the link is read from Mailpit, the invitee accepts and appears in «Miembros»; then «¿Olvidaste tu contraseña?», reset link from Mailpit, the old password fails and the new one works |
@@ -97,7 +97,13 @@ Specs (`tests/e2e`):
 | `i18n` | Switch to English: `lang`, menu, heading, unit count, status filter and page title change, the choice survives a reload, and switching back restores Spanish; with no cookie an `en-US` browser gets English |
 | `a11y-touch-visual` | Tab through the main menu with visible focus; select a villa with the keyboard; mobile menu, tap a villa, swipe the panorama and tap a hotspot; 15 visual baselines (5 pages × 3 projects, 3D canvas masked) |
 
-**Last full run (2026-11-18): 42 passed, 1 failed, 0 skipped, 2.3 min**, with `E2E_SMTP_URL=smtp://localhost:1025`.
+**Last full run (2026-11-18, after publication rollback): 41 passed, 2 failed, 0 skipped, 2.8 min**, with
+`E2E_SHOWROOM_PORT=3002` and `E2E_SMTP_URL=smtp://localhost:1025`. `flow-c` failed because the browser had kept the
+manifest for its 30 s `max-age` and still showed V9 after the restore; the test now checks the public site from a
+new browser context, as a new visitor. `flow-f` hit the login rate limit again. Both run again together after the
+fix: 3 passed.
+
+Earlier run (2026-11-18): 42 passed, 1 failed, 0 skipped, 2.3 min, with `E2E_SMTP_URL=smtp://localhost:1025`.
 The failure was `flow-f-invitations`: the earlier admin flows had used up the per-IP login rate limit and the
 last login got «Too many requests». Run on its own 75 s later it passed (1 passed). The config pins the browser
 locale to `es-ES`, because Playwright's default `en-US` would now switch the showroom to English.

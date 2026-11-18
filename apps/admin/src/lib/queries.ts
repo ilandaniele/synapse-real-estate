@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import type { Asset, Development, FloorPlan, GalleryItem, Invitation, Job, Lead, Member, PointOfInterest, Publication, Scene, SessionUser, Unit } from "@synapse/contracts";
+import type { Asset, Development, FloorPlan, GalleryItem, Invitation, Job, Lead, Member, PointOfInterest, Publication, PublicationDiff, Scene, SessionUser, Unit } from "@synapse/contracts";
 import type { JobStatus, UnitStatus } from "@synapse/domain";
 import { api, ApiRequestError } from "./api";
 
@@ -33,6 +33,7 @@ export const keys = {
   gallery: (devId: string) => ["developments", devId, "gallery"] as const,
   pointsOfInterest: (devId: string) => ["developments", devId, "points-of-interest"] as const,
   publications: (devId: string) => ["developments", devId, "publications"] as const,
+  publicationDiff: (devId: string, from: number, to: number) => ["developments", devId, "publications", "diff", from, to] as const,
   scene: (id: string) => ["scenes", id] as const,
   hotspots: (sceneId: string) => ["scenes", sceneId, "hotspots"] as const,
   leads: (filters: unknown) => ["leads", filters] as const,
@@ -72,6 +73,12 @@ export const useMembers = () => useQuery({ queryKey: keys.members, queryFn: () =
 export const useInvitations = () => useQuery({ queryKey: keys.invitations, queryFn: () => api<Invitation[]>("/admin/invitations"), retry });
 export const usePublications = (devId: string) =>
   useQuery({ queryKey: keys.publications(devId), queryFn: () => api<Publication[]>(`/admin/developments/${devId}/publications`), retry });
+export const usePublicationDiff = (devId: string, from: number, to: number) =>
+  useQuery({
+    queryKey: keys.publicationDiff(devId, from, to),
+    queryFn: () => api<PublicationDiff>(`/admin/developments/${devId}/publications/compare?from=${from}&to=${to}`),
+    retry,
+  });
 export const useScene = (id: string) => useQuery({ queryKey: keys.scene(id), queryFn: () => api<Scene>(`/admin/scenes/${id}`), retry });
 export const useAssets = () => useQuery({ queryKey: keys.assets, queryFn: () => api<Asset[]>("/admin/assets"), retry });
 

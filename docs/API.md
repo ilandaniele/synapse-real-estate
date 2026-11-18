@@ -27,7 +27,9 @@ Errors always use the `ApiError` shape `{error: {code, message, details?}}`. Bod
 | GET/POST | /admin/developments | development:read / write | |
 | GET/PATCH/DELETE | /admin/developments/:id | read / write / write | |
 | POST | /admin/developments/:id/publish | development:publish | **201** Publication; 422 `MANIFEST_INVALID`; builds + validates the manifest, excludes UNLISTED units |
-| GET | /admin/developments/:id/publications | read | |
+| GET | /admin/developments/:id/publications | read | newest first; includes `restoredFromVersion` |
+| GET | /admin/developments/:id/publications/compare?from&to | read | PublicationDiff: added/removed/changed entities per section with field changes; 404 for an unknown version, 422 `SNAPSHOT_INCOMPATIBLE` |
+| POST | /admin/developments/:id/publications/:version/restore | development:publish | **201** new Publication with `restoredFromVersion`; keeps current unit status and price, drops units that no longer exist or are UNLISTED; audit `development.restore` |
 | GET/POST | /admin/developments/:id/units | read / unit:write | |
 | GET/PATCH/DELETE | /admin/units/:id | read / unit:write | status changes validated with `canTransition` (409 `INVALID_TRANSITION`) + history row |
 | PATCH | /admin/units/:id/availability | unit:availability | SALES allowed; writes `unit_availability_history` |

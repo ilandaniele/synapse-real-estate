@@ -15,6 +15,28 @@ import {
 
 type DevelopmentRow = (typeof schema.developments)["$inferSelect"];
 
+type UnitScopedContent = Pick<DevelopmentManifest, "units" | "scenes" | "floorPlans" | "gallery">;
+
+/**
+ * Keeps only the given units and drops everything that references any other unit: scenes, floor plans,
+ * gallery items, and hotspots pointing into a dropped scene.
+ */
+export function restrictToUnits<T extends UnitScopedContent>(content: T, unitIds: ReadonlySet<string>): T {
+  const allowed = (unitId: string | null) => unitId === null || unitIds.has(unitId);
+  const keptScenes = content.scenes.filter((s) => allowed(s.unitId));
+  const sceneIds = new Set(keptScenes.map((s) => s.id));
+  return {
+    ...content,
+    units: content.units.filter((u) => unitIds.has(u.id)),
+    scenes: keptScenes.map((s) => ({
+      ...s,
+      hotspots: s.hotspots.filter((h) => h.targetSceneId === null || sceneIds.has(h.targetSceneId)),
+    })),
+    floorPlans: content.floorPlans.filter((p) => allowed(p.unitId)),
+    gallery: content.gallery.filter((g) => allowed(g.unitId)),
+  };
+}
+
 /**
  * Builds the public snapshot from current rows. Only publicly visible units are included, and nothing that
  * references an excluded unit (scenes, floor plans, gallery items, hotspots into those scenes) leaks out.
@@ -48,25 +70,22 @@ export async function buildManifest(
       .orderBy(asc(pointsOfInterest.name)),
   ]);
 
-  const visibleUnits = allUnits.filter((u) => isPubliclyVisible(u.status));
-  const visibleIds = new Set(visibleUnits.map((u) => u.id));
-  const allowed = (unitId: string | null) => unitId === null || visibleIds.has(unitId);
-
-  const visibleScenes = allScenes.filter((s) => allowed(s.unitId));
-  const sceneIds = new Set(visibleScenes.map((s) => s.id));
-  const scenesOut = visibleScenes.map((s) => ({
-    ...s,
-    hotspots: s.hotspots.filter((h) => h.targetSceneId === null || sceneIds.has(h.targetSceneId)),
-  }));
+  const visibleIds = new Set(allUnits.filter((u) => isPubliclyVisible(u.status)).map((u) => u.id));
+  const content = restrictToUnits(
+    {
+      units: allUnits,
+      scenes: allScenes,
+      floorPlans: plans.map((p) => floorPlanToContract(config, p)),
+      gallery: gallery.map((g) => galleryToContract(config, g)),
+    },
+    visibleIds,
+  );
 
   return DevelopmentManifest.parse({
     version,
     publishedAt: iso(publishedAt),
     development: developmentToContract(config, development),
-    units: visibleUnits,
-    scenes: scenesOut,
-    floorPlans: plans.filter((p) => allowed(p.unitId)).map((p) => floorPlanToContract(config, p)),
-    gallery: gallery.filter((g) => allowed(g.unitId)).map((g) => galleryToContract(config, g)),
+    ...content,
     pointsOfInterest: pois.map(poiToContract),
   });
 }
