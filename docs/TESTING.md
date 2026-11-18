@@ -43,8 +43,10 @@ organizations. `mailpit.test.ts` sends a real email over SMTP and reads it back 
 `packages/ui`, `packages/contracts`, `workers/*` and `apps/admin` have no unit tests of their own. `apps/showroom`
 has only the kiosk-mode and locale-resolution tests. Contracts are exercised through the API tests; the apps are covered by E2E.
 
-The API files each start an in-memory PGlite database. On a machine already at full CPU their setup hooks can
-exceed the 10 s timeout. In that case run them serially: `pnpm --filter @synapse/api exec vitest run --no-file-parallelism`.
+The API files each start an in-memory PGlite database. With one worker per core (24 on the development PC) the
+migrations of every worker compete for CPU and the setup hooks exceeded the 10 s timeout, so
+`apps/api/vitest.config.ts` caps the workers at a third of the cores: 165 tests in about 15 s with 8 workers. If a
+machine is already at full CPU, run them serially: `pnpm --filter @synapse/api exec vitest run --no-file-parallelism`.
 
 With `PG_TEST_URL` the API tests run on real Postgres instead. Each test context creates its own database
 `synapse_test_<uuid>` and drops it on close:
