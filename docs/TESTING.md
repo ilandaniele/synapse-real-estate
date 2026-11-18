@@ -27,7 +27,7 @@ pnpm 9.15.9) on 2026-11-15. Nothing here is projected.
 | `packages/cubemap` | `src/cubemap.test.ts` | 5 |
 | `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security`, `deploy-config`, `content`, `members`, `storage-s3`, `observability`, `invitations`, `mailpit`, `publication-history`, `publication-diff.unit`, `webhooks`, `visits`, `reservations`, `reservations-stripe`, `member-reset-link` | 171 (3 need `S3_TEST_ENDPOINT`, 1 needs `MAILPIT_SMTP_URL`, 2 need `STRIPE_MOCK_URL`, e.g. `docker run -d -p 12111:12111 stripe/stripe-mock:v0.197.0`) |
 | `apps/showroom` | `src/lib/kiosk.test.ts`, `src/lib/analytics.test.ts`, `src/i18n/resolve-locale.test.ts` | 10 |
-| **Total** | | **249 passed, 0 failed, 6 skipped without `S3_TEST_ENDPOINT` and `MAILPIT_SMTP_URL`** (run 2026-11-18) |
+| **Total** | | **265 passed, 0 failed, 8 skipped without `S3_TEST_ENDPOINT`, `MAILPIT_SMTP_URL` and `STRIPE_MOCK_URL`** (run 2026-11-18) |
 
 The API tests start the real Fastify app with an in-memory PGlite database and cover 401, 403, 404, 409,
 413, 415 and 429 responses, cross-organization access (IDOR), the role matrix, the lead honeypot and rate
@@ -102,7 +102,10 @@ Specs (`tests/e2e`):
 | `i18n` | Switch to English: `lang`, menu, heading, unit count, status filter and page title change, the choice survives a reload, and switching back restores Spanish; with no cookie an `en-US` browser gets English |
 | `a11y-touch-visual` | Tab through the main menu with visible focus; select a villa with the keyboard; mobile menu, tap a villa, swipe the panorama and tap a hotspot; 15 visual baselines (5 pages × 3 projects, 3D canvas masked) |
 
-**Last full run (2026-11-18, after reservations): 46 passed, 0 failed, 0 skipped, 2.1 min**, with
+**Last full run (2026-11-18, after Stripe Checkout and the copyable links): 49 passed, 0 failed, 0 skipped,
+1.9 min**, with `E2E_SHOWROOM_PORT=3002` and `E2E_SMTP_URL=smtp://localhost:1025`.
+
+Previous full run (2026-11-18, after reservations): 46 passed, 0 failed, 0 skipped, 2.1 min, with
 `E2E_SHOWROOM_PORT=3002` and `E2E_SMTP_URL=smtp://localhost:1025`.
 
 The first run after adding reservations had 45 passed and 1 failed: the `ficha-villa-6` mobile baseline, because

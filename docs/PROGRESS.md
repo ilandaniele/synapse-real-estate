@@ -59,10 +59,10 @@ from a real run.
 | Check | Result | Time |
 |---|---|---|
 | `pnpm typecheck` | pass, all packages | 6.7 s |
-| `pnpm test` | 197 passed, 0 failed, 6 skipped without `S3_TEST_ENDPOINT` / `MAILPIT_SMTP_URL` (2026-11-17) | 25 s |
+| `pnpm test` | 265 passed, 0 failed, 8 skipped without `S3_TEST_ENDPOINT` / `MAILPIT_SMTP_URL` / `STRIPE_MOCK_URL` (2026-11-18) | |
 | API suite on Postgres 17 with RustFS and Mailpit | 114 passed, 0 failed (2026-11-17) | |
 | `pnpm build` | pass (showroom 10 routes, admin 10 routes) | 6.0 s |
-| `pnpm test:e2e` | 40 passed, 0 failed, 0 skipped (2026-11-17, `E2E_SHOWROOM_PORT=3002`) | 2.6 min |
+| `pnpm test:e2e` | 49 passed, 0 failed, 0 skipped (2026-11-18, `E2E_SHOWROOM_PORT=3002`, `E2E_SMTP_URL`) | 1.9 min |
 | `flow-e` + `flow-f-invitations` with Mailpit, desktop | 3 passed (2026-11-17) | |
 
 Details are in [TESTING.md](TESTING.md). Security review results and fixes are in [SECURITY.md](SECURITY.md).
