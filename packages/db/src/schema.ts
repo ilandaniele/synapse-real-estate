@@ -20,6 +20,7 @@ export const unitStatusEnum = pgEnum("unit_status", UNIT_STATUSES);
 export const jobStatusEnum = pgEnum("job_status", JOB_STATUSES);
 export const hotspotTypeEnum = pgEnum("hotspot_type", ["NAVIGATION", "INFO"]);
 export const assetStatusEnum = pgEnum("asset_status", ["PENDING_UPLOAD", "UPLOADED", "REJECTED"]);
+export const webhookDeliveryStatusEnum = pgEnum("webhook_delivery_status", ["PENDING", "DELIVERED", "FAILED"]);
 export const poiCategoryEnum = pgEnum("poi_category", [
   "BEACH",
   "SCHOOL",
@@ -493,4 +494,43 @@ export const publications = pgTable(
     restoredFromVersion: integer("restored_from_version"),
   },
   (t) => [index("publications_org_idx").on(t.organizationId), unique("publications_dev_version_uq").on(t.developmentId, t.version)],
+);
+
+export const webhookEndpoints = pgTable(
+  "webhook_endpoints",
+  {
+    id: id(),
+    organizationId: orgId(),
+    url: text("url").notNull(),
+    description: text("description"),
+    /** HMAC signing key; needed in clear to sign, never returned after creation. */
+    secret: text("secret").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("webhook_endpoints_org_idx").on(t.organizationId)],
+);
+
+export const webhookDeliveries = pgTable(
+  "webhook_deliveries",
+  {
+    id: id(),
+    organizationId: orgId(),
+    endpointId: uuid("endpoint_id")
+      .notNull()
+      .references(() => webhookEndpoints.id, { onDelete: "cascade" }),
+    event: text("event").notNull(),
+    payload: jsonb("payload").$type<Record<string, unknown>>().notNull(),
+    status: webhookDeliveryStatusEnum("status").notNull().default("PENDING"),
+    attempts: integer("attempts").notNull().default(0),
+    /** Next try; while a worker holds the row it is pushed forward as a lease. */
+    nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+    responseStatus: integer("response_status"),
+    lastError: text("last_error"),
+    deliveredAt: timestamp("delivered_at", { withTimezone: true, mode: "date" }),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index("webhook_deliveries_queue_idx").on(t.status, t.nextAttemptAt),
+    index("webhook_deliveries_endpoint_idx").on(t.endpointId, t.createdAt),
+  ],
 );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import type { Asset, Development, FloorPlan, GalleryItem, Invitation, Job, Lead, Member, PointOfInterest, Publication, PublicationDiff, Scene, SessionUser, Unit } from "@synapse/contracts";
+import type { Asset, Development, FloorPlan, GalleryItem, Invitation, Job, Lead, Member, PointOfInterest, Publication, PublicationDiff, Scene, SessionUser, Unit, WebhookDelivery, WebhookEndpoint } from "@synapse/contracts";
 import type { JobStatus, UnitStatus } from "@synapse/domain";
 import { api, ApiRequestError } from "./api";
 
@@ -43,6 +43,8 @@ export const keys = {
   job: (id: string) => ["jobs", id] as const,
   members: ["members"] as const,
   invitations: ["invitations"] as const,
+  webhooks: ["webhooks"] as const,
+  webhookDeliveries: (id: string) => ["webhooks", id, "deliveries"] as const,
 };
 
 /** 401/403/404 will not get better on retry. */
@@ -70,6 +72,9 @@ export const useGallery = (devId: string) =>
 export const usePointsOfInterest = (devId: string) =>
   useQuery({ queryKey: keys.pointsOfInterest(devId), queryFn: () => api<PointOfInterest[]>(`/admin/developments/${devId}/points-of-interest`), retry });
 export const useMembers = () => useQuery({ queryKey: keys.members, queryFn: () => api<Member[]>("/admin/members"), retry });
+export const useWebhooks = () => useQuery({ queryKey: keys.webhooks, queryFn: () => api<WebhookEndpoint[]>("/admin/webhooks"), retry });
+export const useWebhookDeliveries = (id: string) =>
+  useQuery({ queryKey: keys.webhookDeliveries(id), queryFn: () => api<WebhookDelivery[]>(`/admin/webhooks/${id}/deliveries`), retry });
 export const useInvitations = () => useQuery({ queryKey: keys.invitations, queryFn: () => api<Invitation[]>("/admin/invitations"), retry });
 export const usePublications = (devId: string) =>
   useQuery({ queryKey: keys.publications(devId), queryFn: () => api<Publication[]>(`/admin/developments/${devId}/publications`), retry });

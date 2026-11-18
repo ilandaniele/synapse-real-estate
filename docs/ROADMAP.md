@@ -32,5 +32,7 @@
   entre dos versiones y restauración como versión nueva que conserva estado y precio actuales (ADR-018).
 
 ## Fase 4 — Comercial
-- Integración CRM (webhooks de leads), reservas con señal online, analítica de recorridos (qué unidades y
-  estancias se visitan más).
+- [x] Integración CRM con webhooks de leads firmados y reintentos. Hecho el 2026-11-18 (ADR-020,
+  [WEBHOOKS.md](WEBHOOKS.md)).
+- [ ] Analítica de recorridos: qué unidades y estancias se visitan más.
+- [ ] Reservas con señal online.

@@ -34,6 +34,8 @@ existencia). Cubierto por tests de integración (`apps/api/test`).
 | `leads` | Contactos: nombre, email, teléfono, mensaje, unidad, consentimiento, `ip_hash` (HMAC, nunca la IP en claro) |
 | `import_jobs`, `render_jobs` | Cola de trabajos: estado, intentos, `run_after`, `locked_at`, logs, resultado |
 | `audit_events` | Toda acción administrativa mutante |
+| `webhook_endpoints` | URLs de webhook por organización, descripción y secreto HMAC (nunca se devuelve tras crearlo) |
+| `webhook_deliveries` | Una fila por evento y URL: payload, estado `PENDING/DELIVERED/FAILED`, intentos, `next_attempt_at`, último código y error; se borra en cascada con su endpoint. Índice `(status, next_attempt_at)` para la cola |
 | `publications` | Snapshot JSON versionado del manifiesto público (`unique(development_id, version)`); `restored_from_version` indica la versión restaurada |
 
 ## Índices clave

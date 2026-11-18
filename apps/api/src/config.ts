@@ -22,6 +22,8 @@ const Env = z.object({
   MAIL_FROM: z.string().min(3).default("Synapse <no-reply@synapse.local>"),
   // Base of the links sent by email (invitations, password reset).
   ADMIN_PUBLIC_URL: z.union([z.literal(""), z.string().url()]).default(""),
+  // Logins, invitation accepts and password resets per IP per minute.
+  LOGIN_RATE_LIMIT: z.coerce.number().int().min(1).max(1000).default(10),
 });
 
 export interface Config {
@@ -38,6 +40,7 @@ export interface Config {
   smtpUrl?: string;
   mailFrom: string;
   adminPublicUrl: string;
+  loginRateLimit: number;
 }
 
 export const defaultMediaBaseUrl = (publicApiUrl: string) => `${publicApiUrl}/media`;
@@ -74,5 +77,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, warn: (message:
     smtpUrl: e.SMTP_URL || undefined,
     mailFrom: e.MAIL_FROM,
     adminPublicUrl: (e.ADMIN_PUBLIC_URL || "http://localhost:3001").replace(/\/+$/, ""),
+    loginRateLimit: e.LOGIN_RATE_LIMIT,
   };
 }

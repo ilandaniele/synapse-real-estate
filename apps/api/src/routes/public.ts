@@ -6,6 +6,7 @@ import { developments, leads, publications, units } from "@synapse/db";
 import { isPubliclyVisible } from "@synapse/domain";
 import { hashIp } from "../lib/auth";
 import { badRequest, notFound } from "../lib/errors";
+import { enqueueWebhookEvent } from "../lib/webhooks";
 import { SlugParams } from "../lib/params";
 
 export interface PublicRouteOptions {
@@ -48,16 +49,18 @@ export default async function publicRoutes(app: FastifyInstance, opts: PublicRou
         .where(eq(developments.slug, input.developmentSlug));
       if (!development) throw notFound("Development");
 
+      let unitCode: string | null = null;
       if (input.unitId) {
         const [unit] = await app.db
-          .select({ status: units.status })
+          .select({ status: units.status, code: units.code })
           .from(units)
           .where(and(eq(units.id, input.unitId), eq(units.developmentId, development.id)));
         if (!unit || !isPubliclyVisible(unit.status)) throw badRequest("Unknown unit for this development");
+        unitCode = unit.code;
       }
 
       const id = randomUUID();
-      await app.db.insert(leads).values({
+      const lead = {
         id,
         organizationId: development.organizationId,
         developmentId: development.id,
@@ -70,6 +73,19 @@ export default async function publicRoutes(app: FastifyInstance, opts: PublicRou
         ipHash: hashIp(request.ip, app.config.sessionSecret),
         userAgent: (request.headers["user-agent"] ?? "").slice(0, 255) || null,
         consentAt: new Date(),
+      };
+      await app.db.transaction(async (tx) => {
+        await tx.insert(leads).values(lead);
+        await enqueueWebhookEvent(tx, development.organizationId, "lead.created", {
+          leadId: id,
+          development: { id: development.id, slug: input.developmentSlug },
+          unit: input.unitId ? { id: input.unitId, code: unitCode } : null,
+          name: lead.name,
+          email: lead.email,
+          phone: lead.phone,
+          message: lead.message,
+          createdAt: lead.consentAt.toISOString(),
+        });
       });
       return reply.status(201).send({ id });
     },

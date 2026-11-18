@@ -36,6 +36,13 @@
       "when": 1794972100653,
       "tag": "0004_publication_restored_from",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794973115528,
+      "tag": "0005_webhooks",
+      "breakpoints": true
     }
   ]
 }

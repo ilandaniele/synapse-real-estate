@@ -384,3 +384,37 @@ export const ApiError = z.object({
   error: z.object({ code: z.string(), message: z.string(), details: z.unknown().optional() }),
 });
 export type ApiError = z.infer<typeof ApiError>;
+
+export const WEBHOOK_EVENTS = ["lead.created"] as const;
+export const WebhookEndpointInput = z.object({
+  url: z
+    .string()
+    .trim()
+    .url()
+    .max(2048)
+    .refine((value) => /^https?:\/\//i.test(value), "URL must use http or https"),
+  description: z.string().trim().max(200).optional(),
+});
+export type WebhookEndpointInput = z.infer<typeof WebhookEndpointInput>;
+export const WebhookEndpoint = z.object({
+  id: Uuid,
+  url: z.string(),
+  description: z.string().nullable(),
+  createdAt: IsoDate,
+});
+export type WebhookEndpoint = z.infer<typeof WebhookEndpoint>;
+/** Only the creation response carries the signing secret. */
+export const WebhookEndpointCreated = WebhookEndpoint.extend({ secret: z.string() });
+export type WebhookEndpointCreated = z.infer<typeof WebhookEndpointCreated>;
+export const WebhookDelivery = z.object({
+  id: Uuid,
+  event: z.enum(WEBHOOK_EVENTS),
+  status: z.enum(["PENDING", "DELIVERED", "FAILED"]),
+  attempts: z.number().int(),
+  responseStatus: z.number().int().nullable(),
+  lastError: z.string().nullable(),
+  nextAttemptAt: IsoDate,
+  deliveredAt: IsoDate.nullable(),
+  createdAt: IsoDate,
+});
+export type WebhookDelivery = z.infer<typeof WebhookDelivery>;

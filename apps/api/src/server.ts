@@ -2,6 +2,7 @@ import { mkdir } from "node:fs/promises";
 import { createDb, migrate } from "@synapse/db";
 import { storageFromEnv } from "@synapse/storage";
 import { buildApp } from "./app";
+import { runWebhookWorker } from "./lib/webhooks";
 import { loadConfig } from "./config";
 
 async function main() {
@@ -18,7 +19,7 @@ async function main() {
 
   // PGlite only allows one process on its data dir, so without DATABASE_URL the workers run inside the API.
   const worker = new AbortController();
-  const workersDone: Promise<void>[] = [];
+  const workersDone: Promise<void>[] = [runWebhookWorker(handle.db, worker.signal, config.isProd)];
   if (handle.driver === "pglite") {
     const { runAssetWorker } = await import("../../../workers/asset-processing/src/loop");
     app.log.info("PGlite mode: asset worker embedded in the API process");

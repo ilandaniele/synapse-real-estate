@@ -143,3 +143,16 @@ Formato corto: contexto, decisión, consecuencias. Estado: Aceptada salvo indica
 - **Consecuencias**: un estudio puede subir el IFC del proyecto sin exportar a mano, pero el resultado es una maqueta
   de volúmenes, no un modelo de showroom final. Para que el mapeo funcione, cada edificio se nombra `Villa_NN` en el
   software BIM. Un IFC grande puede producir un GLB pesado. `web-ifc` está en versión 0.x; fijamos 0.0.78.
+
+## ADR-020 Webhooks de leads firmados, con cola en la base de datos
+- **Contexto**: la Fase 4 pide integrar leads con un CRM. Cada CRM tiene su API; un webhook genérico sirve para
+  todos, directamente o vía Zapier/Make/n8n, sin escribir un conector por proveedor.
+- **Decisión**: el lead y una entrega por URL se guardan en la misma transacción. Un worker dentro del API toma
+  entregas con `FOR UPDATE SKIP LOCKED` y una reserva de 60 s, firma `<timestamp>.<cuerpo>` con HMAC-SHA256 (el
+  mismo esquema que usan Stripe y otros) y reintenta 6 veces con espera creciente hasta 12 h. Sin Redis ni BullMQ:
+  la tabla ya es la cola y el volumen de leads es bajo. En producción la URL debe ser https y pública, comprobado
+  al crear y en cada envío. Solo `OWNER` gestiona webhooks (`integration:manage`), porque reciben datos personales.
+- **Consecuencias**: un lead nunca se pierde por una caída del CRM y nunca se envía sin guardarse. La entrega es
+  al menos una vez: el receptor descarta duplicados por el `id` del evento. La comprobación SSRF no fija la IP
+  resuelta, así que un DNS rebinding sigue siendo posible ([WEBHOOKS.md](WEBHOOKS.md)). Rotar el secreto es crear
+  otro webhook y borrar el viejo.

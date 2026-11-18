@@ -13,6 +13,7 @@ export const ACTIONS = [
   "lead:read",
   "lead:export",
   "member:manage",
+  "integration:manage",
 ] as const;
 export type Action = (typeof ACTIONS)[number];
 

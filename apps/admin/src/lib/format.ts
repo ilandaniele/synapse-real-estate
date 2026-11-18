@@ -47,3 +47,9 @@ export const POI_CATEGORY_LABELS = {
   GOLF: "Golf",
   RESTAURANT: "Restaurante",
 } as const;
+
+export const WEBHOOK_STATUS_LABELS = {
+  PENDING: "Pendiente",
+  DELIVERED: "Entregado",
+  FAILED: "Fallido",
+} as const;

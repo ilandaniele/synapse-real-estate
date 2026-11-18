@@ -137,6 +137,8 @@ describe("files", () => {
 describe("permissions and jobs", () => {
   it("enforces RBAC", () => {
     expect(can("OWNER", "member:manage")).toBe(true);
+    expect(can("OWNER", "integration:manage")).toBe(true);
+    expect(can("EDITOR", "integration:manage")).toBe(false);
     expect(can("SALES", "development:publish")).toBe(false);
     expect(can("VIEWER", "lead:read")).toBe(false);
   });

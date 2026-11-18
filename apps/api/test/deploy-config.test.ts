@@ -75,3 +75,11 @@ describe("email links", () => {
     expect(() => loadConfig({ PUBLIC_API_URL: "", SMTP_URL: "http://mail.example.test" }, quiet)).toThrow(/SMTP_URL/);
   });
 });
+
+describe("LOGIN_RATE_LIMIT", () => {
+  it("defaults to 10 per minute and rejects values out of range", () => {
+    expect(loadConfig({}, quiet).loginRateLimit).toBe(10);
+    expect(loadConfig({ LOGIN_RATE_LIMIT: "60" }, quiet).loginRateLimit).toBe(60);
+    expect(() => loadConfig({ LOGIN_RATE_LIMIT: "0" }, quiet)).toThrow(/LOGIN_RATE_LIMIT/);
+  });
+});

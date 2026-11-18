@@ -23,7 +23,7 @@ Errors always use the `ApiError` shape `{error: {code, message, details?}}`. Bod
 | POST | /api/v1/auth/password-reset/request | public | `{email}` -> always **202**, whether the email exists or not; emails a 1 h link. 503 without SMTP in production. 10/min/IP |
 | POST | /api/v1/auth/password-reset/confirm | public | `{token, password}` -> 204; burns every open reset link of the user and revokes their sessions; 400 for an invalid or expired token. 10/min/IP |
 | GET | /api/v1/public/developments/:slug/manifest | public | latest publication; ETag + 304, `Cache-Control: public, max-age=30, stale-while-revalidate=300` |
-| POST | /api/v1/public/leads | public | 5/min/IP; honeypot `website` -> 202 and nothing stored; `consent: true` required; 201 `{id}` |
+| POST | /api/v1/public/leads | public | 5/min/IP; honeypot `website` -> 202 and nothing stored; `consent: true` required; 201 `{id}`; enqueues `lead.created` for the org's webhooks in the same transaction ([WEBHOOKS.md](WEBHOOKS.md)) |
 | GET/POST | /admin/developments | development:read / write | |
 | GET/PATCH/DELETE | /admin/developments/:id | read / write / write | |
 | POST | /admin/developments/:id/publish | development:publish | **201** Publication; 422 `MANIFEST_INVALID`; builds + validates the manifest, excludes UNLISTED units |
@@ -55,6 +55,10 @@ Errors always use the `ApiError` shape `{error: {code, message, details?}}`. Bod
 | GET | /admin/dashboard | read | counts by status, leads 30 d, last publication, jobs by status |
 | GET/POST | /admin/invitations | member:manage | pending invitations; POST `{email, role}` emails a 7-day link, 409 `USER_EXISTS` / `INVITATION_PENDING`, 503 without SMTP in production. The token is never returned |
 | DELETE | /admin/invitations/:id | member:manage | revokes a pending invitation; another org's id is 404 |
+| GET | /admin/webhooks | integration:manage | newest first, max 50; never includes the secret |
+| POST | /admin/webhooks | integration:manage | `{url, description?}` -> **201** with `secret` (`whsec_…`), shown only here; 400 for a non-http(s) URL, and in production for http or a host that resolves to a private address; audited |
+| DELETE | /admin/webhooks/:id | integration:manage | 204; deletes its deliveries too; another org's id is 404; audited |
+| GET | /admin/webhooks/:id/deliveries | integration:manage | last 50: event, status `PENDING/DELIVERED/FAILED`, attempts, response status, last error, next attempt |
 
 Scenes include `cubeMap: {baseUrl, tileSize, faceSizes} | null`. Tiles live at
 `<baseUrl>/<z>/<face>/<row>/<col>.jpg` (z = 1 is the smallest level) with `<baseUrl>/preview.jpg`. It is

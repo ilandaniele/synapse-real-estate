@@ -49,6 +49,7 @@ export default defineConfig({
         CORS_ORIGINS: `${SHOWROOM},${ADMIN}`,
         SMTP_URL: process.env.E2E_SMTP_URL ?? "",
         ADMIN_PUBLIC_URL: ADMIN,
+        LOGIN_RATE_LIMIT: "60",
       },
       reuseExistingServer: false,
       timeout: 180_000,

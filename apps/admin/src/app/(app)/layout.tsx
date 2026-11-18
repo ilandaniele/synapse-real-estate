@@ -19,9 +19,10 @@ const NAV = [
   { slug: "assets", href: "/assets", label: "Activos" },
   { slug: "jobs", href: "/jobs", label: "Procesos" },
   { slug: "members", href: "/members", label: "Miembros" },
+  { slug: "integrations", href: "/integrations", label: "Integraciones" },
 ] as const;
 
-const NAV_PERMISSIONS: Partial<Record<(typeof NAV)[number]["slug"], Action>> = { leads: "lead:read", members: "member:manage" };
+const NAV_PERMISSIONS: Partial<Record<(typeof NAV)[number]["slug"], Action>> = { leads: "lead:read", members: "member:manage", integrations: "integration:manage" };
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const router = useRouter();

@@ -36,6 +36,10 @@ automated test, and the full suites passed after the fixes (see [TESTING.md](TES
 - **Production:** the Swagger UI (`/docs`) is not registered. The demo seed refuses to run with
   `NODE_ENV=production`.
 - **Secrets:** only in environment variables. `.env` is gitignored. Seed passwords are for local use only.
+- **Webhooks:** owner-only. The HMAC secret is shown once and never listed. In production the URL must be https
+  and resolve to public addresses, checked on create and before each send; redirects are not followed and each
+  request times out after 5 s. DNS rebinding between the check and the connection is a known limit
+  ([WEBHOOKS.md](WEBHOOKS.md)).
 
 ## Findings
 

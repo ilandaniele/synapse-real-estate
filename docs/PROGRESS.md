@@ -38,6 +38,9 @@ from a real run.
   keeps current unit status and price (ADR-018).
 - Asynchronous ingestion pipeline with manual review. IFC is converted to a GLB of simple volumes per building
   with `web-ifc` and waits for review (ADR-019). DWG, FBX and OBJ are rejected explicitly.
+- Lead webhooks for CRMs: owners register URLs under «Integraciones»; each lead is sent signed with HMAC-SHA256,
+  retried up to 6 times, with a delivery log in the admin and an https/public-address guard in production
+  (ADR-020, [WEBHOOKS.md](WEBHOOKS.md)).
   Render without a configured backend fails explicitly.
 - Engine bugs found during integration and fixed in the engines:
   - double hotspot removal;

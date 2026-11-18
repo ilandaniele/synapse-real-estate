@@ -20,6 +20,7 @@ import passwordResetRoutes from "./routes/password-reset";
 import publicRoutes from "./routes/public";
 import { assetAdminRoutes, uploadRoutes } from "./routes/admin/assets";
 import dashboardRoutes from "./routes/admin/dashboard";
+import webhookRoutes from "./routes/admin/webhooks";
 import developmentRoutes from "./routes/admin/developments";
 import publicationRoutes from "./routes/admin/publications";
 import invitationRoutes from "./routes/admin/invitations";
@@ -92,10 +93,11 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     trustProxy: false,
     mailFrom: "Synapse <no-reply@synapse.local>",
     adminPublicUrl: "http://localhost:3001",
+    loginRateLimit: 10,
     ...options.config,
     storageDir: options.storageDir,
   };
-  const limits = { global: 300, login: 10, leads: 5, ...options.rateLimit };
+  const limits = { global: 300, login: config.loginRateLimit, leads: 5, ...options.rateLimit };
 
   const app = Fastify({
     logger: options.logger ? { serializers: { req: redactedRequest } } : false,
@@ -177,6 +179,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
           await admin.register(assetAdminRoutes);
           await admin.register(jobRoutes);
           await admin.register(dashboardRoutes);
+          await admin.register(webhookRoutes);
         },
         { prefix: "/admin" },
       );
