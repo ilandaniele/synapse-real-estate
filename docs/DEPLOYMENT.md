@@ -121,6 +121,12 @@ Paso a Postgres del 2026-11-18 (commit `9571fef`): la VM corre ahora
 [BACKUPS.md](BACKUPS.md#en-la-vm-el-2026-11-18). Desde entonces todos los comandos `docker compose` de la VM
 llevan los dos `-f`.
 
+Redespliegue del 2026-11-18 con contenido en español e inglés (commit `7c7e988`, ADR-025): backup previo
+`db-20261118T172213Z.dump`, imagen copiada y `up -d --no-build`. La migración `0008_content_translations` corrió
+al arrancar el API: las siete tablas tienen `translations` con `{}`. El showroom, `/unidades/villa-6`, el
+manifiesto y `/login` del admin responden 200. El seed de demo no se volvió a correr en producción, así que el
+contenido sigue en español hasta cargar el inglés en el admin y publicar.
+
 Para cobrar con Stripe (ADR-023), con una cuenta propia:
 1. En el panel de Stripe, crear el endpoint de webhook
    `https://<SHOWROOM_HOST>/api/v1/public/reservations/stripe/webhook` con los eventos
