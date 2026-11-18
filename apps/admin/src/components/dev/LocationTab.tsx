@@ -10,6 +10,12 @@ import { POI_CATEGORY_LABELS } from "@/lib/format";
 import { apiFieldErrors, parseNumber, zodFieldErrors, type FieldErrors } from "@/lib/forms";
 import { ConfirmDelete } from "../content";
 import { Button, ErrorBanner, Modal, QueryBoundary, SelectField, TableShell, TD, TextField, TH } from "../ui";
+import { EnglishFields, useEnglishText } from "../EnglishFields";
+
+const ENGLISH_FIELDS = [
+  { name: "name", label: "Nombre" },
+  { name: "distanceText", label: "Distancia" },
+];
 
 type Category = PointOfInterest["category"];
 const CATEGORIES = Object.keys(POI_CATEGORY_LABELS) as Category[];
@@ -89,6 +95,7 @@ function PoiDialog({ developmentId, target, onClose }: { developmentId: string; 
   const [lng, setLng] = useState(String(poi?.lng ?? ""));
   const [distanceText, setDistanceText] = useState(poi?.distanceText ?? "");
   const [clientErrors, setClientErrors] = useState<FieldErrors>({});
+  const english = useEnglishText(poi?.translations);
 
   const refresh = () => void queryClient.invalidateQueries({ queryKey: keys.pointsOfInterest(developmentId) });
 
@@ -111,6 +118,7 @@ function PoiDialog({ developmentId, target, onClose }: { developmentId: string; 
       lat: parseNumber(lat),
       lng: parseNumber(lng),
       distanceText: distanceText.trim() || null,
+      translations: english.translations,
     });
     const errors: FieldErrors = parsed.success ? {} : zodFieldErrors(parsed.error);
     for (const [field, raw] of Object.entries({ lat, lng })) {
@@ -140,6 +148,7 @@ function PoiDialog({ developmentId, target, onClose }: { developmentId: string; 
         <TextField label="Distancia" value={distanceText} error={errors.distanceText} hint="Opcional, p. ej. 5 min en coche" testId="poi-field-distance" onChange={(e) => setDistanceText(e.target.value)} />
         <TextField label="Latitud" inputMode="decimal" value={lat} error={errors.lat} hint="Entre -90 y 90" testId="poi-field-lat" onChange={(e) => setLat(e.target.value)} />
         <TextField label="Longitud" inputMode="decimal" value={lng} error={errors.lng} hint="Entre -180 y 180" testId="poi-field-lng" onChange={(e) => setLng(e.target.value)} />
+        <EnglishFields fields={ENGLISH_FIELDS} {...english} errors={errors} testId="poi-field-en" />
         <div className="flex flex-col gap-2 md:col-span-2">
           <ErrorBanner error={save.error} testId="poi-form-error" />
           <div>

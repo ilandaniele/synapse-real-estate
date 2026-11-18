@@ -12,6 +12,7 @@ test.describe("Flujo C — admin crea unidad, publica y el público lo ve", () =
     const form = page.getByTestId("unit-form");
     await form.getByTestId("unit-field-code").fill("V9");
     await form.getByTestId("unit-field-name").fill("Villa 9");
+    await form.getByTestId("unit-field-en-name").fill("Villa Nine");
     await form.getByTestId("unit-field-slug").fill("villa-9");
     await form.getByTestId("unit-field-price").fill("910000.00");
     await form.getByTestId("unit-field-interiorArea").fill("250");
@@ -29,6 +30,11 @@ test.describe("Flujo C — admin crea unidad, publica y el público lo ve", () =
     await expect(page.getByTestId("unit-row-V9")).toBeVisible();
     await page.goto("/unidades/villa-9");
     await expect(page.getByTestId("unit-sheet")).toContainText("910.000");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Villa 9");
+    const englishVisitor = await browser.newPage({ baseURL: test.info().project.use.baseURL, locale: "en-US" });
+    await englishVisitor.goto("/unidades/villa-9");
+    await expect(englishVisitor.getByRole("heading", { level: 1 })).toContainText("Villa Nine");
+    await englishVisitor.close();
 
     await page.goto(`${ADMIN}/developments`);
     await page.getByTestId("dev-row-lomas-del-faro").click();

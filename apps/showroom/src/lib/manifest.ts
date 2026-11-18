@@ -1,4 +1,5 @@
 import { DevelopmentManifest, type Scene, type Unit } from "@synapse/contracts";
+import { localize, type Locale } from "@synapse/domain";
 import { MANIFEST_URL } from "./config";
 
 export type ManifestErrorReason = "offline" | "notPublished" | "httpError" | "invalid";
@@ -38,4 +39,18 @@ export function scenesForUnit(scenes: readonly Scene[], unitId: string): Scene[]
 
 export function unitHasTour(scenes: readonly Scene[], unitId: string): boolean {
   return scenes.some((s) => s.unitId === unitId);
+}
+
+/** The manifest with every translatable text in the visitor's locale, falling back to the base text. */
+export function localizeManifest(manifest: DevelopmentManifest, locale: Locale): DevelopmentManifest {
+  const all = <T extends Parameters<typeof localize>[0]>(items: readonly T[]) => items.map((item) => localize(item, locale));
+  return {
+    ...manifest,
+    development: localize(manifest.development, locale),
+    units: all(manifest.units),
+    scenes: manifest.scenes.map((scene) => ({ ...localize(scene, locale), hotspots: all(scene.hotspots) })),
+    floorPlans: all(manifest.floorPlans),
+    gallery: all(manifest.gallery),
+    pointsOfInterest: all(manifest.pointsOfInterest),
+  };
 }

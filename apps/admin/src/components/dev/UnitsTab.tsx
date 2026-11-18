@@ -10,9 +10,16 @@ import { keys, useUnits } from "@/lib/queries";
 import { useCan } from "@/lib/session";
 import { apiFieldErrors, parseNumber, zodFieldErrors, type FieldErrors } from "@/lib/forms";
 import { ConfirmDelete } from "../content";
+import { EnglishFields, useEnglishText } from "../EnglishFields";
 import { Button, ErrorBanner, Modal, QueryBoundary, SelectField, TableShell, TD, TextAreaField, TextField, TH } from "../ui";
 
 type EditTarget = { mode: "create" } | { mode: "edit"; unit: Unit };
+
+const ENGLISH_FIELDS = [
+  { name: "name", label: "Nombre" },
+  { name: "orientation", label: "Orientación" },
+  { name: "description", label: "Descripción", multiline: true },
+];
 
 export function UnitsTab({ developmentId, currency }: { developmentId: string; currency: string }) {
   const units = useUnits(developmentId);
@@ -142,6 +149,7 @@ function UnitDialog({
   const [orientation, setOrientation] = useState(unit?.orientation ?? "");
   const [description, setDescription] = useState(unit?.description ?? "");
   const [meshNames, setMeshNames] = useState(unit?.meshNames.join(", ") ?? "");
+  const english = useEnglishText(unit?.translations);
   const [clientErrors, setClientErrors] = useState<FieldErrors>({});
 
   const save = useMutation({
@@ -179,6 +187,7 @@ function UnitDialog({
         .map((n) => n.trim())
         .filter(Boolean),
       labelPosition: unit?.labelPosition ?? null,
+      translations: english.translations,
     });
     const numeric = { interiorArea, plotArea, terraceArea, bedrooms, bathrooms, floors };
     const errors: FieldErrors = parsed.success ? {} : zodFieldErrors(parsed.error);
@@ -223,6 +232,7 @@ function UnitDialog({
         <TextField label="Orientación" value={orientation} disabled={readOnly} error={errors.orientation} testId="unit-field-orientation" onChange={(e) => setOrientation(e.target.value)} />
         <TextField label="Mallas del GLB" value={meshNames} disabled={readOnly} error={errors.meshNames} hint="Separadas por coma, p. ej. Villa_06" testId="unit-field-meshNames" onChange={(e) => setMeshNames(e.target.value)} />
         <TextAreaField label="Descripción" className="md:col-span-2" value={description} disabled={readOnly} error={errors.description} testId="unit-field-description" onChange={(e) => setDescription(e.target.value)} />
+        <EnglishFields fields={ENGLISH_FIELDS} {...english} errors={errors} disabled={readOnly} testId="unit-field-en" />
         <div className="flex flex-col gap-2 md:col-span-2">
           <ErrorBanner error={save.error} testId="unit-form-error" />
           {readOnly ? null : (

@@ -33,6 +33,7 @@ export function DatosTab({ development }: { development: Development }) {
           lat: development.lat,
           lng: development.lng,
           currency: development.currency,
+          translations: development.translations,
         }}
         disabled={!canWrite}
         pending={save.isPending}

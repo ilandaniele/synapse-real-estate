@@ -11,6 +11,7 @@ import { useCan } from "@/lib/session";
 import { apiFieldErrors, parseNumber, zodFieldErrors, type FieldErrors } from "@/lib/forms";
 import { slugifyText } from "@/lib/format";
 import { Button, ErrorBanner, Modal, QueryBoundary, SelectField, TableShell, TD, TextField, TH } from "../ui";
+import { EnglishFields, useEnglishText } from "../EnglishFields";
 
 type EditTarget = { mode: "create" } | { mode: "edit"; scene: Scene };
 
@@ -129,6 +130,7 @@ function SceneDialog({ developmentId, target, units, sceneCount, onClose }: { de
   const [fov, setFov] = useState(round(radToDeg(scene?.initialView.fov ?? 1.4), 1));
   const [viewTouched, setViewTouched] = useState(false);
   const [clientErrors, setClientErrors] = useState<FieldErrors>({});
+  const english = useEnglishText(scene?.translations);
 
   const panoramaAssets: Asset[] = (assets.data ?? []).filter((a) => a.status === "UPLOADED" && a.kind !== null && IMAGE_KINDS.includes(a.kind));
 
@@ -149,6 +151,7 @@ function SceneDialog({ developmentId, target, units, sceneCount, onClose }: { de
       slug: slug.trim(),
       name: name.trim(),
       sortOrder: parseNumber(sortOrder),
+      translations: english.translations,
       ...(assetId ? { panoramaAssetId: assetId } : {}),
       ...(panoramaUrl.trim() ? { panoramaUrl: panoramaUrl.trim() } : {}),
       ...(!scene || viewTouched
@@ -191,6 +194,7 @@ function SceneDialog({ developmentId, target, units, sceneCount, onClose }: { de
             setSlug(e.target.value);
           }}
         />
+        <EnglishFields fields={[{ name: "name", label: "Nombre" }]} {...english} errors={errors} testId="scene-field-en" />
         <SelectField label="Unidad" value={unitId} error={errors.unitId} testId="scene-field-unit" onChange={(e) => setUnitId(e.target.value)}>
           <option value="">Sin unidad (común)</option>
           {units.map((u) => (

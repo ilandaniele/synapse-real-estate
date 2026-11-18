@@ -10,6 +10,7 @@ import {
   filterUnits,
   formatPrice,
   isLocale,
+  localize,
   LOCALES,
   STATUS_LABELS,
   UNIT_STATUSES,
@@ -167,5 +168,18 @@ describe("filters", () => {
     expect(filterUnits(units, { statuses: ["AVAILABLE"] }).map((u) => u.code)).toEqual(["V6"]);
     expect(filterUnits(units, { maxPrice: "700000" }).map((u) => u.code)).toEqual(["V1"]);
     expect(filterUnits(units, { minBedrooms: 4, query: "villa" })).toHaveLength(1);
+  });
+});
+
+describe("localize", () => {
+  const room = { name: "Salón", description: "Con chimenea", translations: { en: { name: "Living room", description: "  " } } };
+
+  it("lays non-blank translated fields over the base text", () => {
+    expect(localize(room, "en")).toMatchObject({ name: "Living room", description: "Con chimenea" });
+  });
+
+  it("keeps the base text for the base locale and for missing translations", () => {
+    expect(localize(room, "es")).toBe(room);
+    expect(localize({ name: "Cocina", translations: {} }, "en").name).toBe("Cocina");
   });
 });

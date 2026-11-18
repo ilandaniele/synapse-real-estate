@@ -9,6 +9,7 @@ import { useCan } from "@/lib/session";
 import { apiFieldErrors, parseNumber, zodFieldErrors, type FieldErrors } from "@/lib/forms";
 import { ConfirmDelete, ImageField, UnitSelect, useImageInput } from "../content";
 import { Button, ErrorBanner, Modal, QueryBoundary, TableShell, TD, TextField, TH } from "../ui";
+import { EnglishFields, useEnglishText } from "../EnglishFields";
 
 type EditTarget = { mode: "create" } | { mode: "edit"; item: GalleryItem };
 
@@ -89,6 +90,7 @@ function GalleryDialog({ developmentId, target, onClose }: { developmentId: stri
   const [sortOrder, setSortOrder] = useState(String(item?.sortOrder ?? 0));
   const image = useImageInput({ required: !item });
   const [clientErrors, setClientErrors] = useState<FieldErrors>({});
+  const english = useEnglishText(item?.translations);
 
   const refresh = () => void queryClient.invalidateQueries({ queryKey: keys.gallery(developmentId) });
 
@@ -108,7 +110,7 @@ function GalleryDialog({ developmentId, target, onClose }: { developmentId: stri
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    const parsed = GalleryItemInput.safeParse({ title: title.trim(), unitId, credit: credit.trim(), sortOrder: parseNumber(sortOrder) });
+    const parsed = GalleryItemInput.safeParse({ title: title.trim(), unitId, credit: credit.trim(), sortOrder: parseNumber(sortOrder), translations: english.translations });
     const errors: FieldErrors = parsed.success ? {} : zodFieldErrors(parsed.error);
     const imageError = image.validate();
     if (imageError) errors.image = imageError;
@@ -126,6 +128,7 @@ function GalleryDialog({ developmentId, target, onClose }: { developmentId: stri
     <Modal title={item ? `Imagen «${item.title}»` : "Nueva imagen"} onClose={onClose} testId="gallery-dialog">
       <form onSubmit={submit} noValidate className="flex flex-col gap-3" data-testid="gallery-form">
         <TextField label="Título" value={title} error={errors.title} testId="gallery-field-title" onChange={(e) => setTitle(e.target.value)} />
+        <EnglishFields fields={[{ name: "title", label: "Título" }]} {...english} errors={errors} testId="gallery-field-en" />
         <UnitSelect developmentId={developmentId} value={unitId} error={errors.unitId} testId="gallery-field-unit" onChange={setUnitId} />
         <TextField label="Crédito" value={credit} error={errors.credit} hint="Autoría o licencia de la imagen." testId="gallery-field-credit" onChange={(e) => setCredit(e.target.value)} />
         <TextField label="Orden" inputMode="numeric" value={sortOrder} error={errors.sortOrder} testId="gallery-field-sortOrder" onChange={(e) => setSortOrder(e.target.value)} />

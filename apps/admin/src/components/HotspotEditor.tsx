@@ -11,6 +11,7 @@ import { keys, useScene, useScenes } from "@/lib/queries";
 import { useCan } from "@/lib/session";
 import { apiFieldErrors, zodFieldErrors, type FieldErrors } from "@/lib/forms";
 import { Button, Card, ErrorBanner, QueryBoundary, SelectField, TextAreaField, TextField } from "./ui";
+import { EnglishFields, useEnglishText } from "./EnglishFields";
 
 const MOVE_SAVE_DELAY_MS = 400;
 const DRAFT_ID = "draft";
@@ -27,6 +28,7 @@ interface HotspotFormValues {
   label: string;
   targetSceneId: string | null;
   description: string | null;
+  translations: Hotspot["translations"];
 }
 
 export function HotspotEditor({ sceneId }: { sceneId: string }) {
@@ -152,7 +154,7 @@ function EditorBody({ scene, preview, onTogglePreview, onNavigate }: { scene: Sc
   };
 
   const draftHotspot: Hotspot | null = draft
-    ? { id: DRAFT_ID, sceneId: scene.id, type: "INFO", label: "Nuevo hotspot", yaw: draft.yaw, pitch: draft.pitch, targetSceneId: null, description: null }
+    ? { id: DRAFT_ID, sceneId: scene.id, type: "INFO", label: "Nuevo hotspot", yaw: draft.yaw, pitch: draft.pitch, targetSceneId: null, description: null, translations: {} }
     : null;
   const viewerHotspots = draftHotspot ? [...scene.hotspots, draftHotspot] : scene.hotspots;
   const selected = scene.hotspots.find((h) => h.id === selectedId) ?? null;
@@ -324,6 +326,7 @@ function HotspotForm({
   const [description, setDescription] = useState(initial?.description ?? "");
   const [confirming, setConfirming] = useState(false);
   const [clientErrors, setClientErrors] = useState<FieldErrors>({});
+  const english = useEnglishText(initial?.translations);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -332,6 +335,7 @@ function HotspotForm({
       label: label.trim(),
       targetSceneId: type === "NAVIGATION" ? targetSceneId || null : null,
       description: type === "INFO" && description.trim() ? description.trim() : null,
+      translations: english.translations,
     };
     const parsed = HotspotInput.safeParse({ ...values, yaw: position.yaw, pitch: position.pitch });
     const errors: FieldErrors = parsed.success ? {} : zodFieldErrors(parsed.error);
@@ -368,6 +372,12 @@ function HotspotForm({
       ) : (
         <TextAreaField label="Descripción" maxLength={500} value={description} error={errors.description} testId="hotspot-description-input" onChange={(e) => setDescription(e.target.value)} />
       )}
+      <EnglishFields
+        fields={type === "INFO" ? [{ name: "label", label: "Etiqueta" }, { name: "description", label: "Descripción", multiline: true }] : [{ name: "label", label: "Etiqueta" }]}
+        {...english}
+        errors={errors}
+        testId="hotspot-en"
+      />
       <ErrorBanner error={error} testId="hotspot-error" />
       <div className="flex flex-wrap gap-2">
         <Button type="submit" variant="primary" disabled={pending} data-testid="hotspot-save">

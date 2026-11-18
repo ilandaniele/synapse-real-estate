@@ -33,6 +33,7 @@ export function developmentToContract(config: Config, d: Row<"developments">): D
     heroImageUrl: mediaUrl(config, d.heroImagePath),
     modelUrl: mediaUrl(config, d.modelPath),
     currency: d.currency,
+    translations: d.translations,
     updatedAt: iso(d.updatedAt),
   };
 }
@@ -59,6 +60,7 @@ export function unitToContract(u: Row<"units">, unitType: string | null, meshNam
     description: u.description,
     meshNames,
     labelPosition: u.labelPosition ?? null,
+    translations: u.translations,
     updatedAt: iso(u.updatedAt),
   };
 }
@@ -97,6 +99,7 @@ export function hotspotToContract(h: Row<"sceneHotspots">): Hotspot {
     pitch: h.pitch,
     targetSceneId: h.targetSceneId,
     description: h.description,
+    translations: h.translations,
   };
 }
 
@@ -115,6 +118,7 @@ export function sceneToContract(config: Config, s: Row<"scenes">, hotspots: Hots
     initialView: { yaw: s.initialYaw, pitch: s.initialPitch, fov: s.initialFov },
     floorPlanPoint: s.floorPlanX !== null && s.floorPlanY !== null ? { x: s.floorPlanX, y: s.floorPlanY } : null,
     hotspots,
+    translations: s.translations,
   };
 }
 
@@ -142,15 +146,15 @@ export async function loadScenes(db: Db, config: Config, organizationId: string,
 }
 
 export function floorPlanToContract(config: Config, f: Row<"floorPlans">): FloorPlan {
-  return { id: f.id, unitId: f.unitId, name: f.name, imageUrl: mediaUrl(config, f.imagePath), width: f.width, height: f.height };
+  return { id: f.id, unitId: f.unitId, name: f.name, imageUrl: mediaUrl(config, f.imagePath), width: f.width, height: f.height, translations: f.translations };
 }
 
 export function galleryToContract(config: Config, g: Row<"galleryItems">): GalleryItem {
-  return { id: g.id, unitId: g.unitId, title: g.title, imageUrl: mediaUrl(config, g.imagePath), credit: g.credit, sortOrder: g.sortOrder };
+  return { id: g.id, unitId: g.unitId, title: g.title, imageUrl: mediaUrl(config, g.imagePath), credit: g.credit, sortOrder: g.sortOrder, translations: g.translations };
 }
 
 export function poiToContract(p: Row<"pointsOfInterest">): PointOfInterest {
-  return { id: p.id, name: p.name, category: p.category, lat: p.lat, lng: p.lng, distanceText: p.distanceText };
+  return { id: p.id, name: p.name, category: p.category, lat: p.lat, lng: p.lng, distanceText: p.distanceText, translations: p.translations };
 }
 
 export function assetToContract(a: Row<"assets">): Asset {

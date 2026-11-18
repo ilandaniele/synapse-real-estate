@@ -14,7 +14,7 @@ import {
   unique,
   uuid,
 } from "drizzle-orm/pg-core";
-import { JOB_STATUSES, RESERVATION_STATUSES, ROLES, UNIT_STATUSES } from "@synapse/domain";
+import { JOB_STATUSES, RESERVATION_STATUSES, ROLES, UNIT_STATUSES, type ContentTranslations } from "@synapse/domain";
 
 export const roleEnum = pgEnum("role", ROLES);
 export const unitStatusEnum = pgEnum("unit_status", UNIT_STATUSES);
@@ -41,6 +41,7 @@ const updatedAt = () =>
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date());
+const translations = () => jsonb("translations").$type<ContentTranslations>().notNull().default({});
 const orgId = () =>
   uuid("organization_id")
     .notNull()
@@ -126,6 +127,7 @@ export const developments = pgTable(
     heroImagePath: text("hero_image_path"),
     modelPath: text("model_path"),
     currency: text("currency").notNull().default("EUR"),
+    translations: translations(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -190,6 +192,7 @@ export const units = pgTable(
     sector: text("sector").notNull().default(""),
     orientation: text("orientation"),
     description: text("description").notNull().default(""),
+    translations: translations(),
     labelPosition: jsonb("label_position").$type<[number, number, number] | null>(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -232,6 +235,7 @@ export const floorPlans = pgTable(
     imagePath: text("image_path").notNull(),
     width: doublePrecision("width").notNull(),
     height: doublePrecision("height").notNull(),
+    translations: translations(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -341,6 +345,7 @@ export const scenes = pgTable(
     initialYaw: doublePrecision("initial_yaw").notNull().default(0),
     initialPitch: doublePrecision("initial_pitch").notNull().default(0),
     initialFov: doublePrecision("initial_fov").notNull().default(1.2),
+    translations: translations(),
     floorPlanX: doublePrecision("floor_plan_x"),
     floorPlanY: doublePrecision("floor_plan_y"),
     createdAt: createdAt(),
@@ -366,6 +371,7 @@ export const sceneHotspots = pgTable(
     yaw: doublePrecision("yaw").notNull(),
     pitch: doublePrecision("pitch").notNull(),
     targetSceneId: uuid("target_scene_id").references(() => scenes.id, { onDelete: "set null" }),
+    translations: translations(),
     description: text("description"),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -385,6 +391,7 @@ export const galleryItems = pgTable(
     title: text("title").notNull(),
     imagePath: text("image_path").notNull(),
     credit: text("credit").notNull().default(""),
+    translations: translations(),
     sortOrder: integer("sort_order").notNull().default(0),
     createdAt: createdAt(),
   },
@@ -403,6 +410,7 @@ export const pointsOfInterest = pgTable(
     category: poiCategoryEnum("category").notNull(),
     lat: doublePrecision("lat").notNull(),
     lng: doublePrecision("lng").notNull(),
+    translations: translations(),
     distanceText: text("distance_text"),
     createdAt: createdAt(),
   },

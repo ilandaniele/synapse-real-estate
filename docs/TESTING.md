@@ -16,7 +16,7 @@ pnpm 9.15.9) on 2026-11-15. Nothing here is projected.
 
 | Package | File(s) | Tests |
 |---|---|---|
-| `packages/domain` | `src/domain.test.ts` | 19 |
+| `packages/domain` | `src/domain.test.ts` | 21 |
 | `packages/assets` | `src/glb.test.ts` | 3 |
 | `packages/db` | `test/db.test.ts`, `test/copy-database.test.ts` | 5 |
 | `packages/3d-engine` | `src/helpers.test.ts` | 14 |
@@ -25,9 +25,9 @@ pnpm 9.15.9) on 2026-11-15. Nothing here is projected.
 | `workers/render-processing` | unit tests | 5 |
 | `packages/storage` | local and S3 drivers | 15 (2 need `S3_TEST_ENDPOINT`) |
 | `packages/cubemap` | `src/cubemap.test.ts` | 5 |
-| `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security`, `deploy-config`, `content`, `members`, `storage-s3`, `observability`, `invitations`, `mailpit`, `publication-history`, `publication-diff.unit`, `webhooks`, `visits`, `reservations`, `reservations-stripe`, `member-reset-link` | 171 (3 need `S3_TEST_ENDPOINT`, 1 needs `MAILPIT_SMTP_URL`, 2 need `STRIPE_MOCK_URL`, e.g. `docker run -d -p 12111:12111 stripe/stripe-mock:v0.197.0`) |
-| `apps/showroom` | `src/lib/kiosk.test.ts`, `src/lib/analytics.test.ts`, `src/i18n/resolve-locale.test.ts` | 10 |
-| **Total** | | **265 passed, 0 failed, 8 skipped without `S3_TEST_ENDPOINT`, `MAILPIT_SMTP_URL` and `STRIPE_MOCK_URL`** (run 2026-11-18) |
+| `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security`, `deploy-config`, `content`, `members`, `storage-s3`, `observability`, `invitations`, `mailpit`, `publication-history`, `publication-diff.unit`, `webhooks`, `visits`, `reservations`, `reservations-stripe`, `member-reset-link`, `translations` | 177 (3 need `S3_TEST_ENDPOINT`, 1 needs `MAILPIT_SMTP_URL`, 2 need `STRIPE_MOCK_URL`, e.g. `docker run -d -p 12111:12111 stripe/stripe-mock:v0.197.0`) |
+| `apps/showroom` | `src/lib/kiosk.test.ts`, `src/lib/analytics.test.ts`, `src/i18n/resolve-locale.test.ts`, `src/lib/manifest.test.ts` | 12 |
+| **Total** | | **278 passed, 0 failed, 8 skipped without `S3_TEST_ENDPOINT`, `MAILPIT_SMTP_URL` and `STRIPE_MOCK_URL`** (run 2026-11-18) |
 
 The API tests start the real Fastify app with an in-memory PGlite database and cover 401, 403, 404, 409,
 413, 415 and 429 responses, cross-organization access (IDOR), the role matrix, the lead honeypot and rate
@@ -41,7 +41,7 @@ owner-issued reset link: single use, audit, 401/403, cross-organization 404 and 
 organizations. `mailpit.test.ts` sends a real email over SMTP and reads it back from Mailpit ([EMAIL.md](EMAIL.md)).
 
 `packages/ui`, `packages/contracts`, `workers/*` and `apps/admin` have no unit tests of their own. `apps/showroom`
-has only the kiosk-mode and locale-resolution tests. Contracts are exercised through the API tests; the apps are covered by E2E.
+has only the kiosk-mode, analytics, locale-resolution and manifest-localization tests. Contracts are exercised through the API tests; the apps are covered by E2E.
 
 The API files each start an in-memory PGlite database. With one worker per core (24 on the development PC) the
 migrations of every worker compete for CPU and the setup hooks exceeded the 10 s timeout, so
@@ -92,7 +92,7 @@ Specs (`tests/e2e`):
 |---|---|
 | `flow-a-visit` | Villa 6 360 tour: hotspot, room menu, floor plan modal, thumbnails; fast room switches during a transition do not break the viewer; keyboard focus and accessible hotspots |
 | `flow-b-masterplan-lead` | Masterplan, select Villa 6, sheet, tour, another room, back with selection kept, lead submitted; filters synced with the list; lead validation, honeypot and consent |
-| `flow-c-admin-publish` | Admin creates villa V9, publishes version 2 and the public site shows it; the diff of v2 lists V9 as added; restoring v1 shows V9 as removed, creates v3 «restaurada de v1» and the public site drops V9; VIEWER sees no write actions; bad login shows an error |
+| `flow-c-admin-publish` | Admin creates villa V9, publishes version 2 and the public site shows it; the diff of v2 lists V9 as added; restoring v1 shows V9 as removed, creates v3 «restaurada de v1» and the public site drops V9; the English name entered for V9 shows to an `en-US` visitor; VIEWER sees no write actions; bad login shows an error |
 | `flow-d-hotspot-editor` | Create a hotspot by clicking the panorama, set its target, preview, publish, and navigate with it on the public tour |
 | `flow-e-admin-content` | Gallery item with an uploaded image, point of interest with a coordinate error then fixed, floor-plan list; owner creates a VIEWER member who cannot see «Miembros», gets a wrong-current-password error, changes the password and logs in with it |
 | `flow-f-invitations` | Needs `E2E_SMTP_URL` (Mailpit). Owner invites a SALES member, the link is read from Mailpit, the invitee accepts and appears in «Miembros»; then «¿Olvidaste tu contraseña?», reset link from Mailpit, the old password fails and the new one works. A second test generates a reset link from «Miembros» for the SALES user, uses it, and logs in with the new password |
@@ -101,11 +101,14 @@ Specs (`tests/e2e`):
 | `flow-g-webhooks` | Owner creates a webhook to a local receiver from «Integraciones», the secret is shown once; a public lead arrives signed (HMAC checked in the test); the delivery log shows «Entregado»; the webhook is deleted |
 | `csp` | Masterplan, tour and location pages log no Content Security Policy violations (catches the production CSP blocking the GLB decoder's WebAssembly) |
 | `kiosk` | Kiosk mode with Playwright's simulated clock: after 90 s idle the warning appears and 15 s later the showroom returns home with the search cleared; «Seguir navegando» cancels it; the mode persists across pages and `?kiosk=0` turns it off; no reset outside kiosk mode; the manifest opens fullscreen in kiosk mode |
-| `i18n` | Switch to English: `lang`, menu, heading, unit count, status filter and page title change, the choice survives a reload, and switching back restores Spanish; with no cookie an `en-US` browser gets English |
+| `i18n` | Switch to English: `lang`, menu, heading, unit count, status filter and page title change, the choice survives a reload, and switching back restores Spanish; with no cookie an `en-US` browser gets English; in English the tour rooms, hotspot and unit description show the seeded translations while the untranslated unit name stays in Spanish |
 | `a11y-touch-visual` | Tab through the main menu with visible focus; select a villa with the keyboard; accessibility-tree snapshots (what a screen reader is given) of the main menu, Villa 3's card and the contact form with its errors; mobile menu, tap a villa, swipe the panorama and tap a hotspot; a two-finger pinch zooms the masterplan in (the gap between the V1 and V7 labels grows); 15 visual baselines (5 pages × 3 projects, 3D canvas masked) |
 
-**Last full run (2026-11-18, after the pinch and screen-reader tests): 53 passed, 0 failed, 0 skipped,
-2.1 min**, on PGlite, with `E2E_SHOWROOM_PORT=3002` and `E2E_SMTP_URL=smtp://localhost:1025`. The pinch test was
+**Last full run (2026-11-18, after per-language content): 52 passed, 0 failed, 2 skipped (`flow-f-invitations`,
+run without `E2E_SMTP_URL`), 2.0 min**, on PGlite, with `E2E_SHOWROOM_PORT=3002`.
+
+Previous full run (2026-11-18, after the pinch and screen-reader tests): 53 passed, 0 failed, 0 skipped,
+2.1 min, on PGlite, with `E2E_SHOWROOM_PORT=3002` and `E2E_SMTP_URL=smtp://localhost:1025`. The pinch test was
 also checked the other way: with a scale of 1 (no pinch) it fails, the label gap stays at 169 px.
 
 Previous full run (2026-11-18, after Stripe Checkout and the copyable links): 49 passed, 0 failed, 0 skipped,

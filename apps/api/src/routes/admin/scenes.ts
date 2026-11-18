@@ -93,6 +93,7 @@ export default async function sceneRoutes(app: FastifyInstance) {
             slug: input.slug,
             name: input.name,
             sortOrder: input.sortOrder,
+            translations: input.translations,
             panoramaAssetId: pano.panoramaAssetId ?? null,
             panoramaPath: pano.panoramaPath!,
             previewPath: pano.previewPath ?? null,
@@ -127,6 +128,7 @@ export default async function sceneRoutes(app: FastifyInstance) {
     if (patch.slug !== undefined) set.slug = patch.slug;
     if (patch.name !== undefined) set.name = patch.name;
     if (patch.sortOrder !== undefined) set.sortOrder = patch.sortOrder;
+    if (patch.translations !== undefined) set.translations = patch.translations;
     if (patch.initialView) Object.assign(set, { initialYaw: patch.initialView.yaw, initialPitch: patch.initialView.pitch, initialFov: patch.initialView.fov });
     if (patch.floorPlanPoint !== undefined) {
       set.floorPlanX = patch.floorPlanPoint?.x ?? null;

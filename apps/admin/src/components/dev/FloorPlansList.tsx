@@ -10,6 +10,7 @@ import { readImageSize } from "@/lib/upload";
 import { apiFieldErrors, parseNumber, zodFieldErrors, type FieldErrors } from "@/lib/forms";
 import { ConfirmDelete, ImageField, UnitSelect, useImageInput } from "../content";
 import { Button, ErrorBanner, Modal, QueryBoundary, TableShell, TD, TextField, TH } from "../ui";
+import { EnglishFields, useEnglishText } from "../EnglishFields";
 
 type EditTarget = { mode: "create" } | { mode: "edit"; plan: FloorPlan };
 
@@ -94,6 +95,7 @@ function FloorPlanDialog({ developmentId, target, onClose }: { developmentId: st
     },
   });
   const [clientErrors, setClientErrors] = useState<FieldErrors>({});
+  const english = useEnglishText(plan?.translations);
 
   const refresh = () => void queryClient.invalidateQueries({ queryKey: keys.floorPlans(developmentId) });
 
@@ -113,7 +115,7 @@ function FloorPlanDialog({ developmentId, target, onClose }: { developmentId: st
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    const parsed = FloorPlanInput.safeParse({ name: name.trim(), unitId, width: parseNumber(width), height: parseNumber(height) });
+    const parsed = FloorPlanInput.safeParse({ name: name.trim(), unitId, width: parseNumber(width), height: parseNumber(height), translations: english.translations });
     const errors: FieldErrors = parsed.success ? {} : zodFieldErrors(parsed.error);
     const imageError = image.validate();
     if (imageError) errors.image = imageError;
@@ -131,6 +133,7 @@ function FloorPlanDialog({ developmentId, target, onClose }: { developmentId: st
     <Modal title={plan ? `Plano «${plan.name}»` : "Nuevo plano"} onClose={onClose} testId="floorplan-dialog">
       <form onSubmit={submit} noValidate className="grid gap-3 md:grid-cols-2" data-testid="floorplan-form">
         <TextField label="Nombre" className="md:col-span-2" value={name} error={errors.name} testId="floorplan-field-name" onChange={(e) => setName(e.target.value)} />
+        <EnglishFields fields={[{ name: "name", label: "Nombre" }]} {...english} errors={errors} testId="floorplan-field-en" />
         <div className="md:col-span-2">
           <UnitSelect developmentId={developmentId} value={unitId} error={errors.unitId} testId="floorplan-field-unit" onChange={setUnitId} />
         </div>

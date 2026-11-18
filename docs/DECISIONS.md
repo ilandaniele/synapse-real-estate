@@ -215,3 +215,17 @@ Formato corto: contexto, decisión, consecuencias. Estado: Aceptada salvo indica
   porque no hay canal seguro para entregar el enlace a quien lo pide.
 - **Consecuencias**: el propietario es responsable de enviar el enlace por un canal seguro. Con SMTP el
   comportamiento no cambia y el enlace nunca vuelve en la respuesta.
+
+## ADR-025 Contenido en español e inglés
+- **Contexto**: la interfaz ya estaba traducida, pero el contenido cargado en el admin (nombres de unidades y
+  estancias, descripciones, hotspots, galería, puntos de interés) se mostraba siempre en español.
+- **Decisión**: el español es el idioma base y vive en las columnas de siempre. Cada tabla con texto visible
+  (desarrollos, unidades, planos, escenas, hotspots, galería y puntos de interés) suma una columna jsonb
+  `translations` con forma `{ en?: { campo?: texto } }`, NOT NULL y `{}` por defecto. Zod valida los campos
+  traducibles de cada entidad. Un PATCH con `translations` reemplaza el objeto entero; el admin envía solo los
+  campos no vacíos. El showroom pide el manifiesto una vez y lo localiza en el cliente con `localize` en el
+  `select` de TanStack Query, según el idioma de la visita: cada campo usa el inglés si existe y el español si no.
+- **Consecuencias**: sumar un idioma es sumar su código a `TRANSLATED_LOCALES` y a los formularios, sin migración.
+  El manifiesto público lleva ambos idiomas, así que la caché del CDN no depende del idioma. Los test ids de los
+  hotspots salen de la etiqueta localizada (`hotspot-go-inside` en inglés). La migración 0008 corre en el
+  próximo despliegue; las filas existentes quedan con `{}` y se ven en español hasta que se traduzcan.

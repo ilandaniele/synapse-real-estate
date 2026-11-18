@@ -114,6 +114,6 @@ Masterplan times include software WebGL. Expect real GPUs to be faster, but this
   this project does not have; see [DEPLOYMENT.md](DEPLOYMENT.md).
 - Not automated: real GPU rendering and listening with a real screen reader. Pinch zoom, accessibility-tree
   snapshots and a local load test are covered; see [TESTING.md](TESTING.md).
-- Only the interface is translated. Content entered in the admin (unit and room names, descriptions, points of
-  interest) is shown in the language it was written in.
+- Content entered in the admin has an optional English version per field (ADR-025); English visitors see the
+  Spanish text wherever no translation was entered. Only Spanish and English are supported.
 - The demo data is fictitious. Real panoramas and models from the client are the next improvement.

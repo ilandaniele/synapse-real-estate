@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ROLES, UNIT_STATUSES, JOB_KINDS, JOB_STATUSES, RESERVATION_STATUSES, isValidDecimalAmount } from "@synapse/domain";
+import { ROLES, UNIT_STATUSES, JOB_KINDS, JOB_STATUSES, RESERVATION_STATUSES, TRANSLATED_LOCALES, isValidDecimalAmount } from "@synapse/domain";
 
 export const Uuid = z.string().uuid();
 export const IsoDate = z.string().datetime({ offset: true });
@@ -17,6 +17,19 @@ export const PanoPosition = z.object({
 });
 export const NormalizedPoint = z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1) });
 
+/** Translated text per non-base locale; a blank or missing field falls back to the base-language text. */
+const translationsOf = <F extends z.ZodRawShape>(fields: F) =>
+  z.partialRecord(z.enum(TRANSLATED_LOCALES), z.object(fields).partial());
+const text = (max: number) => z.string().trim().max(max);
+
+const HotspotTranslations = translationsOf({ label: text(80), description: text(500) });
+const SceneTranslations = translationsOf({ name: text(80) });
+const FloorPlanTranslations = translationsOf({ name: text(120) });
+const GalleryItemTranslations = translationsOf({ title: text(120) });
+const PointOfInterestTranslations = translationsOf({ name: text(120), distanceText: text(80) });
+const UnitTranslations = translationsOf({ name: text(120), description: text(4000), orientation: text(80) });
+const DevelopmentTranslations = translationsOf({ tagline: text(200), description: text(4000) });
+
 export const HotspotType = z.enum(["NAVIGATION", "INFO"]);
 export const Hotspot = z.object({
   id: Uuid,
@@ -27,6 +40,7 @@ export const Hotspot = z.object({
   pitch: z.number(),
   targetSceneId: Uuid.nullable(),
   description: z.string().max(500).nullable(),
+  translations: HotspotTranslations.default({}),
 });
 export type Hotspot = z.infer<typeof Hotspot>;
 
@@ -52,6 +66,7 @@ export const Scene = z.object({
   initialView: PanoPosition.extend({ fov: z.number().min(0.3).max(2.2) }),
   floorPlanPoint: NormalizedPoint.nullable(),
   hotspots: z.array(Hotspot),
+  translations: SceneTranslations.default({}),
 });
 export type Scene = z.infer<typeof Scene>;
 
@@ -62,6 +77,7 @@ export const FloorPlan = z.object({
   imageUrl: z.string(),
   width: z.number().positive(),
   height: z.number().positive(),
+  translations: FloorPlanTranslations.default({}),
 });
 export type FloorPlan = z.infer<typeof FloorPlan>;
 
@@ -72,6 +88,7 @@ export const GalleryItem = z.object({
   imageUrl: z.string(),
   credit: z.string(),
   sortOrder: z.number().int(),
+  translations: GalleryItemTranslations.default({}),
 });
 export type GalleryItem = z.infer<typeof GalleryItem>;
 
@@ -82,6 +99,7 @@ export const PointOfInterest = z.object({
   lat: z.number().min(-90).max(90),
   lng: z.number().min(-180).max(180),
   distanceText: z.string().nullable(),
+  translations: PointOfInterestTranslations.default({}),
 });
 export type PointOfInterest = z.infer<typeof PointOfInterest>;
 
@@ -106,6 +124,7 @@ export const Unit = z.object({
   description: z.string().max(4000),
   meshNames: z.array(z.string()),
   labelPosition: z.tuple([z.number(), z.number(), z.number()]).nullable(),
+  translations: UnitTranslations.default({}),
   updatedAt: IsoDate,
 });
 export type Unit = z.infer<typeof Unit>;
@@ -124,6 +143,7 @@ export const Development = z.object({
   heroImageUrl: z.string().nullable(),
   modelUrl: z.string().nullable(),
   currency: Currency,
+  translations: DevelopmentTranslations.default({}),
   updatedAt: IsoDate,
 });
 export type Development = z.infer<typeof Development>;
@@ -185,6 +205,7 @@ export type SessionUser = z.infer<typeof SessionUser>;
 
 export const UnitInput = Unit.omit({ id: true, developmentId: true, updatedAt: true, slug: true }).extend({
   slug: Slug.optional(),
+  translations: UnitTranslations.optional(),
 });
 export type UnitInput = z.infer<typeof UnitInput>;
 export const UnitPatch = UnitInput.partial();
@@ -199,7 +220,7 @@ export const DevelopmentInput = Development.pick({
   lat: true,
   lng: true,
   currency: true,
-}).extend({ slug: Slug });
+}).extend({ slug: Slug, translations: DevelopmentTranslations.optional() });
 
 export const SceneInput = z.object({
   unitId: Uuid.nullable(),
@@ -210,10 +231,12 @@ export const SceneInput = z.object({
   panoramaUrl: z.string().optional(),
   initialView: Scene.shape.initialView.optional(),
   floorPlanPoint: NormalizedPoint.nullable().optional(),
+  translations: SceneTranslations.optional(),
 });
 export const ScenePatch = SceneInput.partial();
 export const HotspotInput = Hotspot.omit({ id: true, sceneId: true }).extend({
   description: z.string().max(500).nullable().optional(),
+  translations: HotspotTranslations.optional(),
 });
 export const HotspotPatch = HotspotInput.partial();
 
@@ -228,6 +251,7 @@ const FloorPlanFields = ImageSource.extend({
   name: z.string().min(1).max(120),
   width: z.number().positive().max(100_000),
   height: z.number().positive().max(100_000),
+  translations: FloorPlanTranslations.optional(),
 });
 export const FloorPlanInput = FloorPlanFields.extend({ unitId: Uuid.nullable().default(null) });
 export type FloorPlanInput = z.infer<typeof FloorPlanInput>;
@@ -238,6 +262,7 @@ const GalleryItemFields = ImageSource.extend({
   title: z.string().min(1).max(120),
   credit: z.string().max(200),
   sortOrder: z.number().int(),
+  translations: GalleryItemTranslations.optional(),
 });
 export const GalleryItemInput = GalleryItemFields.extend({
   unitId: Uuid.nullable().default(null),
@@ -250,6 +275,7 @@ export const GalleryItemPatch = GalleryItemFields.partial();
 const PointOfInterestFields = PointOfInterest.omit({ id: true }).extend({
   name: z.string().min(1).max(120),
   distanceText: z.string().max(80).nullable(),
+  translations: PointOfInterestTranslations.optional(),
 });
 export const PointOfInterestInput = PointOfInterestFields.extend({
   distanceText: z.string().max(80).nullable().default(null),

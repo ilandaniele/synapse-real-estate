@@ -6,6 +6,12 @@ import type { z } from "zod";
 import { apiFieldErrors, parseNumber, zodFieldErrors, type FieldErrors } from "@/lib/forms";
 import { slugifyText } from "@/lib/format";
 import { Button, ErrorBanner, TextAreaField, TextField } from "./ui";
+import { EnglishFields, useEnglishText } from "./EnglishFields";
+
+const ENGLISH_FIELDS = [
+  { name: "tagline", label: "Eslogan" },
+  { name: "description", label: "Descripción", multiline: true },
+];
 
 export type DevelopmentFormValues = z.infer<typeof DevelopmentInput>;
 
@@ -48,6 +54,7 @@ export function DevelopmentForm({
   const [lng, setLng] = useState(String(base.lng));
   const [currency, setCurrency] = useState(base.currency);
   const [clientErrors, setClientErrors] = useState<FieldErrors>({});
+  const english = useEnglishText(base.translations);
 
   const errors = { ...apiFieldErrors(error), ...clientErrors };
 
@@ -63,6 +70,7 @@ export function DevelopmentForm({
       lat: parseNumber(lat),
       lng: parseNumber(lng),
       currency: currency.trim().toUpperCase(),
+      translations: english.translations,
     });
     if (!parsed.success) {
       setClientErrors(zodFieldErrors(parsed.error));
@@ -99,6 +107,7 @@ export function DevelopmentForm({
       />
       <TextField label="Eslogan" className="md:col-span-2" value={tagline} disabled={disabled} error={errors.tagline} testId="dev-field-tagline" onChange={(e) => setTagline(e.target.value)} />
       <TextAreaField label="Descripción" className="md:col-span-2" value={description} disabled={disabled} error={errors.description} testId="dev-field-description" onChange={(e) => setDescription(e.target.value)} />
+      <EnglishFields fields={ENGLISH_FIELDS} {...english} errors={errors} disabled={disabled} testId="dev-field-en" />
       <TextField label="Ciudad" value={city} disabled={disabled} error={errors.city} testId="dev-field-city" onChange={(e) => setCity(e.target.value)} />
       <TextField label="País" value={country} disabled={disabled} error={errors.country} testId="dev-field-country" onChange={(e) => setCountry(e.target.value)} />
       <TextField label="Latitud" inputMode="decimal" value={lat} disabled={disabled} error={errors.lat} testId="dev-field-lat" onChange={(e) => setLat(e.target.value)} />

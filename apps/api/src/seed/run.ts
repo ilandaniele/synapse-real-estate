@@ -26,6 +26,7 @@ import {
 import type { Role, UnitStatus } from "@synapse/domain";
 import { loadConfig } from "../config";
 import { buildManifest } from "../lib/manifest";
+import { inEnglish } from "./english";
 import { seedPassword } from "./guard";
 
 /**
@@ -249,6 +250,11 @@ async function main() {
               "Desarrollo residencial de ocho villas independientes con piscina privada, parcelas amplias y acceso a la playa en cinco minutos. Datos y renders ficticios para demostración.",
             city: "Costa del Faro",
             country: "ES",
+            translations: inEnglish({
+              tagline: "Ocho villas frente al Mediterráneo",
+              description:
+                "Desarrollo residencial de ocho villas independientes con piscina privada, parcelas amplias y acceso a la playa en cinco minutos. Datos y renders ficticios para demostración.",
+            }),
             lat: 36.5101,
             lng: -4.8826,
             heroImagePath: "demo/hero.jpg",
@@ -300,6 +306,7 @@ async function main() {
             sector: v.sector,
             orientation: v.orientation,
             description: v.description,
+            translations: inEnglish({ orientation: v.orientation, description: v.description }),
             labelPosition: demo.labelPositions.get(v.code) ?? null,
           })),
         )
@@ -338,6 +345,7 @@ async function main() {
               unitId: villa6,
               slug: t.slug,
               name: hint?.name ?? t.name,
+              translations: inEnglish({ name: hint?.name ?? t.name }),
               sortOrder: index,
               panoramaPath: `demo/panoramas/${t.slug}.jpg`,
               previewPath: `demo/panoramas/${t.slug}-preview.jpg`,
@@ -361,7 +369,7 @@ async function main() {
         return list.flatMap((h) => {
           const target = h.targetSlug ? sceneId.get(h.targetSlug) : null;
           if (h.targetSlug && !target) return [];
-          return [{ organizationId: orgIdOf.demo, sceneId: sceneId.get(t.slug)!, type: h.type, label: h.label, yaw: h.yaw, pitch: h.pitch, targetSceneId: target ?? null, description: h.description }];
+          return [{ organizationId: orgIdOf.demo, sceneId: sceneId.get(t.slug)!, type: h.type, label: h.label, yaw: h.yaw, pitch: h.pitch, targetSceneId: target ?? null, description: h.description, translations: inEnglish({ label: h.label, description: h.description }) }];
         });
       });
       if (hotspotRows.length > 0) await tx.insert(sceneHotspots).values(hotspotRows);
@@ -371,6 +379,7 @@ async function main() {
         developmentId: dev!.id,
         unitId: villa6,
         name: "Villa 6 · Planta baja",
+        translations: inEnglish({ name: "Villa 6 · Planta baja" }),
         imagePath: "demo/floorplans/villa-6.svg",
         width: 1000,
         height: 700,
@@ -381,13 +390,14 @@ async function main() {
             organizationId: orgIdOf.demo,
             developmentId: dev!.id,
             title: item.title,
+            translations: inEnglish({ title: item.title }),
             imagePath: `demo/${item.file}`,
             credit: "Render propio generado por código (Synapse demo)",
             sortOrder: index,
           })),
         );
       }
-      await tx.insert(pointsOfInterest).values(POIS.map((p) => ({ organizationId: orgIdOf.demo, developmentId: dev!.id, ...p })));
+      await tx.insert(pointsOfInterest).values(POIS.map((p) => ({ organizationId: orgIdOf.demo, developmentId: dev!.id, ...p, translations: inEnglish({ name: p.name, distanceText: p.distanceText }) })));
 
       // Smaller development for the second organization (tenant isolation demo).
       const otherUnits = await tx
