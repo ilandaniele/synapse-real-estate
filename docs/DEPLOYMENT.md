@@ -127,6 +127,11 @@ al arrancar el API: las siete tablas tienen `translations` con `{}`. El showroom
 manifiesto y `/login` del admin responden 200. El seed de demo no se volvió a correr en producción, así que el
 contenido sigue en español hasta cargar el inglés en el admin y publicar.
 
+Redespliegue del 2026-11-18 con el arreglo de `sortOrder` en escenas (commit `3998e77`): imagen copiada y
+`up -d --no-build`, sin migraciones. El API tardó cerca de un minuto en escuchar y mientras tanto Caddy respondía
+502. Después el manifiesto, el showroom y `/login` del admin responden 200, y `PATCH /api/v1/admin/scenes/…` sin
+sesión responde 401.
+
 Para cobrar con Stripe (ADR-023), con una cuenta propia:
 1. En el panel de Stripe, crear el endpoint de webhook
    `https://<SHOWROOM_HOST>/api/v1/public/reservations/stripe/webhook` con los eventos
