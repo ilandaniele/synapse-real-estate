@@ -3,7 +3,7 @@ import path from "node:path";
 import { createRequire } from "node:module";
 import type SharpFn from "sharp";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { FloorPlan, GalleryItem, PointOfInterest } from "@synapse/contracts";
+import { FloorPlan, GalleryItem, PointOfInterest, Scene } from "@synapse/contracts";
 import { ADMIN, createTestContext, EMAILS, uploadFile, type TestContext } from "./helpers";
 
 const sharp = createRequire(path.resolve(import.meta.dirname, "../../../workers/asset-processing/package.json"))("sharp") as typeof SharpFn;
@@ -101,6 +101,15 @@ describe("floor plans CRUD", () => {
   it("rejects non-positive dimensions", async () => {
     const res = await send("POST", `${ADMIN}/developments/${ctx.fx.devA}/floor-plans`, editor, { ...floorPlanBody, width: 0 });
     expect(res.statusCode).toBe(400);
+  });
+});
+
+describe("scene patch", () => {
+  it("keeps fields the patch leaves out, such as sortOrder", async () => {
+    const url = `${ADMIN}/scenes/${ctx.fx.sceneA1}`;
+    expect((await send("PATCH", url, editor, { sortOrder: 4 })).statusCode).toBe(200);
+    const renamed = await send("PATCH", url, editor, { name: "Salón" });
+    expect(Scene.parse(renamed.json())).toMatchObject({ name: "Salón", sortOrder: 4 });
   });
 });
 

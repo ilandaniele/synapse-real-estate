@@ -222,18 +222,19 @@ export const DevelopmentInput = Development.pick({
   currency: true,
 }).extend({ slug: Slug, translations: DevelopmentTranslations.optional() });
 
-export const SceneInput = z.object({
+const SceneFields = z.object({
   unitId: Uuid.nullable(),
   slug: Slug,
   name: z.string().min(1).max(80),
-  sortOrder: z.number().int().default(0),
+  sortOrder: z.number().int(),
   panoramaAssetId: Uuid.nullable().optional(),
   panoramaUrl: z.string().optional(),
   initialView: Scene.shape.initialView.optional(),
   floorPlanPoint: NormalizedPoint.nullable().optional(),
   translations: SceneTranslations.optional(),
 });
-export const ScenePatch = SceneInput.partial();
+export const SceneInput = SceneFields.extend({ sortOrder: z.number().int().default(0) });
+export const ScenePatch = SceneFields.partial();
 export const HotspotInput = Hotspot.omit({ id: true, sceneId: true }).extend({
   description: z.string().max(500).nullable().optional(),
   translations: HotspotTranslations.optional(),

@@ -25,9 +25,9 @@ pnpm 9.15.9) on 2026-11-15. Nothing here is projected.
 | `workers/render-processing` | unit tests | 5 |
 | `packages/storage` | local and S3 drivers | 15 (2 need `S3_TEST_ENDPOINT`) |
 | `packages/cubemap` | `src/cubemap.test.ts` | 5 |
-| `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security`, `deploy-config`, `content`, `members`, `storage-s3`, `observability`, `invitations`, `mailpit`, `publication-history`, `publication-diff.unit`, `webhooks`, `visits`, `reservations`, `reservations-stripe`, `member-reset-link`, `translations` | 177 (3 need `S3_TEST_ENDPOINT`, 1 needs `MAILPIT_SMTP_URL`, 2 need `STRIPE_MOCK_URL`, e.g. `docker run -d -p 12111:12111 stripe/stripe-mock:v0.197.0`) |
+| `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security`, `deploy-config`, `content`, `members`, `storage-s3`, `observability`, `invitations`, `mailpit`, `publication-history`, `publication-diff.unit`, `webhooks`, `visits`, `reservations`, `reservations-stripe`, `member-reset-link`, `translations` | 178 (3 need `S3_TEST_ENDPOINT`, 1 needs `MAILPIT_SMTP_URL`, 2 need `STRIPE_MOCK_URL`, e.g. `docker run -d -p 12111:12111 stripe/stripe-mock:v0.197.0`) |
 | `apps/showroom` | `src/lib/kiosk.test.ts`, `src/lib/analytics.test.ts`, `src/i18n/resolve-locale.test.ts`, `src/lib/manifest.test.ts` | 12 |
-| **Total** | | **278 passed, 0 failed, 8 skipped without `S3_TEST_ENDPOINT`, `MAILPIT_SMTP_URL` and `STRIPE_MOCK_URL`** (run 2026-11-18) |
+| **Total** | | **279 passed, 0 failed, 8 skipped without `S3_TEST_ENDPOINT`, `MAILPIT_SMTP_URL` and `STRIPE_MOCK_URL`** (run 2026-11-18) |
 
 The API tests start the real Fastify app with an in-memory PGlite database and cover 401, 403, 404, 409,
 413, 415 and 429 responses, cross-organization access (IDOR), the role matrix, the lead honeypot and rate
