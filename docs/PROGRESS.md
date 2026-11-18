@@ -26,6 +26,7 @@ from a real run.
     upload (images from an uploaded asset are copied to `published/<org>/`);
   - «Miembros» page, owner only: create, change role and remove, keeping at least one owner;
   - «Mi cuenta» page: password change that revokes older sessions.
+- Kiosk mode for touch screens: idle warning and reset to home, fullscreen, PWA manifest ([KIOSK.md](KIOSK.md)).
 - Asynchronous ingestion pipeline with manual review. DWG, IFC, FBX and OBJ are rejected explicitly.
   Render without a configured backend fails explicitly.
 - Engine bugs found during integration and fixed in the engines:
@@ -39,9 +40,9 @@ from a real run.
 | Check | Result | Time |
 |---|---|---|
 | `pnpm typecheck` | pass, all packages | 6.7 s |
-| `pnpm test` | 149 passed, 0 failed (2026-11-17) | 7 s |
+| `pnpm test` | 152 passed, 0 failed (2026-11-17; API files serially, see TESTING.md) | 7 s |
 | `pnpm build` | pass (showroom 10 routes, admin 10 routes) | 6.0 s |
-| `pnpm test:e2e` | 32 passed, 0 failed, 0 skipped (2026-11-17) | 1.1 min |
+| `pnpm test:e2e` | 40 passed, 0 failed, 0 skipped (2026-11-17, `E2E_SHOWROOM_PORT=3002`) | 2.6 min |
 
 Details are in [TESTING.md](TESTING.md). Security review results and fixes are in [SECURITY.md](SECURITY.md).
 

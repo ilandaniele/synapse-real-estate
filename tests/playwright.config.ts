@@ -6,10 +6,11 @@ import { defineConfig, devices } from "@playwright/test";
  *
  * Prerequisites: `pnpm assets:generate` once, and `pnpm build` (showroom/admin are served with `next start`).
  * Port 4000 must be free (stop any dev API first): the API is always started by Playwright so it uses the
- * E2E database.
+ * E2E database. Set E2E_SHOWROOM_PORT when another app already listens on 3000.
  */
 const API = "http://localhost:4000";
-const SHOWROOM = "http://localhost:3000";
+const SHOWROOM_PORT = process.env.E2E_SHOWROOM_PORT ?? "3000";
+const SHOWROOM = `http://localhost:${SHOWROOM_PORT}`;
 const ADMIN = "http://localhost:3001";
 
 export default defineConfig({
@@ -40,13 +41,13 @@ export default defineConfig({
       command: "pnpm --filter @synapse/api seed && pnpm --filter @synapse/api start",
       url: `${API}/health`,
       cwd: "..",
-      env: { DATABASE_URL: "pglite://.data/pglite-e2e", SEED_PASSWORD: "e2e-password-123" },
+      env: { DATABASE_URL: "pglite://.data/pglite-e2e", SEED_PASSWORD: "e2e-password-123", CORS_ORIGINS: `${SHOWROOM},${ADMIN}` },
       reuseExistingServer: false,
       timeout: 180_000,
       stdout: "pipe",
     },
     {
-      command: "pnpm --filter @synapse/showroom start",
+      command: `pnpm --filter @synapse/showroom exec next start -p ${SHOWROOM_PORT}`,
       url: SHOWROOM,
       cwd: "..",
       reuseExistingServer: true,

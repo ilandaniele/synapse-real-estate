@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { KioskMode } from "@/components/KioskMode";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Providers } from "@/lib/query";
 import "./globals.css";
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           </a>
           <SiteHeader />
           <main id="contenido">{children}</main>
+          <KioskMode />
         </Providers>
       </body>
     </html>

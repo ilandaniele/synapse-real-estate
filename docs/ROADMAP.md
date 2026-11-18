@@ -13,7 +13,8 @@
 - Panoramas multirresolución en teselas cubemap.
 - Postgres gestionado, backups automáticos, observabilidad (logs estructurados + métricas).
 - Gestión de usuarios e invitaciones por organización; recuperación de contraseña por email.
-- Modo kiosko para pantallas táctiles (inactividad → vuelta a home, sin barra del navegador).
+- [x] Modo kiosko para pantallas táctiles (inactividad → vuelta a home, sin barra del navegador). Hecho el
+  2026-11-17: [KIOSK.md](KIOSK.md).
 - i18n (es/en) del showroom.
 
 ## Fase 3 — Pipeline de contenido

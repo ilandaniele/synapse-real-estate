@@ -57,6 +57,7 @@ pnpm workers          # workers independientes (solo con Postgres real)
 | [docs/TESTING.md](docs/TESTING.md) | Estrategia y cómo correr cada suite |
 | [docs/SECURITY.md](docs/SECURITY.md) | Controles, hallazgos de la revisión y riesgos aceptados |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Local, Postgres y opciones de hosting |
+| [docs/KIOSK.md](docs/KIOSK.md) | Modo kiosko para pantallas táctiles (`?kiosk=1`) |
 | [docs/DECISIONS.md](docs/DECISIONS.md) · [docs/ROADMAP.md](docs/ROADMAP.md) | ADRs y próximos pasos |
 
 Los documentos de análisis originales (`docs/EVIDENCIA_DE_LOS_TRES_VIDEOS.md`,

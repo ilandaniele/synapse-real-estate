@@ -24,7 +24,8 @@ pnpm 9.15.9) on 2026-11-15. Nothing here is projected.
 | `tools/cad-importer` | `test/cad-importer.test.ts` | 7 |
 | `workers/render-processing` | unit tests | 5 |
 | `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security`, `deploy-config`, `content`, `members` | 85 |
-| **Total** | | **149 passed, 0 failed** (run 2026-11-17) |
+| `apps/showroom` | `src/lib/kiosk.test.ts` | 3 |
+| **Total** | | **152 passed, 0 failed** (run 2026-11-17) |
 
 The API tests start the real Fastify app with an in-memory PGlite database and cover 401, 403, 404, 409,
 413, 415 and 429 responses, cross-organization access (IDOR), the role matrix, the lead honeypot and rate
@@ -32,8 +33,11 @@ limit, magic-byte checks on uploads, DWG rejection and versioned publishing. `se
 changes and removed members on live sessions, the Origin check on writes and the absence of `/docs` in
 production. `deploy-config.test.ts` covers relative media URLs and the production guard of the demo seed.
 
-`packages/ui`, `packages/contracts`, `workers/*`, `apps/admin` and `apps/showroom` have no unit tests of
-their own. Contracts are exercised through the API tests; the apps are covered by E2E.
+`packages/ui`, `packages/contracts`, `workers/*` and `apps/admin` have no unit tests of their own. `apps/showroom`
+has only the kiosk-mode test. Contracts are exercised through the API tests; the apps are covered by E2E.
+
+The API files each start an in-memory PGlite database. On a machine already at full CPU their setup hooks can
+exceed the 10 s timeout. In that case run them serially: `pnpm --filter @synapse/api exec vitest run --no-file-parallelism`.
 
 ### E2E (Playwright)
 
@@ -41,6 +45,9 @@ Configuration: `tests/playwright.config.ts`. Playwright starts three servers:
 
 - API on :4000, re-seeded on every run into an isolated database `pglite://.data/pglite-e2e`;
 - showroom on :3000 and admin on :3001 with `next start`.
+
+If another app already listens on 3000, set `E2E_SHOWROOM_PORT` (for example `E2E_SHOWROOM_PORT=3002`).
+The API started for the run then allows that origin in CORS.
 
 Before running:
 
@@ -68,10 +75,12 @@ Specs (`tests/e2e`):
 | `flow-d-hotspot-editor` | Create a hotspot by clicking the panorama, set its target, preview, publish, and navigate with it on the public tour |
 | `flow-e-admin-content` | Gallery item with an uploaded image, point of interest with a coordinate error then fixed, floor-plan list; owner creates a VIEWER member who cannot see «Miembros», gets a wrong-current-password error, changes the password and logs in with it |
 | `csp` | Masterplan, tour and location pages log no Content Security Policy violations (catches the production CSP blocking the GLB decoder's WebAssembly) |
+| `kiosk` | Kiosk mode with Playwright's simulated clock: after 90 s idle the warning appears and 15 s later the showroom returns home with the search cleared; «Seguir navegando» cancels it; the mode persists across pages and `?kiosk=0` turns it off; no reset outside kiosk mode; the manifest opens fullscreen in kiosk mode |
 | `a11y-touch-visual` | Tab through the main menu with visible focus; select a villa with the keyboard; mobile menu, tap a villa, swipe the panorama and tap a hotspot; 15 visual baselines (5 pages × 3 projects, 3D canvas masked) |
 
-**Last full run (2026-11-17): 32 passed, 0 failed, 0 skipped, 1.1 min.** This run had the CSP and security headers
-active and includes `csp.spec.ts` and `flow-e-admin-content.spec.ts`.
+**Last full run (2026-11-17): 40 passed, 0 failed, 0 skipped, 2.6 min**, with `E2E_SHOWROOM_PORT=3002` because another
+container held port 3000. It includes `kiosk.spec.ts`, `csp.spec.ts` and `flow-e-admin-content.spec.ts`, with the CSP
+and security headers active.
 
 On 2026-11-15 the full suite could not be rerun: another project's container held port 3000. `csp.spec.ts`
 was run alone against the production Docker stack (`baseURL: http://showroom.localhost`, through Caddy).
