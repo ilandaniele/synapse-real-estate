@@ -132,6 +132,16 @@ Redespliegue del 2026-11-18 con el arreglo de `sortOrder` en escenas (commit `39
 502. Después el manifiesto, el showroom y `/login` del admin responden 200, y `PATCH /api/v1/admin/scenes/…` sin
 sesión responde 401.
 
+Textos en inglés cargados en producción el 2026-11-18. Tras un backup (`db-20261118T193636Z.dump`) se desplegó
+la imagen con `pnpm seed:english` y se corrió en el contenedor del API, primero con `--dry-run`:
+```bash
+docker compose -f docker-compose.prod.yml -f docker-compose.postgres.yml exec -T -w /app/apps/api api pnpm seed:english --dry-run
+```
+El script rellena solo las `translations` vacías cuyo texto en español coincide con el seed de demo, y publica
+una versión nueva únicamente si, frente a la última publicada, no cambió nada más que traducciones. Resultado:
+39 filas traducidas y `lomas-del-faro` publicada como v2; `vista-alta` sin cambios. El manifiesto en vivo trae
+`translations.en` y el tour de la villa 6 en inglés muestra «Living room» y «Go inside».
+
 Para cobrar con Stripe (ADR-023), con una cuenta propia:
 1. En el panel de Stripe, crear el endpoint de webhook
    `https://<SHOWROOM_HOST>/api/v1/public/reservations/stripe/webhook` con los eventos

@@ -54,13 +54,17 @@ async function fillTranslations(db: Db): Promise<number> {
   return filled;
 }
 
-/** A manifest's content without its version stamp and the given keys, with object keys sorted (jsonb does not keep their order). */
+/**
+ * A manifest's content without its version stamp and the given keys. Object keys are sorted (jsonb does not keep
+ * their order), and null or empty values are dropped, as older snapshots lack fields added since.
+ */
 function contentWithout(manifest: DevelopmentManifest, keys: string[]): string {
   const { version: _version, publishedAt: _publishedAt, ...content } = manifest;
   return JSON.stringify(content, (key, value) => {
-    if (keys.includes(key)) return undefined;
-    if (value === null || typeof value !== "object" || Array.isArray(value)) return value;
-    return Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)));
+    if (keys.includes(key) || value === null) return undefined;
+    if (typeof value !== "object" || Array.isArray(value)) return value;
+    const entries = Object.entries(value);
+    return entries.length > 0 ? Object.fromEntries(entries.sort(([a], [b]) => a.localeCompare(b))) : undefined;
   });
 }
 
