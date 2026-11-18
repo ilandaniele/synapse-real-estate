@@ -2,7 +2,7 @@ import { and, eq, or } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { HotspotInput, HotspotPatch, SceneInput, ScenePatch, Uuid } from "@synapse/contracts";
-import { panoramaAssets, sceneHotspots, scenes, type Db } from "@synapse/db";
+import { panoramaAssets, sceneHotspots, scenes, type Db, type StoredCubeTiles } from "@synapse/db";
 import { audit, changedKeys } from "../../lib/audit";
 import { session } from "../../lib/auth";
 import { badRequest, conflict, isUniqueViolation, notFound } from "../../lib/errors";
@@ -28,6 +28,7 @@ interface PanoramaFields {
   panoramaPath?: string;
   previewPath?: string | null;
   thumbnailPath?: string | null;
+  tiles?: StoredCubeTiles | null;
 }
 
 /** Accepts either a processed panorama asset (preferred) or a media URL/path. */
@@ -47,12 +48,12 @@ async function resolvePanorama(
         ),
       );
     if (!pano || !pano.imagePath) throw badRequest("Panorama asset not found or not processed yet");
-    return { panoramaAssetId: pano.id, panoramaPath: pano.imagePath, previewPath: pano.previewPath, thumbnailPath: pano.thumbnailPath };
+    return { panoramaAssetId: pano.id, panoramaPath: pano.imagePath, previewPath: pano.previewPath, thumbnailPath: pano.thumbnailPath, tiles: pano.tiles };
   }
   if (input.panoramaUrl) {
     const stored = toStoredPath(app.config, input.panoramaUrl);
     if (!stored) throw badRequest("panoramaUrl must be an https URL or a path under /media/");
-    return { panoramaAssetId: null, panoramaPath: stored, previewPath: null, thumbnailPath: null };
+    return { panoramaAssetId: null, panoramaPath: stored, previewPath: null, thumbnailPath: null, tiles: null };
   }
   return {};
 }
@@ -96,6 +97,7 @@ export default async function sceneRoutes(app: FastifyInstance) {
             panoramaPath: pano.panoramaPath!,
             previewPath: pano.previewPath ?? null,
             thumbnailPath: pano.thumbnailPath ?? null,
+            tiles: pano.tiles ?? null,
             ...(input.initialView ? { initialYaw: input.initialView.yaw, initialPitch: input.initialView.pitch, initialFov: input.initialView.fov } : {}),
             floorPlanX: input.floorPlanPoint?.x ?? null,
             floorPlanY: input.floorPlanPoint?.y ?? null,

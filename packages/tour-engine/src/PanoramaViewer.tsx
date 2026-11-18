@@ -19,6 +19,7 @@ import { degToRad, normalizePanoPosition, type PanoPosition } from "@synapse/dom
 import { exceedsDragThreshold, slugify, viewDeltaForKey, type PanoView } from "./geometry";
 import type { HotspotCallbacks } from "./hotspot-dom";
 import { destroyRecordHotspots, syncHotspots, type SceneRecord } from "./hotspot-layer";
+import { createPanoramaSource } from "./panorama-source";
 import { TourStyles } from "./TourStyles";
 import { hasWebGL } from "./webgl";
 
@@ -51,8 +52,6 @@ export interface PanoramaViewerProps {
 
 type Status = "loading" | "ready" | "error" | "nowebgl";
 
-const FULL_WIDTH = 4096;
-const PREVIEW_WIDTH = 1024;
 const SCENE_FADE_MS = 600;
 const CLICK_THRESHOLD_PX = 5;
 
@@ -178,19 +177,19 @@ export function PanoramaViewer(props: PanoramaViewerProps) {
   // Scene lifecycle: new Marzipano scene on the shared viewer, cross-fade, drop stale scenes.
   const previewUrl = scene.previewUrl;
   const panoramaUrl = scene.panoramaUrl;
+  const cubeMapUrl = scene.cubeMap?.baseUrl;
   useEffect(() => {
     const mz = mzRef.current;
     const viewer = viewerRef.current;
     if (!viewerReady || !mz || !viewer) return;
 
     const start: PanoView = latest.current.initialView ?? scene.initialView;
-    const levels = previewUrl ? [{ width: PREVIEW_WIDTH }, { width: FULL_WIDTH }] : [{ width: FULL_WIDTH }];
-    const source = new mz.ImageUrlSource((tile) => ({ url: previewUrl && tile.z === 0 ? previewUrl : panoramaUrl }));
-    const limiter = mz.RectilinearView.limit.traditional(FULL_WIDTH, degToRad(100));
+    const { source, geometry, maxResolution } = createPanoramaSource(mz, scene);
+    const limiter = mz.RectilinearView.limit.traditional(maxResolution, degToRad(100));
     const view = new mz.RectilinearView({ yaw: start.yaw, pitch: start.pitch, fov: start.fov }, limiter);
     const mzScene = viewer.createScene({
       source,
-      geometry: new mz.EquirectGeometry(levels),
+      geometry,
       view,
       pinFirstLevel: true,
     });
@@ -239,7 +238,7 @@ export function PanoramaViewer(props: PanoramaViewerProps) {
     };
     // initialView is read through `latest` on purpose: it must not re-create the scene.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewerReady, scene.id, previewUrl, panoramaUrl, retryKey]);
+  }, [viewerReady, scene.id, previewUrl, panoramaUrl, cubeMapUrl, retryKey]);
 
   // Hotspots: reconcile DOM with props whenever they (or the editor state) change.
   useEffect(() => {

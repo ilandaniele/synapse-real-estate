@@ -1,4 +1,5 @@
 import { hotspotAngles, GALLERY, HERO, PANORAMAS } from "./scenes/index";
+import { TILE_SIZE, cubeLevels } from "@synapse/cubemap";
 import type { MasterplanModel } from "./glb";
 
 export const GENERATOR_VERSION = "1.0.0";
@@ -23,6 +24,8 @@ export interface ManifestPanorama {
   file: string;
   preview: string;
   thumb: string;
+  /** Marzipano cube tiles generated from the same panorama. */
+  tiles: { path: string; tileSize: number; faceSizes: number[] };
   width: number;
   height: number;
   initialView: { yaw: number; pitch: number; fov: number };
@@ -56,6 +59,7 @@ export function buildManifest(model: Pick<MasterplanModel, "nodes" | "units">, g
       file: `panoramas/${p.slug}.jpg`,
       preview: `panoramas/${p.slug}-preview.jpg`,
       thumb: `thumbs/${p.slug}.jpg`,
+      tiles: { path: `panoramas/${p.slug}-tiles`, tileSize: TILE_SIZE, faceSizes: cubeLevels(PANO_WIDTH) },
       width: PANO_WIDTH,
       height: PANO_HEIGHT,
       initialView: { yaw: r4(p.initialView.yaw), pitch: r4(p.initialView.pitch), fov: r4(p.initialView.fov) },

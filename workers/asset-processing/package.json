@@ -14,6 +14,7 @@
     "@synapse/db": "workspace:*",
     "@synapse/storage": "workspace:*",
     "@synapse/cad-importer": "workspace:*",
+    "@synapse/cubemap": "workspace:*",
     "drizzle-orm": "^0.45.4",
     "sharp": "^0.35.5",
     "@gltf-transform/core": "^4.5.1"

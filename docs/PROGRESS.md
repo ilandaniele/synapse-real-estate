@@ -83,7 +83,8 @@ Masterplan times include software WebGL. Expect real GPUs to be faster, but this
   [DEPLOYMENT.md](DEPLOYMENT.md).
 - The local Docker test found that the production CSP blocked the masterplan's WebAssembly decoder. Fixed
   with `'wasm-unsafe-eval'` and covered by `tests/e2e/csp.spec.ts`.
-- Panoramas are single-resolution. Multiresolution tiles are supported by the engine design but not generated.
+- Panoramas are cut into multiresolution cube tiles (512 px tiles, faces 512–4096 px). Scenes created from a
+  media URL instead of a processed asset still load the single equirect image.
 - Postgres and Redis/BullMQ are configurable but untested in this session. S3 is tested against local
   RustFS only. Everything else ran on PGlite and local storage.
 - Not automated: pinch zoom, real GPU rendering, load tests and screen-reader output. See

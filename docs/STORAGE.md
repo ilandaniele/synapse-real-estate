@@ -16,7 +16,7 @@ RustFS (Apache-2.0) from `docker-compose.yml`. MinIO no longer publishes images 
 | Prefix | Content | Public |
 | --- | --- | --- |
 | `uploads/<org>/<asset>` | raw uploads (CAD, unprocessed panoramas, GLB) | never |
-| `processed/<org>/` | panorama outputs from the asset worker | yes |
+| `processed/<org>/` | panorama outputs from the asset worker; cube tiles under `<asset>-tiles/` | yes |
 | `published/<org>/` | GLB and images copied on approval or publication | yes |
 | `demo/` | demo assets from `pnpm assets:generate` | yes |
 

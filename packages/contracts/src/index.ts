@@ -30,6 +30,14 @@ export const Hotspot = z.object({
 });
 export type Hotspot = z.infer<typeof Hotspot>;
 
+/** Marzipano cube tiles: `<baseUrl>/<z>/<face>/<row>/<col>.jpg`, with `<baseUrl>/preview.jpg` as level 0. */
+export const CubeMapTiles = z.object({
+  baseUrl: z.string(),
+  tileSize: z.number().int().positive(),
+  faceSizes: z.array(z.number().int().positive()).min(1),
+});
+export type CubeMapTiles = z.infer<typeof CubeMapTiles>;
+
 export const Scene = z.object({
   id: Uuid,
   unitId: Uuid.nullable(),
@@ -40,6 +48,7 @@ export const Scene = z.object({
   panoramaUrl: z.string(),
   previewUrl: z.string().nullable(),
   thumbnailUrl: z.string().nullable(),
+  cubeMap: CubeMapTiles.nullable().default(null),
   initialView: PanoPosition.extend({ fov: z.number().min(0.3).max(2.2) }),
   floorPlanPoint: NormalizedPoint.nullable(),
   hotspots: z.array(Hotspot),

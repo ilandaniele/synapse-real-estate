@@ -46,6 +46,10 @@ Errors always use the `ApiError` shape `{error: {code, message, details?}}`. Bod
 | POST | /admin/jobs/:id/review | job:create | `{decision: approve|reject, note?}`; approving a GLB persists the matched mesh -> unit mappings and publishes the file under `published/` |
 | GET | /admin/dashboard | read | counts by status, leads 30 d, last publication, jobs by status |
 
+Scenes include `cubeMap: {baseUrl, tileSize, faceSizes} | null`. Tiles live at
+`<baseUrl>/<z>/<face>/<row>/<col>.jpg` (z = 1 is the smallest level) with `<baseUrl>/preview.jpg`. It is
+set when the scene uses a processed panorama asset.
+
 Every mutating admin action writes an `audit_events` row. Lead IPs are stored only as a keyed hash (`ipHash`).
 
 ## Ejemplos

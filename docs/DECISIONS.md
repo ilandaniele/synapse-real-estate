@@ -67,3 +67,13 @@ Formato corto: contexto, decisión, consecuencias. Estado: Aceptada salvo indica
 - **Contexto**: producción necesita bucket + CDN; el disco local no escala ni sobrevive a la VM.
 - **Decisión**: `packages/storage` define `ObjectStorage` con dos drivers, `LocalStorage` y `S3Storage` (AWS SDK v3, Apache-2.0), elegidos con `STORAGE_DRIVER`. Con S3 el ticket trae una URL PUT presignada con tamaño y content-type firmados, y el admin llama `POST /admin/assets/:id/complete`; ambos caminos terminan en la misma validación (tamaño + magic bytes). Las URLs de media usan `MEDIA_PUBLIC_URL`. En local se usa RustFS (Apache-2.0) porque MinIO dejó de publicar imágenes.
 - **Consecuencias**: el bucket necesita CORS para el origen del admin y la CDN no debe exponer `uploads/`. Workers y API comparten el driver. Detalle en [STORAGE.md](STORAGE.md).
+
+## ADR-014 Teselas cubemap multirresolución generadas en el worker
+- **Contexto**: un equirect 8K único pesa varios MB y se descarga entero antes de verse nítido; en móvil
+  además supera el tamaño de textura.
+- **Decisión**: `packages/cubemap` (sharp + proyección propia) corta el equirect en caras de 512 a 4096 px con
+  teselas de 512 px y un preview `bdflru` de 256 px, el formato que lee `ImageUrlSource.fromString` de
+  Marzipano. Lo usan el worker de assets y `pnpm assets:generate`. La geometría se valida en test contra el
+  código de Marzipano. La escena guarda el layout en `tiles` (jsonb) y la API lo publica como `cubeMap`.
+- **Consecuencias**: el visor solo baja las teselas visibles al nivel de zoom actual. Procesar un 8K tarda
+  más y genera ~130 archivos. Las escenas creadas desde una URL siguen con el equirect único.

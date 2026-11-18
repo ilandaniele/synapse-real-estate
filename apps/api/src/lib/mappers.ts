@@ -111,6 +111,7 @@ export function sceneToContract(config: Config, s: Row<"scenes">, hotspots: Hots
     panoramaUrl: mediaUrl(config, s.panoramaPath),
     previewUrl: mediaUrl(config, s.previewPath),
     thumbnailUrl: mediaUrl(config, s.thumbnailPath),
+    cubeMap: s.tiles ? { baseUrl: mediaUrl(config, s.tiles.path), tileSize: s.tiles.tileSize, faceSizes: s.tiles.faceSizes } : null,
     initialView: { yaw: s.initialYaw, pitch: s.initialPitch, fov: s.initialFov },
     floorPlanPoint: s.floorPlanX !== null && s.floorPlanY !== null ? { x: s.floorPlanX, y: s.floorPlanY } : null,
     hotspots,

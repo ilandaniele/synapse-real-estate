@@ -11,7 +11,8 @@
 ## Fase 2 — Producción
 - [x] Adaptador de storage S3/R2 con presigned URLs reales y CDN delante de `/media`. Hecho el 2026-11-17
   ([STORAGE.md](STORAGE.md)); probado contra RustFS local, no contra R2/AWS reales.
-- Panoramas multirresolución en teselas cubemap.
+- [x] Panoramas multirresolución en teselas cubemap. Hecho el 2026-11-17: el worker y `pnpm assets:generate`
+  cortan cada equirect en caras de 512 a 4096 px con teselas de 512 px ([RENDER_PIPELINE.md](RENDER_PIPELINE.md)).
 - Postgres gestionado, backups automáticos, observabilidad (logs estructurados + métricas).
 - Gestión de usuarios e invitaciones por organización; recuperación de contraseña por email.
 - [x] Modo kiosko para pantallas táctiles (inactividad → vuelta a home, sin barra del navegador). Hecho el

@@ -59,8 +59,13 @@ declare module "marzipano" {
     constructor(levels: Array<{ width: number }>);
   }
 
+  export class CubeGeometry {
+    constructor(levels: Array<{ tileSize: number; size: number; fallbackOnly?: boolean }>);
+  }
+
   export class ImageUrlSource {
     constructor(sourceFromTile: (tile: Tile) => { url: string }, opts?: { concurrency?: number; retryDelay?: number });
+    static fromString(url: string, opts?: { cubeMapPreviewUrl?: string; cubeMapPreviewFaceOrder?: string }): ImageUrlSource;
   }
 
   export interface TextureStore extends Listenable {}
@@ -103,7 +108,7 @@ declare module "marzipano" {
     constructor(element: HTMLElement, opts?: ViewerOptions);
     createScene(opts: {
       source: ImageUrlSource;
-      geometry: EquirectGeometry;
+      geometry: EquirectGeometry | CubeGeometry;
       view: RectilinearView;
       pinFirstLevel?: boolean;
     }): Scene;

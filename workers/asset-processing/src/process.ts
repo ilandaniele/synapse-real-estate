@@ -1,6 +1,7 @@
 import { NodeIO } from "@gltf-transform/core";
 import { and, eq, sql } from "drizzle-orm";
 import sharp from "sharp";
+import { buildCubeTiles, decodeEquirect } from "@synapse/cubemap";
 import { inspectDxf, inspectGlb, suggestMeshMappings, unsupportedFormatMessage, DXF_REFERENCE_NOTE } from "@synapse/cad-importer";
 import { assets, importJobs, modelAssets, panoramaAssets, units, type Db, type JobLog, type JobRow } from "@synapse/db";
 import { detectFileKind, retryDelayMs } from "@synapse/domain";
@@ -163,18 +164,22 @@ async function processPanorama(
   };
   // Re-encoding strips metadata and guarantees a browser-safe JPEG.
   const source = () => sharp(bytes).rotate();
+  const fullImage = await source().resize({ width: 8192, withoutEnlargement: true }).jpeg({ quality: 85 }).toBuffer();
   await Promise.all([
-    source().resize({ width: 8192, withoutEnlargement: true }).jpeg({ quality: 85 }).toBuffer().then((b) => storage.write(outputs.imagePath, b, "image/jpeg")),
+    storage.write(outputs.imagePath, fullImage, "image/jpeg"),
     source().resize(1024, 512, { fit: "fill" }).jpeg({ quality: 80 }).toBuffer().then((b) => storage.write(outputs.previewPath, b, "image/jpeg")),
     source().resize(320, 180, { fit: "cover" }).jpeg({ quality: 75 }).toBuffer().then((b) => storage.write(outputs.thumbnailPath, b, "image/jpeg")),
   ]);
+  const tilesPath = processedPath(job.organizationId, `${assetId}-tiles`);
+  const layout = await buildCubeTiles(await decodeEquirect(fullImage), (key, data) => storage.write(`${tilesPath}/${key}`, data, "image/jpeg"));
+  const tiles = { path: tilesPath, ...layout };
 
   const [pano] = await db
     .insert(panoramaAssets)
-    .values({ organizationId: job.organizationId, assetId, width, height, ...outputs })
+    .values({ organizationId: job.organizationId, assetId, width, height, ...outputs, tiles })
     .returning();
-  log("info", "Generated full image, 1024x512 preview and thumbnail");
-  return { status: "COMPLETED", result: { kind: "panorama", panoramaAssetId: pano?.id, width, height, ...outputs } };
+  log("info", `Generated full image, 1024x512 preview, thumbnail and cube tiles (faces ${layout.faceSizes.join(", ")} px)`);
+  return { status: "COMPLETED", result: { kind: "panorama", panoramaAssetId: pano?.id, width, height, ...outputs, tiles } };
 }
 
 function processDxf(bytes: Uint8Array, log: (l: JobLog["level"], m: string) => void): JobOutcome {

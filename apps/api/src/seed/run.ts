@@ -64,6 +64,7 @@ const PanoramaHint = z
     initialView: z.object({ yaw: z.number(), pitch: z.number(), fov: z.number() }).partial().optional(),
     floorPlanPoint: Point2.nullable().optional(),
     hotspots: z.array(HotspotHint).optional(),
+    tiles: z.object({ path: z.string(), tileSize: z.number(), faceSizes: z.array(z.number()) }).optional(),
   })
   .passthrough();
 const UnitHint = z.object({ code: z.string().optional(), labelPosition: Tuple3.nullable().optional() }).passthrough();
@@ -341,6 +342,7 @@ async function main() {
               panoramaPath: `demo/panoramas/${t.slug}.jpg`,
               previewPath: `demo/panoramas/${t.slug}-preview.jpg`,
               thumbnailPath: `demo/thumbs/${t.slug}.jpg`,
+              tiles: hint?.tiles ? { ...hint.tiles, path: `demo/${hint.tiles.path}` } : null,
               initialYaw: hint?.initialView?.yaw ?? 0,
               initialPitch: hint?.initialView?.pitch ?? 0,
               initialFov: hint?.initialView?.fov ?? 1.2,

@@ -32,7 +32,7 @@ nombres de agencia, logos) se trata como marca ajena y no se reutiliza.
 | 12 | El modelo aéreo es 3D en tiempo real (orbit libre) | PROBABLE | Se construyó WebGL real; podría ser también un video/secuencia de frames pre-renderizados |
 | 13 | El tour interior es panorámico equirectangular pre-renderizado (no 3D en tiempo real) | PROBABLE | Panoramas equirect + hotspots |
 | 14 | Estado comercial sincronizado con un backend administrable | POSIBLE | Backoffice con disponibilidad e historial; publicación versionada |
-| 15 | Panoramas multirresolución en teselas | POSIBLE | Se usa preview + full (2 niveles); teselas cubemap queda en roadmap |
+| 15 | Panoramas multirresolución en teselas | POSIBLE | Teselas cubemap multirresolución con `packages/cubemap`; fallback a preview + full equirect |
 | 16 | "De archivo DWG a RENDER 3D en minutos" | NO VERIFICADO | **No se implementa.** El pipeline acepta GLB/glTF/imágenes; DWG/IFC/FBX se rechazan con mensaje explícito; DXF solo se inspecciona. Ver [CAD_PIPELINE.md](CAD_PIPELINE.md) |
 | 17 | "Renders 3D realistas y navegables" generados automáticamente | NO VERIFICADO | Render worker sin backend falla explícitamente. Ver [RENDER_PIPELINE.md](RENDER_PIPELINE.md) |
 | 18 | Uso de un motor concreto ("RAE" u otro mencionado en material previo) | NO VERIFICADO | No se afirma ni se replica |

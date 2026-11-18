@@ -224,6 +224,13 @@ export const assets = pgTable(
   (t) => [index("assets_org_idx").on(t.organizationId)],
 );
 
+/** Marzipano cube tiles of a panorama: `<path>/<z>/<face>/<row>/<col>.jpg` and `<path>/preview.jpg`. */
+export interface StoredCubeTiles {
+  path: string;
+  tileSize: number;
+  faceSizes: number[];
+}
+
 export const panoramaAssets = pgTable(
   "panorama_assets",
   {
@@ -236,6 +243,7 @@ export const panoramaAssets = pgTable(
     imagePath: text("image_path"),
     previewPath: text("preview_path"),
     thumbnailPath: text("thumbnail_path"),
+    tiles: jsonb("tiles").$type<StoredCubeTiles | null>(),
     createdAt: createdAt(),
   },
   (t) => [index("panorama_assets_org_idx").on(t.organizationId)],
@@ -294,6 +302,7 @@ export const scenes = pgTable(
     panoramaPath: text("panorama_path").notNull(),
     previewPath: text("preview_path"),
     thumbnailPath: text("thumbnail_path"),
+    tiles: jsonb("tiles").$type<StoredCubeTiles | null>(),
     initialYaw: doublePrecision("initial_yaw").notNull().default(0),
     initialPitch: doublePrecision("initial_pitch").notNull().default(0),
     initialFov: doublePrecision("initial_fov").notNull().default(1.2),

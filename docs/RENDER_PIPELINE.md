@@ -54,7 +54,15 @@ Valores fuera de rango o desconocidos vuelven al valor por defecto.
 ## Limitaciones
 - La calidad depende del modelo: materiales, texturas e iluminación interior vienen del GLB. El masterplan demo
   (villas primitivas) solo produce volúmenes simples.
-- Sin teselado cubemap multirresolución todavía; el panorama se sirve como imagen equirectangular única.
+- Las escenas creadas desde una URL de media (sin asset procesado) no tienen teselas: se sirven como imagen
+  equirectangular única.
+
+## Teselas cubemap multirresolución
+`packages/cubemap` proyecta el equirect a las seis caras con la misma geometría que Marzipano (verificado en
+test contra `CubeGeometry` de Marzipano) y escribe `<z>/<cara>/<fila>/<col>.jpg` más `preview.jpg` (las seis
+caras de 256 px apiladas en orden `bdflru`). Los niveles van de 512 px hasta `ancho/π` redondeado a potencia
+de dos, con tope 4096. El worker de assets guarda las teselas en `processed/<org>/<asset>-tiles/` y la
+escena expone `cubeMap {baseUrl, tileSize, faceSizes}`. El visor usa cubemap si existe y, si no, el equirect.
 
 ## Rendimiento medido (Blender)
 Blender 4.5.10 LTS en Windows 11 con NVIDIA GeForce RTX 5070 Ti Laptop GPU (12 GB). Escena: masterplan demo

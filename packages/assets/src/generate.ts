@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
+import { buildCubeTiles } from "@synapse/cubemap";
 import { buildFloorplanSvg } from "./floorplan";
 import { buildMasterplanGlb } from "./glb";
 import { buildManifest, PANO_HEIGHT, PANO_WIDTH } from "./manifest";
@@ -76,6 +77,7 @@ async function main(): Promise<void> {
     if (kind === "pano") {
       await save(`panoramas/${name}.jpg`, await img.clone().jpeg({ quality: JPEG_QUALITY, mozjpeg: true }).toBuffer());
       await save(`panoramas/${name}-preview.jpg`, await img.clone().resize(dim(1024), dim(512)).jpeg({ quality: 78, mozjpeg: true }).toBuffer());
+      await buildCubeTiles({ data: rgb, width: job.width, height: job.height }, (key, data) => save(`panoramas/${name}-tiles/${key}`, data));
     } else if (kind === "thumb") {
       await save(`thumbs/${name}.jpg`, await img.jpeg({ quality: 78, mozjpeg: true }).toBuffer());
     } else {

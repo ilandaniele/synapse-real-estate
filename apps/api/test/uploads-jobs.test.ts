@@ -179,6 +179,20 @@ describe("import jobs", () => {
     expect(pano).toMatchObject({ width: 512, height: 256 });
     for (const p of [pano!.imagePath, pano!.previewPath, pano!.thumbnailPath]) expect(existsSync(path.join(ctx.storageDir, p!))).toBe(true);
     expect((await ctx.app.inject({ method: "GET", url: `/media/${pano!.previewPath}` })).statusCode).toBe(200);
+
+    expect(pano!.tiles).toEqual({ path: `processed/${ctx.fx.orgA}/${assetId}-tiles`, tileSize: 512, faceSizes: [512] });
+    for (const key of ["preview.jpg", "1/f/0/0.jpg", "1/d/0/0.jpg"]) {
+      expect((await ctx.app.inject({ method: "GET", url: `/media/${pano!.tiles!.path}/${key}` })).statusCode).toBe(200);
+    }
+
+    const created = await ctx.app.inject({
+      method: "POST",
+      url: `${ADMIN}/developments/${ctx.fx.devA}/scenes`,
+      headers: { cookie: editor },
+      payload: { unitId: null, slug: "tiled-room", name: "Tiled room", panoramaAssetId: assetId },
+    });
+    expect(created.statusCode).toBe(201);
+    expect(created.json().cubeMap).toEqual({ baseUrl: expect.stringMatching(new RegExp(`/media/${pano!.tiles!.path}$`)), tileSize: 512, faceSizes: [512] });
   });
 
   it("non-2:1 image fails with a clear message", async () => {
