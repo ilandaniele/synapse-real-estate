@@ -111,6 +111,10 @@ migración `0007_reservations` corre sola al arrancar el API. Después se añadi
 `{"enabled":true,"depositAmount":"3000.00"}`, `/reservar/villa-5` y `/reservations` del admin responden 200 y
 `/api/v1/admin/reservations` sin sesión responde 401. No se hizo una reserva de prueba en producción.
 
+Redespliegue del 2026-11-18 con Stripe Checkout y enlaces copiables sin SMTP (commit `8db4a38`): sigue con
+`PAYMENT_PROVIDER=mock` y sin SMTP. El showroom, el manifiesto y `/login` del admin responden 200, y
+`/api/v1/admin/members` sin sesión responde 401. No se generaron invitaciones ni enlaces en producción.
+
 Para cobrar con Stripe (ADR-023), con una cuenta propia:
 1. En el panel de Stripe, crear el endpoint de webhook
    `https://<SHOWROOM_HOST>/api/v1/public/reservations/stripe/webhook` con los eventos
