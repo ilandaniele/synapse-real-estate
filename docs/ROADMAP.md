@@ -36,4 +36,6 @@
   [WEBHOOKS.md](WEBHOOKS.md)).
 - [x] Analítica de recorridos: qué unidades y estancias se visitan más. Hecho el 2026-11-18: contadores diarios
   agregados por unidad y estancia, sin datos personales, y página «Analítica» en el admin (ADR-021).
-- [ ] Reservas con señal online.
+- [x] Reservas con señal online. Hecho el 2026-11-18 con un proveedor de pago simulado: el comprador reserva
+  desde la ficha, paga la señal en un checkout de demostración y la unidad pasa a RESERVADA (ADR-022). Falta
+  integrar un proveedor real (Stripe, Redsys) antes de cobrar.

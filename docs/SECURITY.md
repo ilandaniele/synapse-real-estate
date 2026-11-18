@@ -22,7 +22,7 @@ automated test, and the full suites passed after the fixes (see [TESTING.md](TES
   request answers 202 for any email and does not wait for SMTP. A reset burns the user's other links and
   revokes their sessions. These endpoints share the login rate limit (10/min/IP). See [EMAIL.md](EMAIL.md).
 - **Leads:** honeypot, consent, a rate limit per IP and a hashed IP (no raw IP stored).
-- **Rate limits per IP:** global 300/min, login 10/min, leads 5/min.
+- **Rate limits per IP:** global 300/min, login 10/min, leads 5/min, reservations 5/min, mock payments 10/min.
 - **CSRF:** SameSite=Lax cookies plus an Origin check. Writes (`POST`, `PUT`, `PATCH`, `DELETE`) that send an
   Origin outside `CORS_ORIGINS` get 403.
 - **CORS:** allow-list from `CORS_ORIGINS`, with credentials.
@@ -40,6 +40,10 @@ automated test, and the full suites passed after the fixes (see [TESTING.md](TES
   and resolve to public addresses, checked on create and before each send; redirects are not followed and each
   request times out after 5 s. DNS rebinding between the check and the connection is a known limit
   ([WEBHOOKS.md](WEBHOOKS.md)).
+- **Reservations:** only a simulated payment exists; no card data is collected and no money moves. The checkout
+  token is 32 random bytes stored as sha256 and works only while the reservation is pending. The unit is
+  reserved by a conditional update in one transaction, so two payments cannot both win. `PAYMENT_PROVIDER`
+  defaults to `none` in production. Creation shares the lead limit (5/min/IP); payments allow 10/min/IP.
 - **Analytics privacy:** visits are stored only as daily counters per unit or room. No IP, cookie, user agent
   or visitor id is kept, and the showroom sends nothing when Do Not Track or Global Privacy Control is on. The
   public endpoint is rate limited to 120/min/IP and counts only listed units and scenes of the given development.

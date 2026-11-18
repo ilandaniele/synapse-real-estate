@@ -1,5 +1,5 @@
 import { and, asc, eq, inArray, type SQL } from "drizzle-orm";
-import type { Asset, Development, FloorPlan, GalleryItem, Hotspot, Job, Lead, PointOfInterest, Scene, Unit } from "@synapse/contracts";
+import type { Asset, Development, FloorPlan, GalleryItem, Hotspot, Job, Lead, PointOfInterest, Reservation, Scene, Unit } from "@synapse/contracts";
 import {
   sceneHotspots,
   scenes,
@@ -179,6 +179,25 @@ export function jobToContract(kind: JobKind, j: JobRow): Job & { developmentId: 
     logs: j.logs,
     createdAt: iso(j.createdAt),
     updatedAt: iso(j.updatedAt),
+  };
+}
+
+export function reservationToContract(r: Row<"reservations">, unitCode: string): Reservation {
+  return {
+    id: r.id,
+    developmentId: r.developmentId,
+    unitId: r.unitId,
+    unitCode,
+    name: r.name,
+    email: r.email,
+    phone: r.phone,
+    depositAmount: r.depositAmount,
+    currency: r.currency,
+    status: r.status,
+    paymentProvider: r.paymentProvider,
+    paymentRef: r.paymentRef,
+    paidAt: r.paidAt ? iso(r.paidAt) : null,
+    createdAt: iso(r.createdAt),
   };
 }
 

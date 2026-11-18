@@ -44,6 +44,9 @@ from a real run.
 - Tour analytics: the showroom counts views of each unit (sheet or masterplan selection) and each 360 room in
   daily aggregates, skipping visitors with Do Not Track or Global Privacy Control; the admin «Analítica» page
   ranks units and rooms over 7, 30 or 90 days (ADR-021).
+- Online reservations with a deposit: «Reservar con señal» on an available unit's sheet opens a form and a
+  simulated checkout; an approved payment reserves the unit and records the change, a declined one can be
+  retried, and the admin «Reservas» page lists them. No real payment provider is wired (ADR-022).
   Render without a configured backend fails explicitly.
 - Engine bugs found during integration and fixed in the engines:
   - double hotspot removal;

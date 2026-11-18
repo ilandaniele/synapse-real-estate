@@ -10,6 +10,7 @@ import { useI18n } from "@/i18n/I18nProvider";
 import { formatArea } from "@/lib/format";
 import { sortUnits, unitHasTour } from "@/lib/manifest";
 import { trackVisit } from "@/lib/analytics";
+import { useReservationSettings } from "@/lib/reservations";
 import { useShowroomStore } from "@/lib/store";
 import { LeadForm } from "./LeadForm";
 import { ManifestGate } from "./ManifestGate";
@@ -20,6 +21,7 @@ function UnitSheet({ manifest, slug }: { manifest: DevelopmentManifest; slug: st
   const unit = units.find((u) => u.slug === slug);
   const selectUnit = useShowroomStore((s) => s.selectUnit);
   const { locale, t } = useI18n();
+  const reservations = useReservationSettings();
 
   // Coming from the sheet, "back to the masterplan" should keep this unit selected.
   useEffect(() => {
@@ -50,6 +52,7 @@ function UnitSheet({ manifest, slug }: { manifest: DevelopmentManifest; slug: st
   const ownGallery = gallery.filter((g) => g.unitId === unit.id);
   const thumbs = (ownGallery.length > 0 ? ownGallery : gallery).slice(0, 6);
   const hasTour = unitHasTour(scenes, unit.id);
+  const reservable = reservations.data?.enabled === true && unit.status === "AVAILABLE";
   const others = sortUnits(units).filter((u) => u.id !== unit.id);
 
   const specs: [string, string][] = [
@@ -102,6 +105,11 @@ function UnitSheet({ manifest, slug }: { manifest: DevelopmentManifest; slug: st
             {hasTour ? (
               <Link href={`/tour/${unit.slug}`} data-testid="sheet-tour-link" className={`${BTN_PRIMARY} px-6`}>
                 {t.common.tour360}
+              </Link>
+            ) : null}
+            {reservable ? (
+              <Link href={`/reservar/${unit.slug}`} data-testid="sheet-reserve-link" className={`${BTN_PRIMARY} px-6`}>
+                {t.reservation.reserve}
               </Link>
             ) : null}
             <Link

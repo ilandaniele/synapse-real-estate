@@ -25,6 +25,9 @@ Errors always use the `ApiError` shape `{error: {code, message, details?}}`. Bod
 | GET | /api/v1/public/developments/:slug/manifest | public | latest publication; ETag + 304, `Cache-Control: public, max-age=30, stale-while-revalidate=300` |
 | POST | /api/v1/public/leads | public | 5/min/IP; honeypot `website` -> 202 and nothing stored; `consent: true` required; 201 `{id}`; enqueues `lead.created` for the org's webhooks in the same transaction ([WEBHOOKS.md](WEBHOOKS.md)) |
 | POST | /api/v1/public/visits | public | 120/min/IP; `{developmentSlug, kind: UNIT|SCENE, targetId}` adds one view to today's counter; always **204**, also for an unknown slug, an unlisted unit or a target of another development (nothing is counted); 400 for a malformed body. No IP or cookie is stored |
+| GET | /api/v1/public/reservations/settings | public | `{enabled, depositAmount}`; `enabled: false` and `depositAmount: null` when `PAYMENT_PROVIDER=none` |
+| POST | /api/v1/public/reservations | public | 5/min/IP; `{developmentSlug, unitId, name, email, phone?, consent: true}` -> **201** `{id, checkoutToken, unitCode, depositAmount, currency}`; the token is stored only as sha256; 409 `UNIT_NOT_AVAILABLE` when the unit is not AVAILABLE or belongs to another development; 503 when reservations are off |
+| POST | /api/v1/public/reservations/:id/mock-payment | public | 10/min/IP; `{checkoutToken, outcome: approve|decline}`. Approve -> 200 `{status:"PAID", paymentRef}` and the unit becomes RESERVED with a history row; decline -> 402 `PAYMENT_DECLINED`, still pending; 409 `UNIT_NOT_AVAILABLE` if another reservation took the unit (this one becomes FAILED); 404 for a wrong token, unknown id or a reservation no longer pending; 503 when off |
 | GET/POST | /admin/developments | development:read / write | |
 | GET/PATCH/DELETE | /admin/developments/:id | read / write / write | |
 | POST | /admin/developments/:id/publish | development:publish | **201** Publication; 422 `MANIFEST_INVALID`; builds + validates the manifest, excludes UNLISTED units |
@@ -43,6 +46,7 @@ Errors always use the `ApiError` shape `{error: {code, message, details?}}`. Bod
 | GET | /admin/developments/:id/gallery | read | |
 | GET | /admin/developments/:id/points-of-interest | read | |
 | GET | /admin/leads | lead:read | `?developmentId&unitId&page&pageSize` -> `{items,total,page,pageSize}` |
+| GET | /admin/reservations | lead:read | `?developmentId&status=PENDING|PAID|FAILED&page&pageSize` -> `{items,total,page,pageSize}`, newest first, with `unitCode`; never includes the checkout token |
 | GET | /admin/leads/:id | lead:read | extra endpoint, not in the original contract list |
 | GET | /admin/leads/export.csv | lead:export | every cell quoted, `=+-@\t\r` prefixed with `'`; audited; max 10 000 rows |
 | POST | /admin/assets/uploads | asset:upload | 201 ticket `{assetId, uploadUrl, expiresAt, requiresCompletion}`; URL valid 10 min; 413 if declared size over the per-kind limit. With S3, `uploadUrl` is a presigned bucket PUT and `requiresCompletion` is true |

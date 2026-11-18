@@ -168,3 +168,19 @@ Formato corto: contexto, decisión, consecuencias. Estado: Aceptada salvo indica
 - **Consecuencias**: no hay sesiones, embudos ni visitantes únicos; una persona que recarga cuenta dos veces. El
   endpoint público responde 204 aunque el destino no exista, para no revelar ids. La tabla crece una fila por
   destino y día, acotada por el número de unidades y escenas.
+
+## ADR-022 Reservas con señal y proveedor de pago simulado
+- **Contexto**: la Fase 4 pide reservar una unidad pagando una señal online. Un proveedor real (Stripe, Redsys)
+  exige cuenta, claves y contrato, y cobrar dinero en una demo no es aceptable.
+- **Decisión**: el comprador rellena nombre, email, teléfono y consentimiento desde la ficha de una unidad
+  disponible. El API crea una reserva `PENDING` con la señal fijada por `RESERVATION_DEPOSIT` y devuelve un token
+  de checkout de un solo uso; solo se guarda su sha256. El proveedor `mock` simula el pago: aprobar marca la
+  reserva `PAID` y, en la misma transacción, pasa la unidad de `AVAILABLE` a `RESERVED` con una fila de historial
+  «Reserva online <ref>»; rechazar responde 402 y deja la reserva pendiente para reintentar. Si otra reserva ya
+  se llevó la unidad, la tardía queda `FAILED` y responde 409. `PAYMENT_PROVIDER` vale `none` por defecto en
+  producción, que desactiva la reserva (503) y oculta el botón. El admin lista las reservas en «Reservas» con
+  el permiso `lead:read`.
+- **Consecuencias**: no se mueve dinero. Un proveedor real deberá confirmar el pago por webhook firmado en lugar
+  del endpoint `mock-payment`, y gestionar reembolsos. El manifiesto público es una instantánea: la unidad sigue
+  apareciendo como disponible hasta la siguiente publicación, aunque el API ya rechaza reservarla (409). Las
+  reservas pendientes no caducan solas.

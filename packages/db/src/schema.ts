@@ -14,7 +14,7 @@ import {
   unique,
   uuid,
 } from "drizzle-orm/pg-core";
-import { JOB_STATUSES, ROLES, UNIT_STATUSES } from "@synapse/domain";
+import { JOB_STATUSES, RESERVATION_STATUSES, ROLES, UNIT_STATUSES } from "@synapse/domain";
 
 export const roleEnum = pgEnum("role", ROLES);
 export const unitStatusEnum = pgEnum("unit_status", UNIT_STATUSES);
@@ -22,6 +22,7 @@ export const jobStatusEnum = pgEnum("job_status", JOB_STATUSES);
 export const hotspotTypeEnum = pgEnum("hotspot_type", ["NAVIGATION", "INFO"]);
 export const assetStatusEnum = pgEnum("asset_status", ["PENDING_UPLOAD", "UPLOADED", "REJECTED"]);
 export const visitKindEnum = pgEnum("visit_kind", ["UNIT", "SCENE"]);
+export const reservationStatusEnum = pgEnum("reservation_status", RESERVATION_STATUSES);
 export const webhookDeliveryStatusEnum = pgEnum("webhook_delivery_status", ["PENDING", "DELIVERED", "FAILED"]);
 export const poiCategoryEnum = pgEnum("poi_category", [
   "BEACH",
@@ -551,4 +552,32 @@ export const visitStats = pgTable(
     views: integer("views").notNull().default(0),
   },
   (t) => [unique("visit_stats_target_day_uq").on(t.developmentId, t.day, t.kind, t.targetId)],
+);
+
+export const reservations = pgTable(
+  "reservations",
+  {
+    id: id(),
+    organizationId: orgId(),
+    developmentId: uuid("development_id")
+      .notNull()
+      .references(() => developments.id, { onDelete: "cascade" }),
+    unitId: uuid("unit_id")
+      .notNull()
+      .references(() => units.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    email: text("email").notNull(),
+    phone: text("phone"),
+    depositAmount: numeric("deposit_amount", { precision: 14, scale: 2 }).notNull(),
+    currency: text("currency").notNull(),
+    status: reservationStatusEnum("status").notNull().default("PENDING"),
+    /** sha256 of the checkout token held only by the visitor's browser. */
+    checkoutTokenHash: text("checkout_token_hash").notNull(),
+    paymentProvider: text("payment_provider").notNull(),
+    paymentRef: text("payment_ref"),
+    consentAt: timestamp("consent_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+    paidAt: timestamp("paid_at", { withTimezone: true, mode: "date" }),
+    createdAt: createdAt(),
+  },
+  (t) => [index("reservations_org_created_idx").on(t.organizationId, t.createdAt), index("reservations_unit_idx").on(t.unitId)],
 );

@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import path from "node:path";
 import { REPO_ROOT } from "@synapse/db";
+import { isValidDecimalAmount } from "@synapse/domain";
 import { z } from "zod";
 
 const Env = z.object({
@@ -24,6 +25,9 @@ const Env = z.object({
   ADMIN_PUBLIC_URL: z.union([z.literal(""), z.string().url()]).default(""),
   // Logins, invitation accepts and password resets per IP per minute.
   LOGIN_RATE_LIMIT: z.coerce.number().int().min(1).max(1000).default(10),
+  // Online reservations. Unset: the mock provider outside production, none (reservations off) in production.
+  PAYMENT_PROVIDER: z.enum(["none", "mock"]).optional(),
+  RESERVATION_DEPOSIT: z.string().refine(isValidDecimalAmount, "must be a decimal amount").default("3000.00"),
 });
 
 export interface Config {
@@ -41,7 +45,11 @@ export interface Config {
   mailFrom: string;
   adminPublicUrl: string;
   loginRateLimit: number;
+  paymentProvider: PaymentProvider;
+  reservationDeposit: string;
 }
+
+export type PaymentProvider = "none" | "mock";
 
 export const defaultMediaBaseUrl = (publicApiUrl: string) => `${publicApiUrl}/media`;
 
@@ -78,5 +86,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, warn: (message:
     mailFrom: e.MAIL_FROM,
     adminPublicUrl: (e.ADMIN_PUBLIC_URL || "http://localhost:3001").replace(/\/+$/, ""),
     loginRateLimit: e.LOGIN_RATE_LIMIT,
+    paymentProvider: e.PAYMENT_PROVIDER ?? (isProd ? "none" : "mock"),
+    reservationDeposit: e.RESERVATION_DEPOSIT,
   };
 }

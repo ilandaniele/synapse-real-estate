@@ -18,6 +18,8 @@ import healthRoutes from "./routes/health";
 import invitationAcceptRoutes from "./routes/invitations";
 import passwordResetRoutes from "./routes/password-reset";
 import publicRoutes from "./routes/public";
+import reservationRoutes from "./routes/reservations";
+import reservationAdminRoutes from "./routes/admin/reservations";
 import { assetAdminRoutes, uploadRoutes } from "./routes/admin/assets";
 import dashboardRoutes from "./routes/admin/dashboard";
 import webhookRoutes from "./routes/admin/webhooks";
@@ -43,7 +45,7 @@ export interface BuildAppOptions {
   /** Defaults to SMTP when `smtpUrl` is set, else the log outside production, else no email. */
   mailer?: Mailer;
   /** Per-IP requests/minute. Defaults: global 300, login 10, leads 5. */
-  rateLimit?: { global?: number; login?: number; leads?: number; visits?: number };
+  rateLimit?: { global?: number; login?: number; leads?: number; visits?: number; payments?: number };
   logger?: boolean;
 }
 
@@ -95,10 +97,12 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     mailFrom: "Synapse <no-reply@synapse.local>",
     adminPublicUrl: "http://localhost:3001",
     loginRateLimit: 10,
+    paymentProvider: "mock",
+    reservationDeposit: "3000.00",
     ...options.config,
     storageDir: options.storageDir,
   };
-  const limits = { global: 300, login: config.loginRateLimit, leads: 5, visits: 120, ...options.rateLimit };
+  const limits = { global: 300, login: config.loginRateLimit, leads: 5, visits: 120, payments: 10, ...options.rateLimit };
 
   const app = Fastify({
     logger: options.logger ? { serializers: { req: redactedRequest } } : false,
@@ -164,6 +168,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
       await api.register(invitationAcceptRoutes, { prefix: "/auth", credentialRateLimit: limits.login });
       await api.register(passwordResetRoutes, { prefix: "/auth", credentialRateLimit: limits.login });
       await api.register(publicRoutes, { prefix: "/public", leadRateLimit: limits.leads, visitRateLimit: limits.visits });
+      await api.register(reservationRoutes, { prefix: "/public/reservations", createRateLimit: limits.leads, paymentRateLimit: limits.payments });
       await api.register(uploadRoutes);
       await api.register(
         async (admin) => {
@@ -182,6 +187,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
           await admin.register(dashboardRoutes);
           await admin.register(webhookRoutes);
           await admin.register(analyticsRoutes);
+          await admin.register(reservationAdminRoutes);
         },
         { prefix: "/admin" },
       );

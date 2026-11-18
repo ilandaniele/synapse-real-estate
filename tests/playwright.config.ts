@@ -50,6 +50,7 @@ export default defineConfig({
         SMTP_URL: process.env.E2E_SMTP_URL ?? "",
         ADMIN_PUBLIC_URL: ADMIN,
         LOGIN_RATE_LIMIT: "60",
+        PAYMENT_PROVIDER: "mock",
       },
       reuseExistingServer: false,
       timeout: 180_000,

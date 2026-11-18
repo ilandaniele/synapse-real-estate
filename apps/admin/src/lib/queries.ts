@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import type { Asset, Development, FloorPlan, GalleryItem, Invitation, Job, Lead, Member, PointOfInterest, Publication, PublicationDiff, Scene, SessionUser, Unit, VisitAnalytics, WebhookDelivery, WebhookEndpoint } from "@synapse/contracts";
+import type { Asset, Development, FloorPlan, GalleryItem, Invitation, Job, Lead, Member, PointOfInterest, Publication, PublicationDiff, Reservation, Scene, SessionUser, Unit, VisitAnalytics, WebhookDelivery, WebhookEndpoint } from "@synapse/contracts";
 import type { JobStatus, UnitStatus } from "@synapse/domain";
 import { api, ApiRequestError } from "./api";
 
@@ -12,12 +12,15 @@ export interface Dashboard {
   jobsByStatus: Record<JobStatus, number>;
 }
 
-export interface LeadsPage {
-  items: Lead[];
+export interface Paged<T> {
+  items: T[];
   total: number;
   page: number;
   pageSize: number;
 }
+
+export type LeadsPage = Paged<Lead>;
+export type ReservationsPage = Paged<Reservation>;
 
 export const ACTIVE_JOB_STATUSES: readonly JobStatus[] = ["PENDING", "PROCESSING"];
 export const isActiveJob = (job: Pick<Job, "status">) => ACTIVE_JOB_STATUSES.includes(job.status);
@@ -39,6 +42,7 @@ export const keys = {
   hotspots: (sceneId: string) => ["scenes", sceneId, "hotspots"] as const,
   leads: (filters: unknown) => ["leads", filters] as const,
   lead: (id: string) => ["leads", "detail", id] as const,
+  reservations: (filters: unknown) => ["reservations", filters] as const,
   assets: ["assets"] as const,
   jobs: ["jobs"] as const,
   job: (id: string) => ["jobs", id] as const,

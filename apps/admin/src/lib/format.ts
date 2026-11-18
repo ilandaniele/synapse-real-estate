@@ -32,6 +32,12 @@ export const JOB_STATUS_LABELS = {
   FAILED: "Fallido",
 } as const;
 
+export const RESERVATION_STATUS_LABELS = {
+  PENDING: "Pendiente de pago",
+  PAID: "Pagada",
+  FAILED: "Fallida",
+} as const;
+
 export const ASSET_STATUS_LABELS = {
   PENDING_UPLOAD: "Pendiente de subida",
   UPLOADED: "Subido",

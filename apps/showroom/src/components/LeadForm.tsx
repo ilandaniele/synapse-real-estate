@@ -9,7 +9,7 @@ import { LEADS_URL } from "@/lib/config";
 type Field = "name" | "email" | "phone" | "message" | "consent";
 type FieldErrors = Partial<Record<Field, string>>;
 
-const INPUT =
+export const INPUT =
   "min-h-11 w-full rounded-md border bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 aria-[invalid=true]:border-red-600";
 
 interface LeadFormProps {

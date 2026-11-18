@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ROLES, UNIT_STATUSES, JOB_KINDS, JOB_STATUSES, isValidDecimalAmount } from "@synapse/domain";
+import { ROLES, UNIT_STATUSES, JOB_KINDS, JOB_STATUSES, RESERVATION_STATUSES, isValidDecimalAmount } from "@synapse/domain";
 
 export const Uuid = z.string().uuid();
 export const IsoDate = z.string().datetime({ offset: true });
@@ -442,3 +442,41 @@ export const VisitAnalytics = z.object({
   scenes: z.array(z.object({ id: Uuid, name: z.string(), unitCode: z.string().nullable(), views: z.number().int() })),
 });
 export type VisitAnalytics = z.infer<typeof VisitAnalytics>;
+
+/** What the showroom needs to offer online reservations; `enabled` is false when no payment provider is set. */
+export const ReservationSettings = z.object({ enabled: z.boolean(), depositAmount: Decimal.nullable() });
+export type ReservationSettings = z.infer<typeof ReservationSettings>;
+export const ReservationInput = LeadInput.pick({ developmentSlug: true, name: true, email: true, phone: true, consent: true }).extend({
+  unitId: Uuid,
+});
+export type ReservationInput = z.infer<typeof ReservationInput>;
+/** `checkoutToken` authorises the payment step; it is returned once and only its hash is stored. */
+export const ReservationCreated = z.object({
+  id: Uuid,
+  checkoutToken: z.string(),
+  unitCode: z.string(),
+  depositAmount: Decimal,
+  currency: Currency,
+});
+export type ReservationCreated = z.infer<typeof ReservationCreated>;
+/** The mock provider lets a test or a demo choose the outcome that a real card network would decide. */
+export const MockPaymentInput = z.object({ checkoutToken: z.string().min(20).max(100), outcome: z.enum(["approve", "decline"]) });
+export type MockPaymentInput = z.infer<typeof MockPaymentInput>;
+export const ReservationStatus = z.enum(RESERVATION_STATUSES);
+export const Reservation = z.object({
+  id: Uuid,
+  developmentId: Uuid,
+  unitId: Uuid,
+  unitCode: z.string(),
+  name: z.string(),
+  email: z.string(),
+  phone: z.string().nullable(),
+  depositAmount: Decimal,
+  currency: Currency,
+  status: ReservationStatus,
+  paymentProvider: z.string(),
+  paymentRef: z.string().nullable(),
+  paidAt: IsoDate.nullable(),
+  createdAt: IsoDate,
+});
+export type Reservation = z.infer<typeof Reservation>;

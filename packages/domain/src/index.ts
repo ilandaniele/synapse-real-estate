@@ -8,3 +8,4 @@ export * from "./files";
 export * from "./permissions";
 export * from "./jobs";
 export * from "./filters";
+export * from "./reservations";
