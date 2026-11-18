@@ -77,3 +77,13 @@ Formato corto: contexto, decisión, consecuencias. Estado: Aceptada salvo indica
   código de Marzipano. La escena guarda el layout en `tiles` (jsonb) y la API lo publica como `cubeMap`.
 - **Consecuencias**: el visor solo baja las teselas visibles al nivel de zoom actual. Procesar un 8K tarda
   más y genera ~130 archivos. Las escenas creadas desde una URL siguen con el equirect único.
+
+## ADR-015 Postgres en contenedor, backups con pg_dump y métricas Prometheus propias
+- **Contexto**: PGlite es monoproceso y su volumen no tiene backups; producción necesita workers aparte,
+  copias restaurables y métricas.
+- **Decisión**: `docker-compose.postgres.yml` añade Postgres 17, el asset worker y un servicio de backup
+  (`pg_dump -Fc` + tar del storage local, retención por días). `/health/ready` comprueba la base y `/metrics`
+  expone texto Prometheus escrito a mano, tras un bearer token. `prom-client` se descartó: su peer
+  `@opentelemetry/api` duplicaba `drizzle-orm` en el lockfile y rompía los tipos.
+- **Consecuencias**: sigue siendo una sola VM; los backups quedan en el disco de la VM hasta que el operador
+  los copie fuera. Los tests de API corren también contra Postgres con `PG_TEST_URL`, una base por contexto.

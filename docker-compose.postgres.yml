@@ -1,0 +1,55 @@
+# Postgres variant of the single-VM stack: the API uses Postgres, the asset worker runs as its own service
+# and a backup service dumps the database and the storage volume every day.
+# Usage (docs/BACKUPS.md):
+#   docker compose -f docker-compose.prod.yml -f docker-compose.postgres.yml up -d --build
+# .env.production must set POSTGRES_PASSWORD and DATABASE_URL=postgres://synapse:<password>@postgres:5432/synapse
+x-postgres-client: &postgres-client
+  depends_on:
+    postgres:
+      condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    env_file: .env.production
+    environment:
+      POSTGRES_USER: synapse
+      POSTGRES_DB: synapse
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U synapse -d synapse"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    <<: *postgres-client
+
+  asset-worker:
+    <<: *postgres-client
+    image: synapse-app
+    restart: unless-stopped
+    env_file: .env.production
+    init: true
+    command: ["pnpm", "--filter", "@synapse/asset-worker", "start"]
+    volumes:
+      - storage:/app/storage
+
+  backup:
+    <<: *postgres-client
+    image: postgres:17-alpine
+    restart: unless-stopped
+    env_file: .env.production
+    entrypoint: ["/backup/backup-loop.sh"]
+    environment:
+      BACKUP_DIR: /backups
+      STORAGE_DIR: /storage
+    volumes:
+      - ./deploy/backup:/backup:ro
+      - storage:/storage:ro
+      - ./backups:/backups
+
+volumes:
+  pgdata:

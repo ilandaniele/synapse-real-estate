@@ -15,6 +15,8 @@ const Env = z.object({
   MEDIA_PUBLIC_URL: z.union([z.literal(""), z.string().url()]).default(""),
   CORS_ORIGINS: z.string().default("http://localhost:3000,http://localhost:3001"),
   TRUST_PROXY: z.enum(["true", "false"]).default("false"),
+  // Bearer token for GET /metrics. Empty disables the endpoint.
+  METRICS_TOKEN: z.union([z.literal(""), z.string().min(24)]).default(""),
 });
 
 export interface Config {
@@ -27,6 +29,7 @@ export interface Config {
   mediaBaseUrl: string;
   corsOrigins: string[];
   trustProxy: boolean;
+  metricsToken?: string;
 }
 
 export const defaultMediaBaseUrl = (publicApiUrl: string) => `${publicApiUrl}/media`;
@@ -58,5 +61,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, warn: (message:
     mediaBaseUrl: e.MEDIA_PUBLIC_URL.replace(/\/+$/, "") || defaultMediaBaseUrl(publicApiUrl),
     corsOrigins: e.CORS_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean),
     trustProxy: e.TRUST_PROXY === "true",
+    metricsToken: e.METRICS_TOKEN || undefined,
   };
 }

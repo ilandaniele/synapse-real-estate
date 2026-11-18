@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import type { FastifyInstance } from "fastify";
 import {
   createDb,
+  createTestDatabase,
   developments,
   floorPlans,
   galleryItems,
@@ -215,7 +216,9 @@ async function seedFixtures(db: Db): Promise<Fixtures> {
 }
 
 export async function createTestContext(options: Partial<Pick<BuildAppOptions, "rateLimit" | "config" | "storage">> = {}): Promise<TestContext> {
-  const handle: DbHandle = await createDb("memory://");
+  const pgAdminUrl = process.env.PG_TEST_URL?.trim();
+  const testDatabase = pgAdminUrl ? await createTestDatabase(pgAdminUrl) : null;
+  const handle: DbHandle = await createDb(testDatabase?.url ?? "memory://");
   await migrate(handle.db);
   const storageDir = mkdtempSync(path.join(tmpdir(), "synapse-api-test-"));
   const app = await buildApp({
@@ -248,6 +251,7 @@ export async function createTestContext(options: Partial<Pick<BuildAppOptions, "
     async close() {
       await app.close();
       await handle.close();
+      await testDatabase?.drop();
       rmSync(storageDir, { recursive: true, force: true });
     },
   };

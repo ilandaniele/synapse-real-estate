@@ -29,6 +29,8 @@ from a real run.
 - Kiosk mode for touch screens: idle warning and reset to home, fullscreen, PWA manifest ([KIOSK.md](KIOSK.md)).
 - Storage drivers local and S3/R2: presigned uploads with a completion check, media behind `MEDIA_PUBLIC_URL`
   ([STORAGE.md](STORAGE.md)).
+- Postgres variant of the VM stack with a separate asset worker and daily `pg_dump` + storage backups;
+  `/health/ready` and token-protected Prometheus `/metrics` ([BACKUPS.md](BACKUPS.md)).
 - Asynchronous ingestion pipeline with manual review. DWG, IFC, FBX and OBJ are rejected explicitly.
   Render without a configured backend fails explicitly.
 - Engine bugs found during integration and fixed in the engines:
@@ -42,7 +44,8 @@ from a real run.
 | Check | Result | Time |
 |---|---|---|
 | `pnpm typecheck` | pass, all packages | 6.7 s |
-| `pnpm test` | 152 passed, 0 failed (2026-11-17; API files serially, see TESTING.md) | 7 s |
+| `pnpm test` | 184 passed, 0 failed, 5 S3 tests skipped without `S3_TEST_ENDPOINT` (2026-11-17) | 25 s |
+| API suite on Postgres 17 (`PG_TEST_URL`) | 100 passed, 0 failed (2026-11-17) | |
 | `pnpm build` | pass (showroom 10 routes, admin 10 routes) | 6.0 s |
 | `pnpm test:e2e` | 40 passed, 0 failed, 0 skipped (2026-11-17, `E2E_SHOWROOM_PORT=3002`) | 2.6 min |
 
@@ -85,8 +88,8 @@ Masterplan times include software WebGL. Expect real GPUs to be faster, but this
   with `'wasm-unsafe-eval'` and covered by `tests/e2e/csp.spec.ts`.
 - Panoramas are cut into multiresolution cube tiles (512 px tiles, faces 512–4096 px). Scenes created from a
   media URL instead of a processed asset still load the single equirect image.
-- Postgres and Redis/BullMQ are configurable but untested in this session. S3 is tested against local
-  RustFS only. Everything else ran on PGlite and local storage.
+- Postgres is tested (API suite, seed, backup/restore and an API + worker smoke), but the Postgres compose
+  stack was not brought up on the VM. Redis/BullMQ is untested. S3 is tested against local RustFS only.
 - Not automated: pinch zoom, real GPU rendering, load tests and screen-reader output. See
   [TESTING.md](TESTING.md).
 - The demo data is fictitious. Real panoramas and models from the client are the next improvement.

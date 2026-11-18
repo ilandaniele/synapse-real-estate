@@ -10,7 +10,9 @@ Errors always use the `ApiError` shape `{error: {code, message, details?}}`. Bod
 
 | Method | Path | Permission | Notes |
 |---|---|---|---|
-| GET | /health | public | `{status:"ok"}` |
+| GET | /health | public | liveness, `{status:"ok"}` |
+| GET | /health/ready | public | readiness: `select 1` on the database; 503 `{status:"unavailable"}` when it fails |
+| GET | /metrics | `Authorization: Bearer METRICS_TOKEN` | Prometheus text 0.0.4. 404 when `METRICS_TOKEN` is unset, 401 on a wrong token. See [BACKUPS.md](BACKUPS.md) |
 | GET | /docs, /docs/json | public, not in production | Swagger UI / OpenAPI 3.0 generated from the Zod contracts |
 | GET | /media/* | public | Local storage only (`STORAGE_DRIVER=local`). Static from STORAGE_DIR. `uploads/` is never served. 7 d cache, nosniff. With S3, media URLs use `MEDIA_PUBLIC_URL` |
 | POST | /api/v1/auth/login | public | 10/min/IP; 401 identical for wrong email or password |

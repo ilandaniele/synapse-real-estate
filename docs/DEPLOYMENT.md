@@ -25,7 +25,7 @@ docker compose up -d postgres
 # .env: DATABASE_URL=postgres://synapse:synapse@localhost:5432/synapse
 pnpm db:seed && pnpm dev
 ```
-El modo Postgres real no se ejercitó en esta sesión (ver PROGRESS.md). El compose trae RustFS (servicio `s3`)
+Para la VM con Postgres, worker aparte y backups ver [BACKUPS.md](BACKUPS.md). El compose trae RustFS (servicio `s3`)
 para probar el driver S3; por defecto el storage es disco local (`STORAGE_DIR`). Ver [STORAGE.md](STORAGE.md).
 
 ## VM única (Oracle Cloud Always Free)

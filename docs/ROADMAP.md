@@ -13,7 +13,9 @@
   ([STORAGE.md](STORAGE.md)); probado contra RustFS local, no contra R2/AWS reales.
 - [x] Panoramas multirresolución en teselas cubemap. Hecho el 2026-11-17: el worker y `pnpm assets:generate`
   cortan cada equirect en caras de 512 a 4096 px con teselas de 512 px ([RENDER_PIPELINE.md](RENDER_PIPELINE.md)).
-- Postgres gestionado, backups automáticos, observabilidad (logs estructurados + métricas).
+- [x] Postgres, backups automáticos y observabilidad. Hecho el 2026-11-17: compose con Postgres, worker y
+  backups diarios; `/health/ready` y `/metrics` Prometheus ([BACKUPS.md](BACKUPS.md)). Postgres en contenedor
+  propio, no gestionado.
 - Gestión de usuarios e invitaciones por organización; recuperación de contraseña por email.
 - [x] Modo kiosko para pantallas táctiles (inactividad → vuelta a home, sin barra del navegador). Hecho el
   2026-11-17: [KIOSK.md](KIOSK.md).

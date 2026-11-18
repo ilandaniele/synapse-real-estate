@@ -20,12 +20,14 @@ pnpm 9.15.9) on 2026-11-15. Nothing here is projected.
 | `packages/assets` | `src/glb.test.ts` | 3 |
 | `packages/db` | `test/db.test.ts` | 2 |
 | `packages/3d-engine` | `src/helpers.test.ts` | 14 |
-| `packages/tour-engine` | `src/geometry.test.ts`, `src/tour-navigator.test.ts` | 16 |
+| `packages/tour-engine` | `src/geometry.test.ts`, `src/tour-navigator.test.ts`, `src/panorama-source.test.ts` | 18 |
 | `tools/cad-importer` | `test/cad-importer.test.ts` | 7 |
 | `workers/render-processing` | unit tests | 5 |
-| `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security`, `deploy-config`, `content`, `members` | 85 |
+| `packages/storage` | local and S3 drivers | 15 (2 need `S3_TEST_ENDPOINT`) |
+| `packages/cubemap` | `src/cubemap.test.ts` | 5 |
+| `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security`, `deploy-config`, `content`, `members`, `storage-s3`, `observability` | 100 (3 need `S3_TEST_ENDPOINT`) |
 | `apps/showroom` | `src/lib/kiosk.test.ts` | 3 |
-| **Total** | | **152 passed, 0 failed** (run 2026-11-17) |
+| **Total** | | **184 passed, 0 failed, 5 skipped without `S3_TEST_ENDPOINT`** (run 2026-11-17) |
 
 The API tests start the real Fastify app with an in-memory PGlite database and cover 401, 403, 404, 409,
 413, 415 and 429 responses, cross-organization access (IDOR), the role matrix, the lead honeypot and rate
@@ -38,6 +40,16 @@ has only the kiosk-mode test. Contracts are exercised through the API tests; the
 
 The API files each start an in-memory PGlite database. On a machine already at full CPU their setup hooks can
 exceed the 10 s timeout. In that case run them serially: `pnpm --filter @synapse/api exec vitest run --no-file-parallelism`.
+
+With `PG_TEST_URL` the API tests run on real Postgres instead. Each test context creates its own database
+`synapse_test_<uuid>` and drops it on close:
+
+```bash
+docker run -d --name synapse-pg-test -e POSTGRES_USER=synapse -e POSTGRES_PASSWORD=synapse -e POSTGRES_DB=synapse -p 5433:5432 postgres:17-alpine
+cd apps/api && PG_TEST_URL=postgres://synapse:synapse@localhost:5433/synapse S3_TEST_ENDPOINT=http://localhost:9000 npx vitest run --no-file-parallelism
+```
+
+Run 2026-11-17: 100 passed on PGlite and 100 passed on Postgres 17, with no test database left behind.
 
 ### E2E (Playwright)
 
@@ -93,7 +105,8 @@ Visual baselines live in `tests/e2e/a11y-touch-visual.spec.ts-snapshots/`. They 
 
 - Two-finger pinch zoom. Playwright has no multi-touch API; one-finger swipe (through CDP) and tap are covered.
 - Real GPU rendering. E2E uses SwiftShader.
-- Postgres and Redis backends. All runs use PGlite. The S3 driver is tested against local RustFS only when
+- Redis backend. Postgres is covered by the API suite with `PG_TEST_URL` and the backup test in
+  [BACKUPS.md](BACKUPS.md); E2E runs on PGlite. The S3 driver is tested against local RustFS only when
   `S3_TEST_ENDPOINT` is set (see [STORAGE.md](STORAGE.md)); real R2/AWS is not tested.
 - Load testing. The app runs locally only; there is no deployed target.
 - Screen-reader output. Accessibility checks are keyboard and ARIA attributes only.

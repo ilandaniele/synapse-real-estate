@@ -10,8 +10,10 @@ import { LocalStorage, type ObjectStorage } from "@synapse/storage";
 import { defaultMediaBaseUrl, loadConfig, type Config } from "./config";
 import { decorateAuth } from "./lib/auth";
 import { errorHandler, forbidden, notFoundHandler } from "./lib/errors";
+import { registerMetrics } from "./lib/metrics";
 import { buildOpenApiDocument } from "./lib/openapi";
 import authRoutes from "./routes/auth";
+import healthRoutes from "./routes/health";
 import publicRoutes from "./routes/public";
 import { assetAdminRoutes, uploadRoutes } from "./routes/admin/assets";
 import dashboardRoutes from "./routes/admin/dashboard";
@@ -120,7 +122,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     global: true,
     max: limits.global,
     timeWindow: "1 minute",
-    allowList: (request) => request.url.startsWith("/media/") || request.url === "/health",
+    allowList: (request) => request.url.startsWith("/media/") || request.url.startsWith("/health"),
     errorResponseBuilder: (_request, context) =>
       Object.assign(new Error(`Too many requests. Retry in ${Math.ceil(context.ttl / 1000)} s.`), { statusCode: 429 }),
   });
@@ -135,7 +137,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
 
   if (storage instanceof LocalStorage) await registerLocalMedia(app, storage.root);
 
-  app.get("/health", async () => ({ status: "ok" as const }));
+  await app.register(healthRoutes);
+  registerMetrics(app, config.metricsToken);
 
   await app.register(
     async (api) => {
