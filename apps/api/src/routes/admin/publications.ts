@@ -21,7 +21,7 @@ export default async function publicationRoutes(app: FastifyInstance) {
     const development = await findDevelopment(app, actor.organizationId, id);
     const version = await nextVersion(app.db, id);
     const manifest = await validManifest(() => buildManifest(app.db, app.config, development, version, new Date()));
-    const body = await storePublication(app, actor, id, manifest, { action: "development.publish", restoredFromVersion: null });
+    const body = await storePublication(app.db, actor, id, manifest, { action: "development.publish", restoredFromVersion: null });
     return reply.status(201).send(body);
   });
 
@@ -38,7 +38,7 @@ export default async function publicationRoutes(app: FastifyInstance) {
         nextVersion(app.db, id),
       ]);
       const manifest = await validManifest(() => restoreManifest(snapshots.get(source)!, currentUnits, version, iso(new Date())));
-      const body = await storePublication(app, actor, id, manifest, { action: "development.restore", restoredFromVersion: source });
+      const body = await storePublication(app.db, actor, id, manifest, { action: "development.restore", restoredFromVersion: source });
       return reply.status(201).send(body);
     },
   );

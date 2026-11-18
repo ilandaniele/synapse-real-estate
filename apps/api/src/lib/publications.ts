@@ -1,5 +1,4 @@
 import { and, eq, inArray, max } from "drizzle-orm";
-import type { FastifyInstance } from "fastify";
 import { ZodError } from "zod";
 import { DevelopmentManifest, type Publication } from "@synapse/contracts";
 import { publications, users, type Db } from "@synapse/db";
@@ -61,7 +60,7 @@ export interface StoreOptions {
 
 /** Stores a validated manifest as a new version and audits it in the same transaction. */
 export async function storePublication(
-  app: FastifyInstance,
+  db: Db,
   actor: SessionClaims,
   developmentId: string,
   manifest: DevelopmentManifest,
@@ -69,7 +68,7 @@ export async function storePublication(
 ): Promise<Publication> {
   const publishedAt = new Date(manifest.publishedAt);
   try {
-    const [created] = await app.db.transaction(async (tx) => {
+    const [created] = await db.transaction(async (tx) => {
       const inserted = await tx
         .insert(publications)
         .values({
@@ -90,7 +89,7 @@ export async function storePublication(
       });
       return inserted;
     });
-    const [author] = await app.db.select({ name: users.name }).from(users).where(eq(users.id, actor.userId));
+    const [author] = await db.select({ name: users.name }).from(users).where(eq(users.id, actor.userId));
     return {
       id: created!.id,
       developmentId,
