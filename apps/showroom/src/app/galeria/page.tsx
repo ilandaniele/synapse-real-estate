@@ -6,9 +6,11 @@ import type { GalleryItem } from "@synapse/contracts";
 import { EmptyState } from "@synapse/ui";
 import { ManifestGate } from "@/components/ManifestGate";
 import { Modal } from "@/components/Modal";
+import { useI18n } from "@/i18n/I18nProvider";
 
 function Lightbox({ items, index, onIndex, onClose }: { items: GalleryItem[]; index: number; onIndex: (i: number) => void; onClose: () => void }) {
   const item = items[index];
+  const { t } = useI18n();
   const prev = () => onIndex((index - 1 + items.length) % items.length);
   const next = () => onIndex((index + 1) % items.length);
 
@@ -33,7 +35,7 @@ function Lightbox({ items, index, onIndex, onClose }: { items: GalleryItem[]; in
         <button
           type="button"
           onClick={prev}
-          aria-label="Imagen anterior"
+          aria-label={t.gallery.previous}
           data-testid="lightbox-prev"
           className="inline-flex size-11 items-center justify-center rounded-md border border-white/25 hover:bg-white/10"
         >
@@ -45,7 +47,7 @@ function Lightbox({ items, index, onIndex, onClose }: { items: GalleryItem[]; in
         <button
           type="button"
           onClick={next}
-          aria-label="Imagen siguiente"
+          aria-label={t.gallery.next}
           data-testid="lightbox-next"
           className="inline-flex size-11 items-center justify-center rounded-md border border-white/25 hover:bg-white/10"
         >
@@ -58,9 +60,10 @@ function Lightbox({ items, index, onIndex, onClose }: { items: GalleryItem[]; in
 
 function Gallery({ items }: { items: GalleryItem[] }) {
   const [open, setOpen] = useState<number | null>(null);
+  const { t } = useI18n();
 
   if (items.length === 0) {
-    return <EmptyState title="Aún no hay imágenes en la galería" description="Vuelve pronto." />;
+    return <EmptyState title={t.gallery.empty} description={t.common.comeBackSoon} />;
   }
   return (
     <>
@@ -71,7 +74,7 @@ function Gallery({ items }: { items: GalleryItem[] }) {
               type="button"
               onClick={() => setOpen(i)}
               data-testid={`gallery-item-${i}`}
-              aria-label={`Ampliar: ${g.title}`}
+              aria-label={t.gallery.enlarge(g.title)}
               className="group block w-full overflow-hidden rounded-xl bg-white text-left shadow-sm"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -87,9 +90,10 @@ function Gallery({ items }: { items: GalleryItem[] }) {
 }
 
 export default function GalleryPage() {
+  const { t } = useI18n();
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 lg:px-8">
-      <h1 className="mb-8 text-3xl font-semibold">Galería</h1>
+      <h1 className="mb-8 text-3xl font-semibold">{t.gallery.title}</h1>
       <ManifestGate>{({ gallery }) => <Gallery items={[...gallery].sort((a, b) => a.sortOrder - b.sortOrder)} />}</ManifestGate>
     </div>
   );

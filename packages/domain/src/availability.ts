@@ -1,3 +1,5 @@
+import type { Locale } from "./locale";
+
 export const UNIT_STATUSES = ["AVAILABLE", "RESERVED", "SOLD", "UNLISTED"] as const;
 export type UnitStatus = (typeof UNIT_STATUSES)[number];
 
@@ -6,11 +8,16 @@ export interface StatusMeta {
   color: string;
 }
 
+export const STATUS_LABELS: Record<Locale, Record<UnitStatus, string>> = {
+  es: { AVAILABLE: "Disponible", RESERVED: "Reservada", SOLD: "Vendida", UNLISTED: "No publicada" },
+  en: { AVAILABLE: "Available", RESERVED: "Reserved", SOLD: "Sold", UNLISTED: "Unlisted" },
+};
+
 export const STATUS_META: Record<UnitStatus, StatusMeta> = {
-  AVAILABLE: { label: "Disponible", color: "#3fae6a" },
-  RESERVED: { label: "Reservada", color: "#e0a526" },
-  SOLD: { label: "Vendida", color: "#d0473f" },
-  UNLISTED: { label: "No publicada", color: "#8a8f98" },
+  AVAILABLE: { label: STATUS_LABELS.es.AVAILABLE, color: "#3fae6a" },
+  RESERVED: { label: STATUS_LABELS.es.RESERVED, color: "#e0a526" },
+  SOLD: { label: STATUS_LABELS.es.SOLD, color: "#d0473f" },
+  UNLISTED: { label: STATUS_LABELS.es.UNLISTED, color: "#8a8f98" },
 };
 
 const ALLOWED_TRANSITIONS: Record<UnitStatus, readonly UnitStatus[]> = {

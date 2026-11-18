@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { X } from "lucide-react";
+import { useI18n } from "@/i18n/I18nProvider";
 
 interface ModalProps {
   title: string;
@@ -19,6 +20,7 @@ const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), selec
 export function Modal({ title, onClose, children, testId, onKeyDown, className }: ModalProps) {
   const ref = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const { t } = useI18n();
 
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null;
@@ -74,7 +76,7 @@ export function Modal({ title, onClose, children, testId, onKeyDown, className }
             ref={closeRef}
             type="button"
             onClick={onClose}
-            aria-label="Cerrar"
+            aria-label={t.common.close}
             data-testid="modal-close"
             className="inline-flex size-11 items-center justify-center rounded-md border border-white/25 hover:bg-white/10"
           >

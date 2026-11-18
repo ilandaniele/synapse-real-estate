@@ -20,7 +20,8 @@
   2026-11-17: enlaces de un solo uso por SMTP, probados con Mailpit local ([EMAIL.md](EMAIL.md)).
 - [x] Modo kiosko para pantallas táctiles (inactividad → vuelta a home, sin barra del navegador). Hecho el
   2026-11-17: [KIOSK.md](KIOSK.md).
-- i18n (es/en) del showroom.
+- [x] i18n (es/en) del showroom. Hecho el 2026-11-18: interfaz completa en los dos idiomas, selector en la
+  cabecera y cookie ([DECISIONS.md](DECISIONS.md), ADR-017). El contenido cargado en el admin no se traduce.
 
 ## Fase 3 — Pipeline de contenido
 - Render worker con Blender CLI (panoramas equirect desde GLB + preset de cámaras).

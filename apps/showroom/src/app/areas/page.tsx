@@ -2,9 +2,10 @@
 
 import { EmptyState } from "@synapse/ui";
 import { ManifestGate } from "@/components/ManifestGate";
-import { POI_LABELS } from "@/lib/format";
+import { useI18n } from "@/i18n/I18nProvider";
 
 export default function AreasPage() {
+  const { t } = useI18n();
   return (
     <ManifestGate>
       {({ development, gallery, pointsOfInterest }) => {
@@ -14,12 +15,12 @@ export default function AreasPage() {
 
         return (
           <div className="mx-auto max-w-6xl px-4 py-12 lg:px-8">
-            <h1 className="text-3xl font-semibold">Áreas comunes y entorno</h1>
+            <h1 className="text-3xl font-semibold">{t.areas.title}</h1>
             <p className="mt-3 max-w-3xl text-lg text-slate-700">{development.description}</p>
 
-            <h2 className="mt-10 text-xl font-semibold">Espacios</h2>
+            <h2 className="mt-10 text-xl font-semibold">{t.areas.spaces}</h2>
             {common.length === 0 ? (
-              <EmptyState title="Aún no hay imágenes de las áreas comunes" description="Vuelve pronto: estamos preparando el material." />
+              <EmptyState title={t.areas.emptyTitle} description={t.areas.emptyText} />
             ) : (
               <ul className="mt-4 grid list-none gap-5 p-0 sm:grid-cols-2 lg:grid-cols-3" data-testid="areas-list">
                 {common.map((g) => (
@@ -37,13 +38,13 @@ export default function AreasPage() {
 
             {nearby.length > 0 ? (
               <>
-                <h2 className="mt-12 text-xl font-semibold">A pocos minutos</h2>
+                <h2 className="mt-12 text-xl font-semibold">{t.areas.nearby}</h2>
                 <ul className="mt-4 grid list-none gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
                   {nearby.map((p) => (
                     <li key={p.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3">
                       <span>
                         <span className="block font-medium">{p.name}</span>
-                        <span className="text-xs text-slate-600">{POI_LABELS[p.category]}</span>
+                        <span className="text-xs text-slate-600">{t.poi[p.category]}</span>
                       </span>
                       <span className="text-sm text-slate-700">{p.distanceText}</span>
                     </li>

@@ -7,6 +7,7 @@ import { ArrowLeft, Expand, Map as MapIcon, Shrink } from "lucide-react";
 import type { DevelopmentManifest, Scene } from "@synapse/contracts";
 import { EmptyState } from "@synapse/ui";
 import { FloorPlanMap, PanoramaViewer, SceneStrip, useTour } from "@synapse/tour-engine";
+import { useI18n } from "@/i18n/I18nProvider";
 import { scenesForUnit } from "@/lib/manifest";
 import { useShowroomStore } from "@/lib/store";
 import { ManifestGate } from "./ManifestGate";
@@ -27,6 +28,7 @@ function TourPlayer({ unitName, unitCode, scenes, initialSceneSlug, plan }: Play
   const router = useRouter();
   const selectUnit = useShowroomStore((s) => s.selectUnit);
   const { current, goTo } = useTour(scenes, initialSceneSlug);
+  const { locale, t } = useI18n();
   const containerRef = useRef<HTMLDivElement>(null);
   const [planOpen, setPlanOpen] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
@@ -90,7 +92,7 @@ function TourPlayer({ unitName, unitCode, scenes, initialSceneSlug, plan }: Play
   if (!current) {
     return (
       <div className="mx-auto max-w-md py-16">
-        <EmptyState title="Este tour no tiene estancias" />
+        <EmptyState title={t.tour.noScenes} />
       </div>
     );
   }
@@ -109,13 +111,14 @@ function TourPlayer({ unitName, unitCode, scenes, initialSceneSlug, plan }: Play
         scene={current}
         hotspots={current.hotspots}
         onNavigate={goTo}
+        locale={locale}
       />
 
       <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 sm:p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
             <button type="button" onClick={goBack} data-testid="tour-back" className={GLASS_BTN}>
-              <ArrowLeft aria-hidden="true" size={16} /> Volver
+              <ArrowLeft aria-hidden="true" size={16} /> {t.tour.back}
             </button>
             <div className="pointer-events-auto rounded-full bg-[#0b1220]/70 px-4 py-2 text-sm text-white backdrop-blur">
               <span className="text-white/70">{unitName} · </span>
@@ -133,26 +136,26 @@ function TourPlayer({ unitName, unitCode, scenes, initialSceneSlug, plan }: Play
                 data-testid="tour-floorplan-button"
                 className={GLASS_BTN}
               >
-                <MapIcon aria-hidden="true" size={16} /> Plano
+                <MapIcon aria-hidden="true" size={16} /> {t.tour.plan}
               </button>
             ) : null}
             <button
               type="button"
               onClick={() => void toggleFullscreen()}
               aria-pressed={isFs}
-              aria-label={isFs ? "Salir de pantalla completa" : "Pantalla completa"}
+              aria-label={isFs ? t.tour.exitFullscreen : t.tour.enterFullscreen}
               data-testid="tour-fullscreen"
               className={GLASS_BTN}
             >
               {isFs ? <Shrink aria-hidden="true" size={16} /> : <Expand aria-hidden="true" size={16} />}
-              <span className="hidden sm:inline">{isFs ? "Salir" : "Pantalla completa"}</span>
+              <span className="hidden sm:inline">{isFs ? t.tour.exitShort : t.tour.enterFullscreen}</span>
             </button>
           </div>
         </div>
 
         <div className="mb-[7.5rem] flex flex-col gap-2 md:mb-0">
           <nav
-            aria-label="Estancias"
+            aria-label={t.tour.rooms}
             data-testid="tour-rooms"
             className="pointer-events-auto flex gap-2 overflow-x-auto md:absolute md:left-4 md:top-24 md:flex-col md:overflow-visible"
           >
@@ -182,11 +185,12 @@ function TourPlayer({ unitName, unitCode, scenes, initialSceneSlug, plan }: Play
           scenes={scenes}
           currentSceneId={current.id}
           onSelect={goTo}
+          locale={locale}
         />
       </div>
 
       {planOpen && plan ? (
-        <Modal title="Ir a un punto" onClose={() => setPlanOpen(false)} testId="floorplan-modal" className="max-w-3xl">
+        <Modal title={t.tour.goToPoint} onClose={() => setPlanOpen(false)} testId="floorplan-modal" className="max-w-3xl">
           <div className="rounded-lg bg-white p-2 text-slate-900">
             <FloorPlanMap
               plan={plan}
@@ -196,9 +200,10 @@ function TourPlayer({ unitName, unitCode, scenes, initialSceneSlug, plan }: Play
                 goTo(id);
                 setPlanOpen(false);
               }}
+              locale={locale}
             />
           </div>
-          <p className="mt-3 text-sm text-white/70">Elige una estancia en el plano para saltar directamente a ella.</p>
+          <p className="mt-3 text-sm text-white/70">{t.tour.planHint}</p>
         </Modal>
       ) : null}
     </div>
@@ -208,16 +213,17 @@ function TourPlayer({ unitName, unitCode, scenes, initialSceneSlug, plan }: Play
 function TourLoader({ manifest, slug }: { manifest: DevelopmentManifest; slug: string }) {
   const unit = manifest.units.find((u) => u.slug === slug);
   // Read once the manifest is in (client only), so the SSR pass never touches `window`.
+  const { t } = useI18n();
   const [initialSceneSlug] = useState(() => new URLSearchParams(window.location.search).get("scene") ?? undefined);
 
   if (!unit) {
     return (
       <div className="mx-auto max-w-lg py-16">
         <EmptyState
-          title="No encontramos esta unidad"
+          title={t.common.unitNotFound}
           action={
             <Link href="/unidades" className="inline-flex min-h-11 items-center rounded-md border border-slate-400 px-4 text-sm">
-              Ver unidades
+              {t.tour.viewUnits}
             </Link>
           }
         />
@@ -229,11 +235,11 @@ function TourLoader({ manifest, slug }: { manifest: DevelopmentManifest; slug: s
     return (
       <div className="mx-auto max-w-lg py-16">
         <EmptyState
-          title={`${unit.name} aún no tiene tour 360`}
-          description="Puedes consultar su ficha mientras tanto."
+          title={t.tour.noTour(unit.name)}
+          description={t.tour.noTourText}
           action={
             <Link href={`/unidades/${unit.slug}`} className="inline-flex min-h-11 items-center rounded-md border border-slate-400 px-4 text-sm">
-              Ver ficha
+              {t.common.viewSheet}
             </Link>
           }
         />

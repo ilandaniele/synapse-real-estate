@@ -9,6 +9,10 @@ import {
   equirectPixelToPano,
   filterUnits,
   formatPrice,
+  isLocale,
+  LOCALES,
+  STATUS_LABELS,
+  UNIT_STATUSES,
   fromViewBox,
   normalizeYaw,
   reachableSceneIds,
@@ -41,6 +45,21 @@ describe("availability", () => {
   it("allows commercial transitions", () => {
     expect(canTransition("AVAILABLE", "RESERVED")).toBe(true);
     expect(canTransition("UNLISTED", "SOLD")).toBe(false);
+  });
+
+  it("labels every status in every locale", () => {
+    for (const locale of LOCALES) {
+      for (const status of UNIT_STATUSES) expect(STATUS_LABELS[locale][status]).toBeTruthy();
+    }
+    expect(STATUS_LABELS.en.SOLD).toBe("Sold");
+  });
+});
+
+describe("locale", () => {
+  it("accepts only supported locales", () => {
+    expect(isLocale("en")).toBe(true);
+    expect(isLocale("fr")).toBe(false);
+    expect(isLocale(undefined)).toBe(false);
   });
 });
 

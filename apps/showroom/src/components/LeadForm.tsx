@@ -3,18 +3,11 @@
 import { useId, useState, type FormEvent } from "react";
 import { ApiError, LeadInput } from "@synapse/contracts";
 import type { Unit } from "@synapse/contracts";
+import { useI18n } from "@/i18n/I18nProvider";
 import { LEADS_URL } from "@/lib/config";
 
 type Field = "name" | "email" | "phone" | "message" | "consent";
 type FieldErrors = Partial<Record<Field, string>>;
-
-const FIELD_MESSAGES: Record<Field, string> = {
-  name: "Escribe tu nombre (mínimo 2 caracteres).",
-  email: "Escribe un correo electrónico válido.",
-  phone: "Teléfono no válido: usa 6 a 25 caracteres entre dígitos, +, espacios, paréntesis o guiones.",
-  message: "El mensaje no puede superar los 2000 caracteres.",
-  consent: "Debes aceptar el tratamiento de tus datos para enviar la solicitud.",
-};
 
 const INPUT =
   "min-h-11 w-full rounded-md border bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 aria-[invalid=true]:border-red-600";
@@ -32,6 +25,8 @@ export function LeadForm({ developmentSlug, units, unitId = null }: LeadFormProp
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const { t } = useI18n();
+  const fieldMessages: Record<Field, string> = t.lead.fields;
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -55,8 +50,8 @@ export function LeadForm({ developmentSlug, units, unitId = null }: LeadFormProp
       const next: FieldErrors = {};
       for (const issue of parsed.error.issues) {
         const key = issue.path[0];
-        if (typeof key === "string" && key in FIELD_MESSAGES && !(key in next)) {
-          next[key as Field] = FIELD_MESSAGES[key as Field];
+        if (typeof key === "string" && key in fieldMessages && !(key in next)) {
+          next[key as Field] = fieldMessages[key as Field];
         }
       }
       setErrors(next);
@@ -83,19 +78,19 @@ export function LeadForm({ developmentSlug, units, unitId = null }: LeadFormProp
         return;
       }
       if (res.status === 429) {
-        setServerError("Has enviado demasiadas solicitudes seguidas. Espera un minuto e inténtalo de nuevo.");
+        setServerError(t.lead.tooMany);
         return;
       }
       const err = ApiError.safeParse(await res.json().catch(() => null));
       setServerError(
         res.status === 400 || res.status === 422
-          ? "Revisa los datos del formulario: el servidor no los ha aceptado."
+          ? t.lead.rejected
           : err.success
-            ? "No se pudo enviar la solicitud. Inténtalo de nuevo en unos minutos."
-            : `No se pudo enviar la solicitud (error ${res.status}).`,
+            ? t.lead.failed
+            : t.lead.failedStatus(res.status),
       );
     } catch {
-      setServerError("No se pudo conectar con el servidor. Comprueba tu conexión e inténtalo de nuevo.");
+      setServerError(t.lead.offline);
     } finally {
       setSubmitting(false);
     }
@@ -108,14 +103,14 @@ export function LeadForm({ developmentSlug, units, unitId = null }: LeadFormProp
         data-testid="lead-success"
         className="rounded-xl border border-emerald-300 bg-emerald-50 p-6 text-emerald-900"
       >
-        <p className="text-lg font-semibold">¡Gracias! Hemos recibido tu solicitud.</p>
-        <p className="mt-1 text-sm">Un asesor se pondrá en contacto contigo lo antes posible.</p>
+        <p className="text-lg font-semibold">{t.lead.thanks}</p>
+        <p className="mt-1 text-sm">{t.lead.thanksText}</p>
         <button
           type="button"
           onClick={() => setDone(false)}
           className="mt-4 inline-flex min-h-11 items-center rounded-md border border-emerald-700 px-4 text-sm font-medium"
         >
-          Enviar otra solicitud
+          {t.lead.sendAnother}
         </button>
       </div>
     );
@@ -124,10 +119,10 @@ export function LeadForm({ developmentSlug, units, unitId = null }: LeadFormProp
   const err = (k: Field) => (errors[k] ? `${uid}-${k}-err` : undefined);
 
   return (
-    <form onSubmit={onSubmit} noValidate data-testid="lead-form" aria-label="Solicitar información" className="grid gap-4">
+    <form onSubmit={onSubmit} noValidate data-testid="lead-form" aria-label={t.lead.form} className="grid gap-4">
       <div>
         <label htmlFor={`${uid}-name`} className="mb-1 block text-sm font-medium">
-          Nombre <span aria-hidden="true">*</span>
+          {t.lead.name} <span aria-hidden="true">*</span>
         </label>
         <input
           id={`${uid}-name`}
@@ -150,7 +145,7 @@ export function LeadForm({ developmentSlug, units, unitId = null }: LeadFormProp
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor={`${uid}-email`} className="mb-1 block text-sm font-medium">
-            Correo electrónico <span aria-hidden="true">*</span>
+            {t.lead.email} <span aria-hidden="true">*</span>
           </label>
           <input
             id={`${uid}-email`}
@@ -171,7 +166,7 @@ export function LeadForm({ developmentSlug, units, unitId = null }: LeadFormProp
         </div>
         <div>
           <label htmlFor={`${uid}-phone`} className="mb-1 block text-sm font-medium">
-            Teléfono (opcional)
+            {t.lead.phone}
           </label>
           <input
             id={`${uid}-phone`}
@@ -193,7 +188,7 @@ export function LeadForm({ developmentSlug, units, unitId = null }: LeadFormProp
 
       <div>
         <label htmlFor={`${uid}-unit`} className="mb-1 block text-sm font-medium">
-          Unidad de interés (opcional)
+          {t.lead.unit}
         </label>
         <select
           id={`${uid}-unit`}
@@ -202,7 +197,7 @@ export function LeadForm({ developmentSlug, units, unitId = null }: LeadFormProp
           defaultValue={unitId ?? ""}
           className={INPUT}
         >
-          <option value="">Ninguna en concreto</option>
+          <option value="">{t.lead.noUnit}</option>
           {units.map((u) => (
             <option key={u.id} value={u.id}>
               {u.name} ({u.code})
@@ -213,7 +208,7 @@ export function LeadForm({ developmentSlug, units, unitId = null }: LeadFormProp
 
       <div>
         <label htmlFor={`${uid}-message`} className="mb-1 block text-sm font-medium">
-          Mensaje (opcional)
+          {t.lead.message}
         </label>
         <textarea
           id={`${uid}-message`}
@@ -235,7 +230,7 @@ export function LeadForm({ developmentSlug, units, unitId = null }: LeadFormProp
       {/* Honeypot: off-screen, not focusable, hidden from assistive tech. Humans never fill it. */}
       <div aria-hidden="true" style={{ position: "absolute", left: "-10000px", top: "auto", width: 1, height: 1, overflow: "hidden" }}>
         <label>
-          No rellenar este campo
+          {t.lead.honeypot}
           <input type="text" name="website" tabIndex={-1} autoComplete="off" defaultValue="" data-testid="lead-website" />
         </label>
       </div>
@@ -251,7 +246,7 @@ export function LeadForm({ developmentSlug, units, unitId = null }: LeadFormProp
             aria-describedby={err("consent")}
           />
           <span>
-            Acepto que se traten mis datos para atender esta solicitud de información. <span aria-hidden="true">*</span>
+            {t.lead.consent} <span aria-hidden="true">*</span>
           </span>
         </label>
         {errors.consent ? (
@@ -275,7 +270,7 @@ export function LeadForm({ developmentSlug, units, unitId = null }: LeadFormProp
           data-testid="lead-submit"
           className="inline-flex min-h-11 items-center justify-center rounded-md bg-[#0b1220] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#1b2740] disabled:cursor-wait disabled:opacity-60"
         >
-          {submitting ? "Enviando…" : "Solicitar información"}
+          {submitting ? t.lead.sending : t.lead.submit}
         </button>
       </div>
     </form>

@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Map as MapLibreMap, Marker, Popup } from "maplibre-gl";
 import type { Development, PointOfInterest } from "@synapse/contracts";
 import { EmptyState, ErrorState, Spinner } from "@synapse/ui";
-import { POI_LABELS } from "@/lib/format";
+import { useI18n } from "@/i18n/I18nProvider";
 
 const STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
 const WORKER_URL = "/vendor/maplibre-gl-worker.mjs";
@@ -39,6 +39,7 @@ export function LocationView({ development, pois }: { development: Development; 
   const [attempt, setAttempt] = useState(0);
   const [category, setCategory] = useState<Category | "ALL">("ALL");
   const [selected, setSelected] = useState<string | null>(null);
+  const { t } = useI18n();
 
   const indexed = useMemo(() => pois.map((poi, i) => ({ poi, i })), [pois]);
   const visible = useMemo(() => indexed.filter(({ poi }) => category === "ALL" || poi.category === category), [indexed, category]);
@@ -138,10 +139,10 @@ export function LocationView({ development, pois }: { development: Development; 
     <div className="grid gap-6 lg:grid-cols-[22rem_1fr]">
       <section aria-labelledby="poi-heading" className="order-2 lg:order-1">
         <h2 id="poi-heading" className="text-xl font-semibold">
-          Puntos de interés
+          {t.location.pois}
         </h2>
         {pois.length > 0 ? (
-          <div role="group" aria-label="Filtrar por categoría" className="mt-3 flex flex-wrap gap-2">
+          <div role="group" aria-label={t.location.filterByCategory} className="mt-3 flex flex-wrap gap-2">
             {(["ALL", ...categories] as const).map((c) => (
               <button
                 key={c}
@@ -153,16 +154,16 @@ export function LocationView({ development, pois }: { development: Development; 
                   category === c ? "border-[#0b1220] bg-[#0b1220] text-white" : "border-slate-300 bg-white hover:bg-slate-100"
                 }`}
               >
-                {c === "ALL" ? "Todos" : POI_LABELS[c]}
+                {c === "ALL" ? t.location.all : t.poi[c]}
               </button>
             ))}
           </div>
         ) : null}
 
         {pois.length === 0 ? (
-          <EmptyState title="Aún no hay puntos de interés" />
+          <EmptyState title={t.location.empty} />
         ) : visible.length === 0 ? (
-          <EmptyState title="No hay puntos en esta categoría" />
+          <EmptyState title={t.location.emptyCategory} />
         ) : (
           <ul className="m-0 mt-4 flex list-none flex-col gap-2 p-0" data-testid="poi-list">
             {visible.map(({ poi, i }) => (
@@ -178,7 +179,7 @@ export function LocationView({ development, pois }: { development: Development; 
                 >
                   <span>
                     <span className="block font-medium">{poi.name}</span>
-                    <span className="text-xs text-slate-600">{POI_LABELS[poi.category]}</span>
+                    <span className="text-xs text-slate-600">{t.poi[poi.category]}</span>
                   </span>
                   {poi.distanceText ? <span className="shrink-0 text-sm text-slate-700">{poi.distanceText}</span> : null}
                 </button>
@@ -189,16 +190,17 @@ export function LocationView({ development, pois }: { development: Development; 
       </section>
 
       <div className="relative order-1 h-[60dvh] min-h-80 overflow-hidden rounded-xl bg-slate-200 shadow-sm lg:order-2 lg:h-[75dvh]">
-        <div ref={containerRef} data-testid="map-container" data-status={status} aria-label={`Mapa de ${development.name}`} className="h-full w-full" />
+        <div ref={containerRef} data-testid="map-container" data-status={status} aria-label={t.location.mapOf(development.name)} className="h-full w-full" />
         {status === "loading" ? (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-slate-700">
-            <Spinner label="Cargando mapa" />
+            <Spinner label={t.location.loadingMap} />
           </div>
         ) : null}
         {status === "error" ? (
           <div className="absolute inset-0 flex items-center justify-center bg-slate-100/95 text-slate-800" data-testid="map-error">
             <ErrorState
-              message="No se pudo cargar el mapa. Puedes consultar los puntos de interés en la lista."
+              message={t.location.mapError}
+              retryLabel={t.common.retry}
               onRetry={() => setAttempt((n) => n + 1)}
             />
           </div>
@@ -213,11 +215,11 @@ export function LocationView({ development, pois }: { development: Development; 
           <a href="https://openmaptiles.org/" target="_blank" rel="noreferrer" className="underline">
             © OpenMapTiles
           </a>{" "}
-          · Datos ©{" "}
+          · {t.location.data} ©{" "}
           <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" className="underline">
-            colaboradores de OpenStreetMap
-          </a>{" "}
-          (OpenStreetMap contributors)
+            {t.location.osmContributors}
+          </a>
+          {t.location.osmLicenseNote}
         </p>
       </div>
     </div>

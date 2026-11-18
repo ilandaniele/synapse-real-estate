@@ -101,3 +101,20 @@ Formato corto: contexto, decisión, consecuencias. Estado: Aceptada salvo indica
   `docker-compose.yml` para probar el envío real sin salir de la máquina.
 - **Consecuencias**: producción necesita un proveedor SMTP y `ADMIN_PUBLIC_URL`. Sin ellos se sigue pudiendo
   crear miembros con contraseña desde «Miembros».
+
+## ADR-017 i18n del showroom con diccionarios tipados y cookie, sin prefijo de idioma en la URL
+- **Contexto**: el showroom solo estaba en español y la Fase 2 pedía español e inglés. Las pantallas táctiles
+  y los enlaces ya compartidos usan rutas sin idioma (`/unidades`, `/tour/villa-6`) y los tests E2E dependen
+  de ellas.
+- **Decisión**: un diccionario por idioma en `apps/showroom/src/i18n` (`es.ts` es la fuente y define el tipo
+  `Messages`; `en.ts` debe cumplirlo, así que una clave que falte rompe `tsc`). El idioma vive en una cookie
+  `locale` (un año); sin cookie se toma de `Accept-Language` y, si no coincide, español. El servidor lo lee para
+  `<html lang>`, los metadatos y el enlace «Saltar al contenido»; el cliente lo recibe por `I18nProvider` y
+  `useI18n()`. Cambiar de idioma escribe la cookie, actualiza `lang` y hace `router.refresh()` para que el
+  texto renderizado en servidor también cambie. Los paquetes `3d-engine`, `tour-engine` y `ui` reciben una
+  prop `locale` con sus propios textos; los nombres de estado comercial viven en `@synapse/domain`. Sin
+  librería de i18n: dos idiomas y textos cortos no la justifican.
+- **Consecuencias**: las páginas pasan a renderizarse por petición (leen la cookie). El contenido que carga
+  el admin (nombres de unidades, estancias, descripciones, POIs) sigue en un único idioma, el del manifiesto;
+  traducirlo exigiría campos por idioma en la base de datos. Las URLs no llevan idioma, así que un buscador no
+  indexa las dos versiones por separado.

@@ -2,6 +2,7 @@
 import type * as Marzipano from "marzipano";
 import type { Hotspot } from "@synapse/contracts";
 import { createHotspotHandle, type HotspotCallbacks, type HotspotHandle } from "./hotspot-dom";
+import type { TourStrings } from "./strings";
 
 export interface HotspotEntry {
   hotspot: Marzipano.Hotspot;
@@ -19,6 +20,7 @@ export interface HotspotSyncOptions {
   selectedHotspotId: string | null | undefined;
   editable: boolean;
   callbacks: HotspotCallbacks;
+  strings: TourStrings;
 }
 
 /** Diffs `desired` against what is mounted in `record`: removes, creates and moves hotspots. */
@@ -33,7 +35,7 @@ export function syncHotspots(record: SceneRecord, desired: readonly Hotspot[], o
   }
 
   for (const h of desired) {
-    const state = { selected: h.id === options.selectedHotspotId, editable: options.editable };
+    const state = { selected: h.id === options.selectedHotspotId, editable: options.editable, strings: options.strings };
     const existing = record.hotspots.get(h.id);
     if (existing) {
       existing.handle.update(h, state);

@@ -16,7 +16,7 @@ pnpm 9.15.9) on 2026-11-15. Nothing here is projected.
 
 | Package | File(s) | Tests |
 |---|---|---|
-| `packages/domain` | `src/domain.test.ts` | 17 |
+| `packages/domain` | `src/domain.test.ts` | 19 |
 | `packages/assets` | `src/glb.test.ts` | 3 |
 | `packages/db` | `test/db.test.ts` | 2 |
 | `packages/3d-engine` | `src/helpers.test.ts` | 14 |
@@ -26,8 +26,8 @@ pnpm 9.15.9) on 2026-11-15. Nothing here is projected.
 | `packages/storage` | local and S3 drivers | 15 (2 need `S3_TEST_ENDPOINT`) |
 | `packages/cubemap` | `src/cubemap.test.ts` | 5 |
 | `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security`, `deploy-config`, `content`, `members`, `storage-s3`, `observability`, `invitations`, `mailpit` | 114 (3 need `S3_TEST_ENDPOINT`, 1 needs `MAILPIT_SMTP_URL`) |
-| `apps/showroom` | `src/lib/kiosk.test.ts` | 3 |
-| **Total** | | **197 passed, 0 failed, 6 skipped without `S3_TEST_ENDPOINT` and `MAILPIT_SMTP_URL`** (run 2026-11-17) |
+| `apps/showroom` | `src/lib/kiosk.test.ts`, `src/i18n/resolve-locale.test.ts` | 8 |
+| **Total** | | **204 passed, 0 failed, 6 skipped without `S3_TEST_ENDPOINT` and `MAILPIT_SMTP_URL`** (run 2026-11-18) |
 
 The API tests start the real Fastify app with an in-memory PGlite database and cover 401, 403, 404, 409,
 413, 415 and 429 responses, cross-organization access (IDOR), the role matrix, the lead honeypot and rate
@@ -39,7 +39,7 @@ cross-organization 404, 202 for unknown emails, session revocation, 503 without 
 rate limit. `mailpit.test.ts` sends a real email over SMTP and reads it back from Mailpit ([EMAIL.md](EMAIL.md)).
 
 `packages/ui`, `packages/contracts`, `workers/*` and `apps/admin` have no unit tests of their own. `apps/showroom`
-has only the kiosk-mode test. Contracts are exercised through the API tests; the apps are covered by E2E.
+has only the kiosk-mode and locale-resolution tests. Contracts are exercised through the API tests; the apps are covered by E2E.
 
 The API files each start an in-memory PGlite database. On a machine already at full CPU their setup hooks can
 exceed the 10 s timeout. In that case run them serially: `pnpm --filter @synapse/api exec vitest run --no-file-parallelism`.
@@ -94,9 +94,15 @@ Specs (`tests/e2e`):
 | `flow-f-invitations` | Needs `E2E_SMTP_URL` (Mailpit). Owner invites a SALES member, the link is read from Mailpit, the invitee accepts and appears in «Miembros»; then «¿Olvidaste tu contraseña?», reset link from Mailpit, the old password fails and the new one works |
 | `csp` | Masterplan, tour and location pages log no Content Security Policy violations (catches the production CSP blocking the GLB decoder's WebAssembly) |
 | `kiosk` | Kiosk mode with Playwright's simulated clock: after 90 s idle the warning appears and 15 s later the showroom returns home with the search cleared; «Seguir navegando» cancels it; the mode persists across pages and `?kiosk=0` turns it off; no reset outside kiosk mode; the manifest opens fullscreen in kiosk mode |
+| `i18n` | Switch to English: `lang`, menu, heading, unit count, status filter and page title change, the choice survives a reload, and switching back restores Spanish; with no cookie an `en-US` browser gets English |
 | `a11y-touch-visual` | Tab through the main menu with visible focus; select a villa with the keyboard; mobile menu, tap a villa, swipe the panorama and tap a hotspot; 15 visual baselines (5 pages × 3 projects, 3D canvas masked) |
 
-**Last full run (2026-11-17): 40 passed, 0 failed, 0 skipped, 2.6 min**, with `E2E_SHOWROOM_PORT=3002` because another
+**Last full run (2026-11-18): 42 passed, 1 failed, 0 skipped, 2.3 min**, with `E2E_SMTP_URL=smtp://localhost:1025`.
+The failure was `flow-f-invitations`: the earlier admin flows had used up the per-IP login rate limit and the
+last login got «Too many requests». Run on its own 75 s later it passed (1 passed). The config pins the browser
+locale to `es-ES`, because Playwright's default `en-US` would now switch the showroom to English.
+
+Previous full run (2026-11-17): 40 passed, 0 failed, 0 skipped, 2.6 min, with `E2E_SHOWROOM_PORT=3002` because another
 container held port 3000. It includes `kiosk.spec.ts`, `csp.spec.ts` and `flow-e-admin-content.spec.ts`, with the CSP
 and security headers active. `flow-f-invitations` was added later and run on its own with `flow-e` on desktop
 (2026-11-17, `E2E_SMTP_URL=smtp://localhost:1025`): 3 passed. Without `E2E_SMTP_URL` it is skipped.

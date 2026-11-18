@@ -4,10 +4,12 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useGLTF, useProgress } from "@react-three/drei";
 import type { Unit } from "@synapse/contracts";
+import { DEFAULT_LOCALE, type Locale } from "@synapse/domain";
 import type { CameraPreset } from "./helpers";
 import { MasterplanErrorBoundary } from "./MasterplanErrorBoundary";
 import { MasterplanModel } from "./MasterplanModel";
 import { MasterplanStyles } from "./MasterplanStyles";
+import { MASTERPLAN_STRINGS, type MasterplanStrings } from "./strings";
 import { UnitList } from "./UnitList";
 import { hasWebGL } from "./webgl";
 
@@ -26,11 +28,12 @@ export interface MasterplanProps {
   className?: string;
   showLabels?: boolean;
   cameraPreset?: CameraPreset;
+  locale?: Locale;
 }
 
 type GlSupport = "unknown" | "yes" | "no";
 
-function LoadingOverlay() {
+function LoadingOverlay({ strings }: { strings: MasterplanStrings }) {
   const { progress } = useProgress();
   return (
     <div
@@ -40,7 +43,7 @@ function LoadingOverlay() {
       style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, color: "#0f172a", pointerEvents: "none" }}
     >
       <span className="syn-mp-spinner" aria-hidden="true" />
-      <span style={{ font: "600 14px system-ui, sans-serif" }}>Cargando masterplan {Math.round(progress)}%</span>
+      <span style={{ font: "600 14px system-ui, sans-serif" }}>{strings.loading(Math.round(progress))}</span>
     </div>
   );
 }
@@ -56,7 +59,9 @@ export function Masterplan({
   className,
   showLabels = true,
   cameraPreset = "overview",
+  locale = DEFAULT_LOCALE,
 }: MasterplanProps) {
+  const strings = MASTERPLAN_STRINGS[locale];
   const [gl, setGl] = useState<GlSupport>("unknown");
   const [ready, setReady] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
@@ -95,7 +100,7 @@ export function Masterplan({
       <MasterplanStyles />
 
       {gl === "yes" ? (
-        <MasterplanErrorBoundary key={retryKey} onRetry={handleRetry}>
+        <MasterplanErrorBoundary key={retryKey} onRetry={handleRetry} strings={strings}>
           <Canvas
             dpr={[1, 2]}
             shadows
@@ -119,21 +124,22 @@ export function Masterplan({
                 showLabels={showLabels}
                 cameraPreset={cameraPreset}
                 onReady={handleReady}
+                locale={locale}
               />
             </Suspense>
           </Canvas>
-          {ready ? null : <LoadingOverlay />}
+          {ready ? null : <LoadingOverlay strings={strings} />}
         </MasterplanErrorBoundary>
       ) : null}
 
       {gl === "no" ? (
         <div role="status" data-testid="masterplan-nowebgl" style={{ position: "absolute", left: 0, right: 0, top: 0, padding: 16, color: "#0f172a", font: "600 14px system-ui, sans-serif" }}>
-          Tu navegador no admite WebGL. Elige una unidad de la lista:
+          {strings.noWebGL}
         </div>
       ) : null}
 
       <div style={gl === "no" ? { position: "absolute", left: 0, right: 0, top: 56 } : undefined}>
-        <UnitList units={units} selectedUnitId={selectedUnitId} onSelect={onSelect} onHover={onHover} visible={gl === "no"} />
+        <UnitList units={units} selectedUnitId={selectedUnitId} onSelect={onSelect} onHover={onHover} visible={gl === "no"} locale={locale} />
       </div>
     </div>
   );

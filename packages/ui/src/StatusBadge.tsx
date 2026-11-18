@@ -1,13 +1,14 @@
 "use client";
 
-import { STATUS_META, type UnitStatus } from "@synapse/domain";
+import { DEFAULT_LOCALE, STATUS_LABELS, STATUS_META, type Locale, type UnitStatus } from "@synapse/domain";
 
 export interface StatusBadgeProps {
   status: UnitStatus;
+  locale?: Locale;
   className?: string;
 }
 
-export function StatusBadge({ status, className }: StatusBadgeProps) {
+export function StatusBadge({ status, locale = DEFAULT_LOCALE, className }: StatusBadgeProps) {
   const meta = STATUS_META[status];
   return (
     <span
@@ -28,7 +29,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
       }}
     >
       <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: 9999, background: meta.color }} />
-      {meta.label}
+      {STATUS_LABELS[locale][status]}
     </span>
   );
 }

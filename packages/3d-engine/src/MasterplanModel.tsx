@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useThree, type ThreeEvent } from "@react-three/fiber";
 import { Line, useGLTF } from "@react-three/drei";
 import type { Unit } from "@synapse/contracts";
-import { STATUS_META, buildMeshIndex } from "@synapse/domain";
+import { STATUS_LABELS, STATUS_META, buildMeshIndex, type Locale } from "@synapse/domain";
 import { CameraRig } from "./CameraRig";
 import {
   computeUnitVisual,
@@ -30,6 +30,7 @@ export interface MasterplanModelProps {
   showLabels: boolean;
   cameraPreset: CameraPreset;
   onReady: () => void;
+  locale: Locale;
 }
 
 /** Everything that lives inside the R3F canvas: model, picking, highlight, labels, lights, camera. */
@@ -44,6 +45,7 @@ export function MasterplanModel({
   showLabels,
   cameraPreset,
   onReady,
+  locale,
 }: MasterplanModelProps) {
   // Draco decoders live on a CDN by default; the showroom must not fetch anything remote.
   const gltf = useGLTF(modelUrl, false);
@@ -182,6 +184,7 @@ export function MasterplanModel({
                 key={unit.id}
                 unit={unit}
                 position={position}
+                statusLabel={STATUS_LABELS[locale][unit.status]}
                 selected={unit.id === selectedUnitId}
                 faded={filterOpacity(unit.id, filterMatch) < 1}
                 onSelect={onSelect}

@@ -5,6 +5,8 @@ import { useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import type { DevelopmentManifest } from "@synapse/contracts";
 import { EmptyState, Price, StatusBadge } from "@synapse/ui";
+import { INTL_LOCALE } from "@synapse/domain";
+import { useI18n } from "@/i18n/I18nProvider";
 import { formatArea } from "@/lib/format";
 import { sortUnits, unitHasTour } from "@/lib/manifest";
 import { useShowroomStore } from "@/lib/store";
@@ -16,6 +18,7 @@ function UnitSheet({ manifest, slug }: { manifest: DevelopmentManifest; slug: st
   const { development, units, scenes, gallery } = manifest;
   const unit = units.find((u) => u.slug === slug);
   const selectUnit = useShowroomStore((s) => s.selectUnit);
+  const { locale, t } = useI18n();
 
   // Coming from the sheet, "back to the masterplan" should keep this unit selected.
   useEffect(() => {
@@ -26,11 +29,11 @@ function UnitSheet({ manifest, slug }: { manifest: DevelopmentManifest; slug: st
     return (
       <div className="mx-auto max-w-lg py-16">
         <EmptyState
-          title="No encontramos esta unidad"
-          description="Puede que ya no esté publicada."
+          title={t.common.unitNotFound}
+          description={t.sheet.notPublished}
           action={
             <Link href="/unidades" className="inline-flex min-h-11 items-center rounded-md border border-slate-400 px-4 text-sm">
-              Ver todas las unidades
+              {t.sheet.allUnits}
             </Link>
           }
         />
@@ -44,21 +47,21 @@ function UnitSheet({ manifest, slug }: { manifest: DevelopmentManifest; slug: st
   const others = sortUnits(units).filter((u) => u.id !== unit.id);
 
   const specs: [string, string][] = [
-    ["Tipología", unit.unitType],
-    ["Sector", unit.sector],
-    ["Superficie interior", formatArea(unit.interiorArea)],
-    ["Parcela", formatArea(unit.plotArea)],
-    ["Terraza", formatArea(unit.terraceArea)],
-    ["Dormitorios", String(unit.bedrooms)],
-    ["Baños", String(unit.bathrooms)],
-    ["Plantas", String(unit.floors)],
-    ["Orientación", unit.orientation ?? "—"],
+    [t.specs.unitType, unit.unitType],
+    [t.specs.sector, unit.sector],
+    [t.specs.interiorArea, formatArea(unit.interiorArea, locale)],
+    [t.specs.plot, formatArea(unit.plotArea, locale)],
+    [t.specs.terrace, formatArea(unit.terraceArea, locale)],
+    [t.specs.bedrooms, String(unit.bedrooms)],
+    [t.specs.bathrooms, String(unit.bathrooms)],
+    [t.specs.floors, String(unit.floors)],
+    [t.specs.orientation, unit.orientation ?? "—"],
   ];
 
   return (
     <article data-testid="unit-sheet" data-unit-code={unit.code} className="mx-auto max-w-6xl px-4 py-10 lg:px-8">
       <Link href="/unidades" className="inline-flex min-h-11 items-center gap-2 text-sm text-slate-700 hover:underline">
-        <ArrowLeft aria-hidden="true" size={16} /> Todas las unidades
+        <ArrowLeft aria-hidden="true" size={16} /> {t.sheet.backToUnits}
       </Link>
 
       <header className="mt-2 flex flex-wrap items-end justify-between gap-4">
@@ -71,8 +74,8 @@ function UnitSheet({ manifest, slug }: { manifest: DevelopmentManifest; slug: st
           </h1>
         </div>
         <div className="flex flex-col items-start gap-2 sm:items-end">
-          <StatusBadge status={unit.status} />
-          <Price amount={unit.price} currency={unit.currency} className="text-3xl font-semibold text-[#8a6a22]" />
+          <StatusBadge status={unit.status} locale={locale} />
+          <Price amount={unit.price} currency={unit.currency} locale={INTL_LOCALE[locale]} className="text-3xl font-semibold text-[#8a6a22]" />
         </div>
       </header>
 
@@ -92,21 +95,21 @@ function UnitSheet({ manifest, slug }: { manifest: DevelopmentManifest; slug: st
           <div className="mt-6 flex flex-wrap gap-3">
             {hasTour ? (
               <Link href={`/tour/${unit.slug}`} data-testid="sheet-tour-link" className={`${BTN_PRIMARY} px-6`}>
-                Tour 360
+                {t.common.tour360}
               </Link>
             ) : null}
             <Link
               href="/masterplan"
               className="inline-flex min-h-11 items-center rounded-md border border-slate-400 px-6 text-sm font-semibold hover:bg-slate-100"
             >
-              Ver en el masterplan
+              {t.sheet.onMasterplan}
             </Link>
           </div>
 
           {thumbs.length > 0 ? (
             <section className="mt-10" aria-labelledby="sheet-gallery">
               <h2 id="sheet-gallery" className="text-xl font-semibold">
-                Galería
+                {t.sheet.gallery}
               </h2>
               <ul className="mt-3 grid list-none grid-cols-2 gap-3 p-0 sm:grid-cols-3" data-testid="sheet-gallery">
                 {thumbs.map((g) => (
@@ -115,7 +118,7 @@ function UnitSheet({ manifest, slug }: { manifest: DevelopmentManifest; slug: st
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={g.imageUrl}
-                        alt={`${g.title} (se abre en una pestaña nueva)`}
+                        alt={t.sheet.opensInNewTab(g.title)}
                         loading="lazy"
                         className="aspect-[16/10] w-full object-cover transition-transform hover:scale-105"
                       />
@@ -129,15 +132,15 @@ function UnitSheet({ manifest, slug }: { manifest: DevelopmentManifest; slug: st
 
         <aside id="solicitar" aria-labelledby="sheet-lead" className="self-start rounded-xl bg-white p-6 shadow-sm">
           <h2 id="sheet-lead" className="text-xl font-semibold">
-            Solicitar información sobre {unit.name}
+            {t.sheet.requestInfo(unit.name)}
           </h2>
-          <p className="mb-5 mt-1 text-sm text-slate-600">Te enviaremos disponibilidad, planos y condiciones.</p>
+          <p className="mb-5 mt-1 text-sm text-slate-600">{t.sheet.requestInfoText}</p>
           <LeadForm developmentSlug={development.slug} units={others.length ? [unit, ...others] : [unit]} unitId={unit.id} />
         </aside>
       </div>
 
       <p className="mt-10 text-xs text-slate-500">
-        Última actualización: {new Date(unit.updatedAt).toLocaleString("es-ES", { dateStyle: "long", timeStyle: "short" })}
+        {t.sheet.updatedAt} {new Date(unit.updatedAt).toLocaleString(INTL_LOCALE[locale], { dateStyle: "long", timeStyle: "short" })}
       </p>
     </article>
   );

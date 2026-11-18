@@ -1,3 +1,4 @@
+export * from "./locale";
 export * from "./availability";
 export * from "./money";
 export * from "./coordinates";

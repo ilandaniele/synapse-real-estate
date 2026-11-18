@@ -15,11 +15,12 @@ import {
 } from "react";
 import type * as Marzipano from "marzipano";
 import type { Hotspot, Scene } from "@synapse/contracts";
-import { degToRad, normalizePanoPosition, type PanoPosition } from "@synapse/domain";
+import { DEFAULT_LOCALE, degToRad, normalizePanoPosition, type Locale, type PanoPosition } from "@synapse/domain";
 import { exceedsDragThreshold, slugify, viewDeltaForKey, type PanoView } from "./geometry";
 import type { HotspotCallbacks } from "./hotspot-dom";
 import { destroyRecordHotspots, syncHotspots, type SceneRecord } from "./hotspot-layer";
 import { createPanoramaSource } from "./panorama-source";
+import { TOUR_STRINGS } from "./strings";
 import { TourStyles } from "./TourStyles";
 import { hasWebGL } from "./webgl";
 
@@ -47,6 +48,7 @@ export interface PanoramaViewerProps {
   className?: string;
   /** Overrides `scene.initialView` when a scene is mounted. */
   initialView?: PanoView;
+  locale?: Locale;
   ref?: Ref<PanoramaViewerHandle>;
 }
 
@@ -70,7 +72,8 @@ const readView = (view: Marzipano.RectilinearView): PanoView => ({
 });
 
 export function PanoramaViewer(props: PanoramaViewerProps) {
-  const { scene, className, editable = false, selectedHotspotId, ref } = props;
+  const { scene, className, editable = false, selectedHotspotId, ref, locale = DEFAULT_LOCALE } = props;
+  const strings = TOUR_STRINGS[locale];
   const hotspots = props.hotspots ?? scene.hotspots;
 
   const stageRef = useRef<HTMLDivElement>(null);
@@ -244,8 +247,8 @@ export function PanoramaViewer(props: PanoramaViewerProps) {
   useEffect(() => {
     const record = currentRef.current;
     if (!viewerReady || !record) return;
-    syncHotspots(record, hotspots, { selectedHotspotId, editable, callbacks: hotspotCallbacks });
-  }, [viewerReady, sceneRev, hotspots, selectedHotspotId, editable, hotspotCallbacks]);
+    syncHotspots(record, hotspots, { selectedHotspotId, editable, callbacks: hotspotCallbacks, strings });
+  }, [viewerReady, sceneRev, hotspots, selectedHotspotId, editable, hotspotCallbacks, strings]);
 
   const onKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
     if (e.target !== e.currentTarget) return;
@@ -292,7 +295,7 @@ export function PanoramaViewer(props: PanoramaViewerProps) {
       data-status={status}
       tabIndex={0}
       role="application"
-      aria-label={`Panorama 360: ${scene.name}`}
+      aria-label={strings.viewer(scene.name)}
       aria-busy={status === "loading"}
       onKeyDown={onKeyDown}
       onPointerDown={onPointerDown}
@@ -304,7 +307,7 @@ export function PanoramaViewer(props: PanoramaViewerProps) {
       {status === "loading" ? (
         <div
           role="status"
-          aria-label="Cargando panorama"
+          aria-label={strings.loading}
           data-testid="panorama-loading"
           style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(11,15,20,.55)", pointerEvents: "none" }}
         >
@@ -318,14 +321,14 @@ export function PanoramaViewer(props: PanoramaViewerProps) {
           data-testid="panorama-error"
           style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, background: "rgba(11,15,20,.85)", color: "#fff", textAlign: "center", padding: 16 }}
         >
-          <p style={{ margin: 0 }}>No se pudo cargar el panorama de «{scene.name}».</p>
+          <p style={{ margin: 0 }}>{strings.loadError(scene.name)}</p>
           <button
             type="button"
             data-testid="panorama-retry"
             onClick={() => setRetryKey((n) => n + 1)}
             style={{ minHeight: 44, padding: "0 20px", borderRadius: 8, border: "1px solid #fff", background: "transparent", color: "#fff", cursor: "pointer" }}
           >
-            Reintentar
+            {strings.retry}
           </button>
         </div>
       ) : null}
@@ -335,18 +338,18 @@ export function PanoramaViewer(props: PanoramaViewerProps) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={previewUrl ?? panoramaUrl}
-            alt={`Vista previa de ${scene.name}`}
+            alt={strings.preview(scene.name)}
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
           <div
             role="status"
             style={{ position: "absolute", left: 0, right: 0, top: 0, padding: "8px 12px", background: "rgba(11,15,20,.75)", color: "#fff", fontSize: 14 }}
           >
-            Tu navegador no admite WebGL: se muestra una vista estática.
+            {strings.noWebGL}
           </div>
           {fallbackNav.length > 0 ? (
             <nav
-              aria-label="Navegación entre estancias"
+              aria-label={strings.fallbackNav}
               style={{ position: "absolute", left: 0, right: 0, bottom: 0, display: "flex", flexWrap: "wrap", gap: 8, padding: 12, background: "rgba(11,15,20,.6)" }}
             >
               {fallbackNav.map((h) => (
@@ -355,7 +358,7 @@ export function PanoramaViewer(props: PanoramaViewerProps) {
                   type="button"
                   data-testid={`hotspot-${slugify(h.label)}`}
                   data-hotspot-id={h.id}
-                  aria-label={`Ir a ${h.label}`}
+                  aria-label={strings.goTo(h.label)}
                   onClick={() => h.targetSceneId && props.onNavigate(h.targetSceneId)}
                   style={{ minHeight: 44, padding: "0 16px", borderRadius: 9999, border: "1px solid #fff", background: "rgba(17,24,39,.8)", color: "#fff", cursor: "pointer" }}
                 >

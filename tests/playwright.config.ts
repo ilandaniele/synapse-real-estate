@@ -24,6 +24,7 @@ export default defineConfig({
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
     baseURL: SHOWROOM,
+    locale: "es-ES",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     launchOptions: { args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] },

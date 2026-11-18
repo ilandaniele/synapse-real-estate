@@ -28,6 +28,8 @@ from a real run.
   - «Mi cuenta» page: password change that revokes older sessions.
   - Invitations by email and password reset by email, with single-use links ([EMAIL.md](EMAIL.md)).
 - Kiosk mode for touch screens: idle warning and reset to home, fullscreen, PWA manifest ([KIOSK.md](KIOSK.md)).
+- Showroom in Spanish and English: language switch in the header, choice kept in a cookie, `Accept-Language`
+  as the fallback (ADR-017).
 - Storage drivers local and S3/R2: presigned uploads with a completion check, media behind `MEDIA_PUBLIC_URL`
   ([STORAGE.md](STORAGE.md)).
 - Postgres variant of the VM stack with a separate asset worker and daily `pg_dump` + storage backups;
@@ -95,4 +97,6 @@ Masterplan times include software WebGL. Expect real GPUs to be faster, but this
 - The deployed VM has no SMTP configured, so invitations and password resets answer 503 there.
 - Not automated: pinch zoom, real GPU rendering, load tests and screen-reader output. See
   [TESTING.md](TESTING.md).
+- Only the interface is translated. Content entered in the admin (unit and room names, descriptions, points of
+  interest) is shown in the language it was written in.
 - The demo data is fictitious. Real panoramas and models from the client are the next improvement.

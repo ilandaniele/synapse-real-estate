@@ -1,9 +1,11 @@
 import type { Hotspot } from "@synapse/contracts";
 import { exceedsDragThreshold, slugify } from "./geometry";
+import type { TourStrings } from "./strings";
 
 export interface HotspotViewState {
   selected: boolean;
   editable: boolean;
+  strings: TourStrings;
 }
 
 export interface HotspotCallbacks {
@@ -76,7 +78,7 @@ export function createHotspotHandle(
     button.setAttribute("data-hotspot-type", current.type);
     button.setAttribute("data-selected", String(view.selected));
     button.setAttribute("data-editable", String(view.editable));
-    button.setAttribute("aria-label", isInfo ? `Información: ${current.label}` : `Ir a ${current.label}`);
+    button.setAttribute("aria-label", isInfo ? view.strings.info(current.label) : view.strings.goTo(current.label));
     if (isInfo) {
       button.textContent = "i";
       button.setAttribute("aria-controls", popover.id);

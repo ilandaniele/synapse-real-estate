@@ -2,17 +2,20 @@
 
 import { useEffect, useRef } from "react";
 import type { Scene } from "@synapse/contracts";
+import { DEFAULT_LOCALE, type Locale } from "@synapse/domain";
 import { slugify } from "./geometry";
+import { TOUR_STRINGS } from "./strings";
 
 export interface SceneStripProps {
   scenes: Scene[];
   currentSceneId: string;
   onSelect: (sceneId: string) => void;
   className?: string;
+  locale?: Locale;
 }
 
 /** Horizontally scrollable thumbnail strip (bottom bar of a tour). */
-export function SceneStrip({ scenes, currentSceneId, onSelect, className }: SceneStripProps) {
+export function SceneStrip({ scenes, currentSceneId, onSelect, className, locale = DEFAULT_LOCALE }: SceneStripProps) {
   const currentRef = useRef<HTMLButtonElement>(null);
   const sorted = [...scenes].sort((a, b) => a.sortOrder - b.sortOrder);
 
@@ -24,7 +27,7 @@ export function SceneStrip({ scenes, currentSceneId, onSelect, className }: Scen
 
   return (
     <ul
-      aria-label="Estancias del tour"
+      aria-label={TOUR_STRINGS[locale].strip}
       data-testid="scene-strip"
       className={className}
       style={{ listStyle: "none", margin: 0, padding: 8, display: "flex", gap: 8, overflowX: "auto", WebkitOverflowScrolling: "touch" }}

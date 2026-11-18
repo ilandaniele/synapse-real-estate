@@ -2,8 +2,9 @@
 
 import { useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import type { FloorPlan, Scene } from "@synapse/contracts";
-import type { NormalizedPoint } from "@synapse/domain";
+import { DEFAULT_LOCALE, type Locale, type NormalizedPoint } from "@synapse/domain";
 import { exceedsDragThreshold, pointFromClient, slugify, toPercentStyle } from "./geometry";
+import { TOUR_STRINGS } from "./strings";
 import { TourStyles } from "./TourStyles";
 
 export interface FloorPlanMapProps {
@@ -20,6 +21,7 @@ export interface FloorPlanMapProps {
   editable?: boolean;
   onPointMove?: (sceneId: string, point: NormalizedPoint) => void;
   className?: string;
+  locale?: Locale;
 }
 
 const DRAG_START_PX = 4;
@@ -33,7 +35,9 @@ export function FloorPlanMap({
   editable = false,
   onPointMove,
   className,
+  locale = DEFAULT_LOCALE,
 }: FloorPlanMapProps) {
+  const strings = TOUR_STRINGS[locale];
   const mapRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ sceneId: string; pointerId: number; startX: number; startY: number; moved: boolean } | null>(null);
   const suppressClick = useRef(false);
@@ -98,13 +102,13 @@ export function FloorPlanMap({
       >
         {imageFailed ? (
           <div role="alert" data-testid="floorplan-error" style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: 8, textAlign: "center", fontSize: 13, color: "#374151" }}>
-            No se pudo cargar el plano.
+            {strings.planError}
           </div>
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={plan.imageUrl}
-            alt={`Plano: ${plan.name}`}
+            alt={strings.planAlt(plan.name)}
             draggable={false}
             onError={() => setImageFailed(true)}
             style={{ display: "block", width: "100%", height: "100%", objectFit: "contain", pointerEvents: "none" }}
@@ -123,7 +127,7 @@ export function FloorPlanMap({
               data-testid={`floorplan-point-${slug}`}
               data-floorplan-point={scene.id}
               data-current={current}
-              aria-label={`Ir a ${scene.name}`}
+              aria-label={strings.goTo(scene.name)}
               aria-current={current ? "true" : undefined}
               title={scene.name}
               onPointerDown={(e) => onMarkerPointerDown(e, scene.id)}
@@ -174,11 +178,11 @@ export function FloorPlanMap({
 
       {sorted.length === 0 ? (
         <p data-testid="floorplan-empty" style={{ margin: "8px 0 0", fontSize: 13, opacity: 0.75 }}>
-          Sin estancias disponibles.
+          {strings.noScenes}
         </p>
       ) : (
         <ul
-          aria-label="Estancias"
+          aria-label={strings.planScenes}
           style={{ listStyle: "none", margin: "8px 0 0", padding: 0, display: "flex", flexWrap: "wrap", gap: mini ? 4 : 8 }}
         >
           {sorted.map((scene) => {

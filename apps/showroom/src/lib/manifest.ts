@@ -1,23 +1,30 @@
 import { DevelopmentManifest, type Scene, type Unit } from "@synapse/contracts";
 import { MANIFEST_URL } from "./config";
 
+export type ManifestErrorReason = "offline" | "notPublished" | "httpError" | "invalid";
+
+export class ManifestError extends Error {
+  constructor(
+    readonly reason: ManifestErrorReason,
+    readonly status?: number,
+  ) {
+    super(status ? `${reason} (${status})` : reason);
+  }
+}
+
 export async function fetchManifest(signal?: AbortSignal): Promise<DevelopmentManifest> {
   let res: Response;
   try {
     res = await fetch(MANIFEST_URL, { signal, headers: { Accept: "application/json" } });
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") throw err;
-    throw new Error("No se pudo conectar con el servidor. Comprueba tu conexión e inténtalo de nuevo.");
+    throw new ManifestError("offline");
   }
   if (!res.ok) {
-    throw new Error(
-      res.status === 404
-        ? "Este desarrollo aún no está publicado."
-        : `El servidor respondió con un error (${res.status}).`,
-    );
+    throw res.status === 404 ? new ManifestError("notPublished") : new ManifestError("httpError", res.status);
   }
   const parsed = DevelopmentManifest.safeParse(await res.json().catch(() => null));
-  if (!parsed.success) throw new Error("La respuesta del servidor no tiene el formato esperado.");
+  if (!parsed.success) throw new ManifestError("invalid");
   return parsed.data;
 }
 

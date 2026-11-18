@@ -1,9 +1,11 @@
 "use client";
 
 import { Component, type ReactNode } from "react";
+import type { MasterplanStrings } from "./strings";
 
 export interface MasterplanErrorBoundaryProps {
   onRetry: () => void;
+  strings: MasterplanStrings;
   children: ReactNode;
 }
 
@@ -36,14 +38,14 @@ export class MasterplanErrorBoundary extends Component<MasterplanErrorBoundaryPr
         data-testid="masterplan-error"
         style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, textAlign: "center", padding: 16, color: "#0f172a" }}
       >
-        <p style={{ margin: 0, fontWeight: 600 }}>No se pudo cargar el masterplan</p>
+        <p style={{ margin: 0, fontWeight: 600 }}>{this.props.strings.loadError}</p>
         <button
           type="button"
           data-testid="masterplan-retry"
           onClick={this.retry}
           style={{ minHeight: 44, padding: "0 20px", borderRadius: 8, border: "1px solid #0f172a", background: "#fff", color: "#0f172a", cursor: "pointer" }}
         >
-          Reintentar
+          {this.props.strings.retry}
         </button>
       </div>
     );

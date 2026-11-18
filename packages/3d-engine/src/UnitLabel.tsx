@@ -8,6 +8,7 @@ import type { Vec3 } from "./helpers";
 export interface UnitLabelProps {
   unit: Unit;
   position: Vec3;
+  statusLabel: string;
   selected: boolean;
   faded: boolean;
   onSelect: (unitId: string) => void;
@@ -15,7 +16,7 @@ export interface UnitLabelProps {
 }
 
 /** HTML badge anchored above a villa: name + status dot. A real button, so it is keyboard/touch accessible. */
-export function UnitLabel({ unit, position, selected, faded, onSelect, onHover }: UnitLabelProps) {
+export function UnitLabel({ unit, position, statusLabel, selected, faded, onSelect, onHover }: UnitLabelProps) {
   const meta = STATUS_META[unit.status];
   return (
     <Html position={[position[0], position[1], position[2]]} center zIndexRange={[20, 0]} style={{ pointerEvents: "none" }}>
@@ -24,7 +25,7 @@ export function UnitLabel({ unit, position, selected, faded, onSelect, onHover }
         className="syn-mp-label"
         data-testid={`masterplan-label-${unit.code}`}
         data-status={unit.status}
-        aria-label={`${unit.name}, ${meta.label}`}
+        aria-label={`${unit.name}, ${statusLabel}`}
         aria-pressed={selected}
         onClick={() => onSelect(unit.id)}
         onPointerEnter={() => onHover(unit.id)}
