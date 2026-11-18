@@ -11,6 +11,7 @@ import { useCan, useUser } from "@/lib/session";
 import { formatDateTime, ROLE_LABELS } from "@/lib/format";
 import { apiFieldErrors, zodFieldErrors, type FieldErrors } from "@/lib/forms";
 import { ConfirmDelete } from "@/components/content";
+import { InviteDialog, PendingInvitations } from "@/components/Invitations";
 import { Button, ErrorBanner, Modal, PageHeader, QueryBoundary, SelectField, TableShell, TD, TextField, TH } from "@/components/ui";
 
 const LAST_OWNER_MESSAGE = "La organización debe tener al menos un propietario.";
@@ -37,7 +38,7 @@ export default function MembersPage() {
 function MembersView() {
   const members = useMembers();
   const queryClient = useQueryClient();
-  const [dialog, setDialog] = useState<{ mode: "create" } | { mode: "edit"; member: Member } | null>(null);
+  const [dialog, setDialog] = useState<{ mode: "create" } | { mode: "invite" } | { mode: "edit"; member: Member } | null>(null);
   const refresh = () => void queryClient.invalidateQueries({ queryKey: keys.members });
 
   const changeRole = useMutation({
@@ -51,9 +52,14 @@ function MembersView() {
         title="Miembros"
         description="Personas con acceso al backoffice de tu organización."
         actions={
-          <Button variant="primary" onClick={() => setDialog({ mode: "create" })} data-testid="member-create-open">
-            Nuevo miembro
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="primary" onClick={() => setDialog({ mode: "invite" })} data-testid="member-invite-open">
+              Invitar por email
+            </Button>
+            <Button onClick={() => setDialog({ mode: "create" })} data-testid="member-create-open">
+              Nuevo miembro
+            </Button>
+          </div>
         }
       />
       <div className="flex flex-col gap-3">
@@ -104,7 +110,9 @@ function MembersView() {
             </TableShell>
           )}
         </QueryBoundary>
+        <PendingInvitations />
       </div>
+      {dialog?.mode === "invite" ? <InviteDialog onClose={() => setDialog(null)} roleOptions={<RoleOptions />} /> : null}
       {dialog?.mode === "create" ? <CreateMemberDialog onClose={() => setDialog(null)} onCreated={refresh} /> : null}
       {dialog?.mode === "edit" ? <ManageMemberDialog member={dialog.member} onClose={() => setDialog(null)} onDeleted={refresh} /> : null}
     </>

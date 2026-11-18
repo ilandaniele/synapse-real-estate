@@ -215,7 +215,7 @@ async function seedFixtures(db: Db): Promise<Fixtures> {
   };
 }
 
-export async function createTestContext(options: Partial<Pick<BuildAppOptions, "rateLimit" | "config" | "storage">> = {}): Promise<TestContext> {
+export async function createTestContext(options: Partial<Pick<BuildAppOptions, "rateLimit" | "config" | "storage" | "mailer">> = {}): Promise<TestContext> {
   const pgAdminUrl = process.env.PG_TEST_URL?.trim();
   const testDatabase = pgAdminUrl ? await createTestDatabase(pgAdminUrl) : null;
   const handle: DbHandle = await createDb(testDatabase?.url ?? "memory://");
@@ -226,6 +226,7 @@ export async function createTestContext(options: Partial<Pick<BuildAppOptions, "
     storageDir,
     config: options.config,
     storage: options.storage,
+    mailer: options.mailer,
     rateLimit: { global: 100_000, login: 100_000, leads: 100_000, ...options.rateLimit },
   });
   await app.ready();

@@ -17,6 +17,7 @@ export const unauthorized = (message = "Authentication required") => new HttpErr
 export const forbidden = (message = "You do not have permission to perform this action") => new HttpError(403, "FORBIDDEN", message);
 export const notFound = (what = "Resource") => new HttpError(404, "NOT_FOUND", `${what} not found`);
 export const conflict = (message: string, code = "CONFLICT") => new HttpError(409, code, message);
+export const serviceUnavailable = (message: string) => new HttpError(503, "SERVICE_UNAVAILABLE", message);
 
 /** Postgres unique violation (23505), whether raised directly or wrapped by drizzle. */
 export function isUniqueViolation(error: unknown): boolean {

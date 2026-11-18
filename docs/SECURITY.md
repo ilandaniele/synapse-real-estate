@@ -17,6 +17,10 @@ automated test, and the full suites passed after the fixes (see [TESTING.md](TES
   limited to 1 MB.
 - **Uploads:** signed, single-use upload URLs, size limits, magic-byte checks and an extension allow-list.
   DWG, IFC, FBX and OBJ are rejected. Raw uploads are never served.
+- **Email links (invitations, password reset):** 32-byte random tokens, stored only as sha256, sent in the URL
+  fragment so they never reach server logs, single-use through an atomic update, 7 days or 1 hour. A reset
+  request answers 202 for any email and does not wait for SMTP. A reset burns the user's other links and
+  revokes their sessions. These endpoints share the login rate limit (10/min/IP). See [EMAIL.md](EMAIL.md).
 - **Leads:** honeypot, consent, a rate limit per IP and a hashed IP (no raw IP stored).
 - **Rate limits per IP:** global 300/min, login 10/min, leads 5/min.
 - **CSRF:** SameSite=Lax cookies plus an Origin check. Writes (`POST`, `PUT`, `PATCH`, `DELETE`) that send an

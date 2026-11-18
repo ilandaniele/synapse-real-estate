@@ -22,6 +22,13 @@
       "when": 1794968090824,
       "tag": "0002_panorama_cube_tiles",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794969514180,
+      "tag": "0003_invitations_password_resets",
+      "breakpoints": true
     }
   ]
 }

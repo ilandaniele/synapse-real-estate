@@ -17,6 +17,11 @@ const Env = z.object({
   TRUST_PROXY: z.enum(["true", "false"]).default("false"),
   // Bearer token for GET /metrics. Empty disables the endpoint.
   METRICS_TOKEN: z.union([z.literal(""), z.string().min(24)]).default(""),
+  // smtp:// or smtps:// URL. Empty: emails are logged outside production and disabled in production.
+  SMTP_URL: z.union([z.literal(""), z.string().regex(/^smtps?:\/\//)]).default(""),
+  MAIL_FROM: z.string().min(3).default("Synapse <no-reply@synapse.local>"),
+  // Base of the links sent by email (invitations, password reset).
+  ADMIN_PUBLIC_URL: z.union([z.literal(""), z.string().url()]).default(""),
 });
 
 export interface Config {
@@ -30,6 +35,9 @@ export interface Config {
   corsOrigins: string[];
   trustProxy: boolean;
   metricsToken?: string;
+  smtpUrl?: string;
+  mailFrom: string;
+  adminPublicUrl: string;
 }
 
 export const defaultMediaBaseUrl = (publicApiUrl: string) => `${publicApiUrl}/media`;
@@ -51,6 +59,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, warn: (message:
     warn("[api] SESSION_SECRET missing or shorter than 32 chars: using a random per-process secret (sessions reset on restart).");
   }
   const publicApiUrl = e.PUBLIC_API_URL.replace(/\/+$/, "");
+  if (isProd && e.SMTP_URL && !e.ADMIN_PUBLIC_URL) throw new Error("ADMIN_PUBLIC_URL is required in production when SMTP_URL is set");
   return {
     isProd,
     port: e.API_PORT,
@@ -62,5 +71,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, warn: (message:
     corsOrigins: e.CORS_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean),
     trustProxy: e.TRUST_PROXY === "true",
     metricsToken: e.METRICS_TOKEN || undefined,
+    smtpUrl: e.SMTP_URL || undefined,
+    mailFrom: e.MAIL_FROM,
+    adminPublicUrl: (e.ADMIN_PUBLIC_URL || "http://localhost:3001").replace(/\/+$/, ""),
   };
 }

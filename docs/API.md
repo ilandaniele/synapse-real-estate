@@ -18,6 +18,10 @@ Errors always use the `ApiError` shape `{error: {code, message, details?}}`. Bod
 | POST | /api/v1/auth/login | public | 10/min/IP; 401 identical for wrong email or password |
 | POST | /api/v1/auth/logout | public | clears cookie |
 | GET | /api/v1/auth/me | session | SessionUser |
+| POST | /api/v1/auth/invitations/preview | public | `{token}` -> `{email, role, organizationName, expiresAt}`; 404 `NOT_FOUND` for unknown, used, revoked or expired. 10/min/IP |
+| POST | /api/v1/auth/invitations/accept | public | `{token, name, password}` creates the user and membership, marks the invitation used and logs in: **201** SessionUser plus the cookie; 404 if the token is not usable, 409 `USER_EXISTS`. 10/min/IP |
+| POST | /api/v1/auth/password-reset/request | public | `{email}` -> always **202**, whether the email exists or not; emails a 1 h link. 503 without SMTP in production. 10/min/IP |
+| POST | /api/v1/auth/password-reset/confirm | public | `{token, password}` -> 204; burns every open reset link of the user and revokes their sessions; 400 for an invalid or expired token. 10/min/IP |
 | GET | /api/v1/public/developments/:slug/manifest | public | latest publication; ETag + 304, `Cache-Control: public, max-age=30, stale-while-revalidate=300` |
 | POST | /api/v1/public/leads | public | 5/min/IP; honeypot `website` -> 202 and nothing stored; `consent: true` required; 201 `{id}` |
 | GET/POST | /admin/developments | development:read / write | |
@@ -47,6 +51,8 @@ Errors always use the `ApiError` shape `{error: {code, message, details?}}`. Bod
 | POST | /admin/jobs/:id/retry | job:create | only FAILED with attempts left (409 `NOT_RETRYABLE`) |
 | POST | /admin/jobs/:id/review | job:create | `{decision: approve|reject, note?}`; approving a GLB persists the matched mesh -> unit mappings and publishes the file under `published/` |
 | GET | /admin/dashboard | read | counts by status, leads 30 d, last publication, jobs by status |
+| GET/POST | /admin/invitations | member:manage | pending invitations; POST `{email, role}` emails a 7-day link, 409 `USER_EXISTS` / `INVITATION_PENDING`, 503 without SMTP in production. The token is never returned |
+| DELETE | /admin/invitations/:id | member:manage | revokes a pending invitation; another org's id is 404 |
 
 Scenes include `cubeMap: {baseUrl, tileSize, faceSizes} | null`. Tiles live at
 `<baseUrl>/<z>/<face>/<row>/<col>.jpg` (z = 1 is the smallest level) with `<baseUrl>/preview.jpg`. It is

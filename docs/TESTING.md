@@ -25,15 +25,18 @@ pnpm 9.15.9) on 2026-11-15. Nothing here is projected.
 | `workers/render-processing` | unit tests | 5 |
 | `packages/storage` | local and S3 drivers | 15 (2 need `S3_TEST_ENDPOINT`) |
 | `packages/cubemap` | `src/cubemap.test.ts` | 5 |
-| `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security`, `deploy-config`, `content`, `members`, `storage-s3`, `observability` | 100 (3 need `S3_TEST_ENDPOINT`) |
+| `apps/api` | `test/auth-rbac`, `tenancy`, `leads`, `publish`, `uploads-jobs`, `security`, `deploy-config`, `content`, `members`, `storage-s3`, `observability`, `invitations`, `mailpit` | 114 (3 need `S3_TEST_ENDPOINT`, 1 needs `MAILPIT_SMTP_URL`) |
 | `apps/showroom` | `src/lib/kiosk.test.ts` | 3 |
-| **Total** | | **184 passed, 0 failed, 5 skipped without `S3_TEST_ENDPOINT`** (run 2026-11-17) |
+| **Total** | | **197 passed, 0 failed, 6 skipped without `S3_TEST_ENDPOINT` and `MAILPIT_SMTP_URL`** (run 2026-11-17) |
 
 The API tests start the real Fastify app with an in-memory PGlite database and cover 401, 403, 404, 409,
 413, 415 and 429 responses, cross-organization access (IDOR), the role matrix, the lead honeypot and rate
 limit, magic-byte checks on uploads, DWG rejection and versioned publishing. `security.test.ts` covers role
 changes and removed members on live sessions, the Origin check on writes and the absence of `/docs` in
-production. `deploy-config.test.ts` covers relative media URLs and the production guard of the demo seed.
+production. `deploy-config.test.ts` covers relative media URLs and the production guard of the demo seed and the `ADMIN_PUBLIC_URL` rules. `invitations.test.ts` covers invitations
+and password resets: no token in responses or in clear in the database, single use, expiry, revocation,
+cross-organization 404, 202 for unknown emails, session revocation, 503 without SMTP in production and the
+rate limit. `mailpit.test.ts` sends a real email over SMTP and reads it back from Mailpit ([EMAIL.md](EMAIL.md)).
 
 `packages/ui`, `packages/contracts`, `workers/*` and `apps/admin` have no unit tests of their own. `apps/showroom`
 has only the kiosk-mode test. Contracts are exercised through the API tests; the apps are covered by E2E.
@@ -46,10 +49,12 @@ With `PG_TEST_URL` the API tests run on real Postgres instead. Each test context
 
 ```bash
 docker run -d --name synapse-pg-test -e POSTGRES_USER=synapse -e POSTGRES_PASSWORD=synapse -e POSTGRES_DB=synapse -p 5433:5432 postgres:17-alpine
-cd apps/api && PG_TEST_URL=postgres://synapse:synapse@localhost:5433/synapse S3_TEST_ENDPOINT=http://localhost:9000 npx vitest run --no-file-parallelism
+docker compose up -d mailpit
+cd apps/api && PG_TEST_URL=postgres://synapse:synapse@localhost:5433/synapse S3_TEST_ENDPOINT=http://localhost:9000 MAILPIT_SMTP_URL=smtp://localhost:1025 npx vitest run --no-file-parallelism
 ```
 
-Run 2026-11-17: 100 passed on PGlite and 100 passed on Postgres 17, with no test database left behind.
+Run 2026-11-17: 110 passed and 4 skipped on PGlite; 114 passed on Postgres 17 with RustFS and Mailpit, with no
+test database left behind.
 
 ### E2E (Playwright)
 
@@ -86,13 +91,15 @@ Specs (`tests/e2e`):
 | `flow-c-admin-publish` | Admin creates villa V9, publishes version 2 and the public site shows it; VIEWER sees no write actions; bad login shows an error |
 | `flow-d-hotspot-editor` | Create a hotspot by clicking the panorama, set its target, preview, publish, and navigate with it on the public tour |
 | `flow-e-admin-content` | Gallery item with an uploaded image, point of interest with a coordinate error then fixed, floor-plan list; owner creates a VIEWER member who cannot see «Miembros», gets a wrong-current-password error, changes the password and logs in with it |
+| `flow-f-invitations` | Needs `E2E_SMTP_URL` (Mailpit). Owner invites a SALES member, the link is read from Mailpit, the invitee accepts and appears in «Miembros»; then «¿Olvidaste tu contraseña?», reset link from Mailpit, the old password fails and the new one works |
 | `csp` | Masterplan, tour and location pages log no Content Security Policy violations (catches the production CSP blocking the GLB decoder's WebAssembly) |
 | `kiosk` | Kiosk mode with Playwright's simulated clock: after 90 s idle the warning appears and 15 s later the showroom returns home with the search cleared; «Seguir navegando» cancels it; the mode persists across pages and `?kiosk=0` turns it off; no reset outside kiosk mode; the manifest opens fullscreen in kiosk mode |
 | `a11y-touch-visual` | Tab through the main menu with visible focus; select a villa with the keyboard; mobile menu, tap a villa, swipe the panorama and tap a hotspot; 15 visual baselines (5 pages × 3 projects, 3D canvas masked) |
 
 **Last full run (2026-11-17): 40 passed, 0 failed, 0 skipped, 2.6 min**, with `E2E_SHOWROOM_PORT=3002` because another
 container held port 3000. It includes `kiosk.spec.ts`, `csp.spec.ts` and `flow-e-admin-content.spec.ts`, with the CSP
-and security headers active.
+and security headers active. `flow-f-invitations` was added later and run on its own with `flow-e` on desktop
+(2026-11-17, `E2E_SMTP_URL=smtp://localhost:1025`): 3 passed. Without `E2E_SMTP_URL` it is skipped.
 
 On 2026-11-15 the full suite could not be rerun: another project's container held port 3000. `csp.spec.ts`
 was run alone against the production Docker stack (`baseURL: http://showroom.localhost`, through Caddy).

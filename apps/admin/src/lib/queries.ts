@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import type { Asset, Development, FloorPlan, GalleryItem, Job, Lead, Member, PointOfInterest, Publication, Scene, SessionUser, Unit } from "@synapse/contracts";
+import type { Asset, Development, FloorPlan, GalleryItem, Invitation, Job, Lead, Member, PointOfInterest, Publication, Scene, SessionUser, Unit } from "@synapse/contracts";
 import type { JobStatus, UnitStatus } from "@synapse/domain";
 import { api, ApiRequestError } from "./api";
 
@@ -41,6 +41,7 @@ export const keys = {
   jobs: ["jobs"] as const,
   job: (id: string) => ["jobs", id] as const,
   members: ["members"] as const,
+  invitations: ["invitations"] as const,
 };
 
 /** 401/403/404 will not get better on retry. */
@@ -68,6 +69,7 @@ export const useGallery = (devId: string) =>
 export const usePointsOfInterest = (devId: string) =>
   useQuery({ queryKey: keys.pointsOfInterest(devId), queryFn: () => api<PointOfInterest[]>(`/admin/developments/${devId}/points-of-interest`), retry });
 export const useMembers = () => useQuery({ queryKey: keys.members, queryFn: () => api<Member[]>("/admin/members"), retry });
+export const useInvitations = () => useQuery({ queryKey: keys.invitations, queryFn: () => api<Invitation[]>("/admin/invitations"), retry });
 export const usePublications = (devId: string) =>
   useQuery({ queryKey: keys.publications(devId), queryFn: () => api<Publication[]>(`/admin/developments/${devId}/publications`), retry });
 export const useScene = (id: string) => useQuery({ queryKey: keys.scene(id), queryFn: () => api<Scene>(`/admin/scenes/${id}`), retry });

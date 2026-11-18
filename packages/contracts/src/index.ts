@@ -279,6 +279,29 @@ export const MemberInput = z.object({
 export type MemberInput = z.infer<typeof MemberInput>;
 export const MemberPatch = z.object({ role: Role });
 
+const Email = z.string().trim().email().max(254);
+const Token = z.string().min(20).max(200);
+export const TokenBody = z.object({ token: Token });
+
+export const Invitation = z.object({
+  id: Uuid,
+  email: z.string(),
+  role: Role,
+  expiresAt: IsoDate,
+  createdAt: IsoDate,
+});
+export type Invitation = z.infer<typeof Invitation>;
+export const InvitationInput = z.object({ email: Email, role: Role });
+export type InvitationInput = z.infer<typeof InvitationInput>;
+export const InvitationPreview = z.object({ email: z.string(), role: Role, organizationName: z.string(), expiresAt: IsoDate });
+export type InvitationPreview = z.infer<typeof InvitationPreview>;
+export const InvitationAccept = z.object({ token: Token, name: z.string().trim().min(1).max(120), password: NewPassword });
+export type InvitationAccept = z.infer<typeof InvitationAccept>;
+export const PasswordResetRequest = z.object({ email: Email });
+export type PasswordResetRequest = z.infer<typeof PasswordResetRequest>;
+export const PasswordResetConfirm = z.object({ token: Token, password: NewPassword });
+export type PasswordResetConfirm = z.infer<typeof PasswordResetConfirm>;
+
 export const UploadRequest = z.object({
   filename: z.string().min(1).max(200),
   size: z.number().int().positive(),

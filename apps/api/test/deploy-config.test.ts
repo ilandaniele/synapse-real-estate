@@ -57,3 +57,21 @@ describe("seed guard", () => {
     expect(seedPassword({ NODE_ENV: "production", SEED_ALLOW_PRODUCTION: PRODUCTION_OPT_IN, SEED_PASSWORD: strong })).toBe(strong);
   });
 });
+
+describe("email links", () => {
+  const prod = { NODE_ENV: "production", SESSION_SECRET: "x".repeat(40), PUBLIC_API_URL: "" };
+
+  it("defaults to the local admin outside production", () => {
+    expect(loadConfig({ PUBLIC_API_URL: "" }, quiet).adminPublicUrl).toBe("http://localhost:3001");
+  });
+
+  it("requires ADMIN_PUBLIC_URL in production when SMTP is configured", () => {
+    expect(() => loadConfig({ ...prod, SMTP_URL: "smtps://mail.example.test:465" }, quiet)).toThrow(/ADMIN_PUBLIC_URL/);
+    const config = loadConfig({ ...prod, SMTP_URL: "smtps://mail.example.test:465", ADMIN_PUBLIC_URL: "https://admin.example.test/" }, quiet);
+    expect(config.adminPublicUrl).toBe("https://admin.example.test");
+  });
+
+  it("rejects a non-SMTP URL", () => {
+    expect(() => loadConfig({ PUBLIC_API_URL: "", SMTP_URL: "http://mail.example.test" }, quiet)).toThrow(/SMTP_URL/);
+  });
+});

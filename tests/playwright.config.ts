@@ -7,6 +7,7 @@ import { defineConfig, devices } from "@playwright/test";
  * Prerequisites: `pnpm assets:generate` once, and `pnpm build` (showroom/admin are served with `next start`).
  * Port 4000 must be free (stop any dev API first): the API is always started by Playwright so it uses the
  * E2E database. Set E2E_SHOWROOM_PORT when another app already listens on 3000.
+ * Set E2E_SMTP_URL=smtp://localhost:1025 with Mailpit running to include the email flow (flow F).
  */
 const API = "http://localhost:4000";
 const SHOWROOM_PORT = process.env.E2E_SHOWROOM_PORT ?? "3000";
@@ -41,7 +42,13 @@ export default defineConfig({
       command: "pnpm --filter @synapse/api seed && pnpm --filter @synapse/api start",
       url: `${API}/health`,
       cwd: "..",
-      env: { DATABASE_URL: "pglite://.data/pglite-e2e", SEED_PASSWORD: "e2e-password-123", CORS_ORIGINS: `${SHOWROOM},${ADMIN}` },
+      env: {
+        DATABASE_URL: "pglite://.data/pglite-e2e",
+        SEED_PASSWORD: "e2e-password-123",
+        CORS_ORIGINS: `${SHOWROOM},${ADMIN}`,
+        SMTP_URL: process.env.E2E_SMTP_URL ?? "",
+        ADMIN_PUBLIC_URL: ADMIN,
+      },
       reuseExistingServer: false,
       timeout: 180_000,
       stdout: "pipe",

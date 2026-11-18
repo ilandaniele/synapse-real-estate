@@ -6,6 +6,7 @@ import { can, ROLES, type Action, type Role } from "@synapse/domain";
 import { organizationMemberships, users, type Db } from "@synapse/db";
 import type { ObjectStorage } from "@synapse/storage";
 import type { Config } from "../config";
+import type { Mailer } from "./mailer";
 import { forbidden, unauthorized } from "./errors";
 
 export const SESSION_COOKIE = "synapse_session";
@@ -22,6 +23,8 @@ declare module "fastify" {
     db: Db;
     config: Config;
     storage: ObjectStorage;
+    /** Null in production without SMTP_URL: email features answer 503. */
+    mailer: Mailer | null;
     /** preHandler factory: authenticates the session cookie and (optionally) checks an RBAC action. */
     requireAuth: (action?: Action) => (request: FastifyRequest) => Promise<void>;
   }

@@ -15,6 +15,10 @@ services:
       RUSTFS_SECRET_KEY: synapse-dev-only
     ports: ["9000:9000", "9001:9001"]
     volumes: [s3data:/data]
+  # Local SMTP catcher for invitations and password resets (MIT). Inbox UI: http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:v1.27.0
+    ports: ["1025:1025", "8025:8025"]
 volumes:
   pgdata:
   s3data:

@@ -26,6 +26,7 @@ from a real run.
     upload (images from an uploaded asset are copied to `published/<org>/`);
   - «Miembros» page, owner only: create, change role and remove, keeping at least one owner;
   - «Mi cuenta» page: password change that revokes older sessions.
+  - Invitations by email and password reset by email, with single-use links ([EMAIL.md](EMAIL.md)).
 - Kiosk mode for touch screens: idle warning and reset to home, fullscreen, PWA manifest ([KIOSK.md](KIOSK.md)).
 - Storage drivers local and S3/R2: presigned uploads with a completion check, media behind `MEDIA_PUBLIC_URL`
   ([STORAGE.md](STORAGE.md)).
@@ -44,10 +45,11 @@ from a real run.
 | Check | Result | Time |
 |---|---|---|
 | `pnpm typecheck` | pass, all packages | 6.7 s |
-| `pnpm test` | 184 passed, 0 failed, 5 S3 tests skipped without `S3_TEST_ENDPOINT` (2026-11-17) | 25 s |
-| API suite on Postgres 17 (`PG_TEST_URL`) | 100 passed, 0 failed (2026-11-17) | |
+| `pnpm test` | 197 passed, 0 failed, 6 skipped without `S3_TEST_ENDPOINT` / `MAILPIT_SMTP_URL` (2026-11-17) | 25 s |
+| API suite on Postgres 17 with RustFS and Mailpit | 114 passed, 0 failed (2026-11-17) | |
 | `pnpm build` | pass (showroom 10 routes, admin 10 routes) | 6.0 s |
 | `pnpm test:e2e` | 40 passed, 0 failed, 0 skipped (2026-11-17, `E2E_SHOWROOM_PORT=3002`) | 2.6 min |
+| `flow-e` + `flow-f-invitations` with Mailpit, desktop | 3 passed (2026-11-17) | |
 
 Details are in [TESTING.md](TESTING.md). Security review results and fixes are in [SECURITY.md](SECURITY.md).
 
@@ -90,6 +92,7 @@ Masterplan times include software WebGL. Expect real GPUs to be faster, but this
   media URL instead of a processed asset still load the single equirect image.
 - Postgres is tested (API suite, seed, backup/restore and an API + worker smoke), but the Postgres compose
   stack was not brought up on the VM. Redis/BullMQ is untested. S3 is tested against local RustFS only.
+- The deployed VM has no SMTP configured, so invitations and password resets answer 503 there.
 - Not automated: pinch zoom, real GPU rendering, load tests and screen-reader output. See
   [TESTING.md](TESTING.md).
 - The demo data is fictitious. Real panoramas and models from the client are the next improvement.

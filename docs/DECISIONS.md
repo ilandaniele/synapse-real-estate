@@ -87,3 +87,17 @@ Formato corto: contexto, decisión, consecuencias. Estado: Aceptada salvo indica
   `@opentelemetry/api` duplicaba `drizzle-orm` en el lockfile y rompía los tipos.
 - **Consecuencias**: sigue siendo una sola VM; los backups quedan en el disco de la VM hasta que el operador
   los copie fuera. Los tests de API corren también contra Postgres con `PG_TEST_URL`, una base por contexto.
+
+## ADR-016 Invitaciones y recuperación de contraseña con tokens de un solo uso por email
+- **Contexto**: los owners solo podían crear miembros con una contraseña que tenían que pasar a mano, y no
+  había forma de recuperar una contraseña olvidada.
+- **Decisión**: tablas `invitations` y `password_resets` que guardan solo el sha256 de un token aleatorio de
+  32 bytes. El enlace lleva el token en el fragmento (`#token=`), que no llega a servidores ni logs; la página
+  del admin lo lee y lo borra de la barra. El canje es un `UPDATE ... WHERE used_at IS NULL AND expires_at >
+  now() RETURNING`, atómico, así que un enlace no se usa dos veces. Pedir un reset responde 202 exista o no el
+  email, y el envío no se espera para no delatarlo por tiempo. Canjear un reset quema todos los enlaces
+  abiertos del usuario y revoca sus sesiones. Envío con `nodemailer` por
+  `SMTP_URL`; sin SMTP, en desarrollo el email va al log y en producción la API responde 503. Mailpit (MIT) en
+  `docker-compose.yml` para probar el envío real sin salir de la máquina.
+- **Consecuencias**: producción necesita un proveedor SMTP y `ADMIN_PUBLIC_URL`. Sin ellos se sigue pudiendo
+  crear miembros con contraseña desde «Miembros».

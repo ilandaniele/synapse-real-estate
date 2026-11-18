@@ -17,5 +17,6 @@ repositorio público en GitHub.
 - [x] Roadmap Fase 2 — Storage S3/R2 con subida presignada ([STORAGE.md](STORAGE.md)).
 - [x] Roadmap Fase 2 — Panoramas multirresolución en teselas cubemap (ADR-014).
 - [x] Roadmap Fase 2 — Postgres, backups y métricas ([BACKUPS.md](BACKUPS.md), ADR-015).
+- [x] Roadmap Fase 2 — Invitaciones y recuperación de contraseña por email ([EMAIL.md](EMAIL.md), ADR-016).
 
 Detalle de avance, comandos y resultados de tests: [PROGRESS.md](PROGRESS.md).

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { LoginInput, type SessionUser } from "@synapse/contracts";
@@ -60,6 +61,9 @@ export default function LoginPage() {
           <Button type="submit" variant="primary" disabled={login.isPending} data-testid="login-submit">
             {login.isPending ? "Entrando…" : "Entrar"}
           </Button>
+          <Link href="/forgot-password" className="text-sm text-blue-700 hover:underline" data-testid="login-forgot">
+            ¿Olvidaste tu contraseña?
+          </Link>
         </div>
       </form>
     </main>

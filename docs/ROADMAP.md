@@ -16,7 +16,8 @@
 - [x] Postgres, backups automáticos y observabilidad. Hecho el 2026-11-17: compose con Postgres, worker y
   backups diarios; `/health/ready` y `/metrics` Prometheus ([BACKUPS.md](BACKUPS.md)). Postgres en contenedor
   propio, no gestionado.
-- Gestión de usuarios e invitaciones por organización; recuperación de contraseña por email.
+- [x] Gestión de usuarios e invitaciones por organización; recuperación de contraseña por email. Hecho el
+  2026-11-17: enlaces de un solo uso por SMTP, probados con Mailpit local ([EMAIL.md](EMAIL.md)).
 - [x] Modo kiosko para pantallas táctiles (inactividad → vuelta a home, sin barra del navegador). Hecho el
   2026-11-17: [KIOSK.md](KIOSK.md).
 - i18n (es/en) del showroom.

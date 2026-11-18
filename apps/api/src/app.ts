@@ -10,14 +10,18 @@ import { LocalStorage, type ObjectStorage } from "@synapse/storage";
 import { defaultMediaBaseUrl, loadConfig, type Config } from "./config";
 import { decorateAuth } from "./lib/auth";
 import { errorHandler, forbidden, notFoundHandler } from "./lib/errors";
+import { logMailer, smtpMailer, type Mailer } from "./lib/mailer";
 import { registerMetrics } from "./lib/metrics";
 import { buildOpenApiDocument } from "./lib/openapi";
 import authRoutes from "./routes/auth";
 import healthRoutes from "./routes/health";
+import invitationAcceptRoutes from "./routes/invitations";
+import passwordResetRoutes from "./routes/password-reset";
 import publicRoutes from "./routes/public";
 import { assetAdminRoutes, uploadRoutes } from "./routes/admin/assets";
 import dashboardRoutes from "./routes/admin/dashboard";
 import developmentRoutes from "./routes/admin/developments";
+import invitationRoutes from "./routes/admin/invitations";
 import floorPlanRoutes from "./routes/admin/floor-plans";
 import galleryRoutes from "./routes/admin/gallery";
 import jobRoutes from "./routes/admin/jobs";
@@ -33,6 +37,8 @@ export interface BuildAppOptions {
   config?: Partial<Omit<Config, "storageDir">>;
   /** Defaults to files under `storageDir`, served by the API at /media/. */
   storage?: ObjectStorage;
+  /** Defaults to SMTP when `smtpUrl` is set, else the log outside production, else no email. */
+  mailer?: Mailer;
   /** Per-IP requests/minute. Defaults: global 300, login 10, leads 5. */
   rateLimit?: { global?: number; login?: number; leads?: number };
   logger?: boolean;
@@ -67,6 +73,11 @@ async function registerLocalMedia(app: FastifyInstance, root: string) {
   });
 }
 
+function defaultMailer(config: Config, app: FastifyInstance): Mailer | null {
+  if (config.smtpUrl) return smtpMailer(config.smtpUrl, config.mailFrom);
+  return config.isProd ? null : logMailer(app.log);
+}
+
 export async function buildApp(options: BuildAppOptions): Promise<FastifyInstance> {
   const publicApiUrl = options.config?.publicApiUrl ?? "http://localhost:4000";
   const config: Config = {
@@ -78,6 +89,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     mediaBaseUrl: defaultMediaBaseUrl(publicApiUrl),
     corsOrigins: ["http://localhost:3000", "http://localhost:3001"],
     trustProxy: false,
+    mailFrom: "Synapse <no-reply@synapse.local>",
+    adminPublicUrl: "http://localhost:3001",
     ...options.config,
     storageDir: options.storageDir,
   };
@@ -93,6 +106,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   app.decorate("config", config);
   const storage = options.storage ?? new LocalStorage(options.storageDir);
   app.decorate("storage", storage);
+  app.decorate("mailer", options.mailer ?? defaultMailer(config, app));
   decorateAuth(app);
   app.setErrorHandler(errorHandler);
   app.setNotFoundHandler(notFoundHandler);
@@ -143,6 +157,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   await app.register(
     async (api) => {
       await api.register(authRoutes, { prefix: "/auth", loginRateLimit: limits.login });
+      await api.register(invitationAcceptRoutes, { prefix: "/auth", credentialRateLimit: limits.login });
+      await api.register(passwordResetRoutes, { prefix: "/auth", credentialRateLimit: limits.login });
       await api.register(publicRoutes, { prefix: "/public", leadRateLimit: limits.leads });
       await api.register(uploadRoutes);
       await api.register(
@@ -154,6 +170,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
           await admin.register(galleryRoutes);
           await admin.register(pointOfInterestRoutes);
           await admin.register(memberRoutes);
+          await admin.register(invitationRoutes);
           await admin.register(leadRoutes);
           await admin.register(assetAdminRoutes);
           await admin.register(jobRoutes);
