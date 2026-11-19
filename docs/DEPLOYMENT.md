@@ -160,6 +160,16 @@ Para cobrar con Stripe (ADR-023), con una cuenta propia:
    `SHOWROOM_PUBLIC_URL=https://<SHOWROOM_HOST>`. El API no arranca si falta alguna.
 3. Reiniciar solo el API. Probar primero con claves `sk_test_…` y una tarjeta de prueba de Stripe.
 
+Stripe en modo prueba activado el 2026-11-19 con una cuenta de Stripe propia, "Synapse", separada de otros
+proyectos. Su destino de webhook "synapse-showroom" escucha los cuatro eventos de checkout con carga "snapshot". El
+usuario pegó `sk_test_…` y `whsec_…` en un script interactivo de la VM, que exige esos prefijos y guarda una copia
+`.env.production.bak-<fecha>`; las claves no pasaron por el chat ni por git. Luego se recreó solo el API
+(`up -d --no-build api`). Prueba de punta a punta: reserva de Villa 5 desde el showroom y pago con la tarjeta
+4242 4242 4242 4242. El checkout volvió con "Reserva confirmada", el webhook llegó, la reserva quedó `PAID` y la
+unidad V5 `RESERVED`. La sesión SSH se cortaba mientras el script esperaba la clave: con
+`-o ServerAliveInterval=10 -o ServerAliveCountMax=30` aguanta. Para cobrar de verdad hace falta verificar la empresa
+en Stripe y repetir los pasos con claves `sk_live_…` y un webhook del modo real.
+
 ### Instalación en la VM
 ```bash
 sudo apt-get update && sudo apt-get install -y docker.io docker-compose-v2 git
