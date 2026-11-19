@@ -170,6 +170,16 @@ unidad V5 `RESERVED`. La sesión SSH se cortaba mientras el script esperaba la c
 `-o ServerAliveInterval=10 -o ServerAliveCountMax=30` aguanta. Para cobrar de verdad hace falta verificar la empresa
 en Stripe y repetir los pasos con claves `sk_live_…` y un webhook del modo real.
 
+Para entrar al admin con Google (ADR-026):
+1. En Google Cloud Console, crear un proyecto, configurar la pantalla de consentimiento (tipo «Externo», en
+   modo prueba alcanza; sumar como testers los emails que van a entrar) y crear un ID de cliente OAuth de tipo
+   «Aplicación web» con el origen JavaScript autorizado `https://<ADMIN_HOST>`. No hace falta URI de
+   redirección ni client secret.
+2. En `.env.production`: `GOOGLE_CLIENT_ID=<id>.apps.googleusercontent.com`. Reiniciar solo el API
+   (`up -d --no-build api`); el botón aparece al recargar el login, porque el admin lee el ID de
+   `GET /api/v1/auth/providers`. El admin sí necesita la imagen nueva por la CSP.
+3. Solo entran emails que ya son miembros. Para sumar a alguien, invitarlo desde «Miembros» con su Gmail.
+
 ### Instalación en la VM
 ```bash
 sudo apt-get update && sudo apt-get install -y docker.io docker-compose-v2 git

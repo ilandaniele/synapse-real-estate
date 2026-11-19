@@ -5,6 +5,7 @@ import fastifyStatic from "@fastify/static";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
+import type { JWTVerifyGetKey } from "jose";
 import type { Db } from "@synapse/db";
 import { LocalStorage, type ObjectStorage } from "@synapse/storage";
 import { defaultMediaBaseUrl, loadConfig, type Config } from "./config";
@@ -47,6 +48,8 @@ export interface BuildAppOptions {
   mailer?: Mailer;
   /** Defaults to Stripe Checkout when `paymentProvider` is "stripe"; tests inject a fake. */
   paymentGateway?: PaymentGateway;
+  /** Defaults to Google's published keys; tests pass local ones. */
+  googleKeys?: JWTVerifyGetKey;
   /** Per-IP requests/minute. Defaults: global 300, login 10, leads 5. */
   rateLimit?: { global?: number; login?: number; leads?: number; visits?: number; payments?: number };
   logger?: boolean;
@@ -169,7 +172,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
 
   await app.register(
     async (api) => {
-      await api.register(authRoutes, { prefix: "/auth", loginRateLimit: limits.login });
+      await api.register(authRoutes, { prefix: "/auth", loginRateLimit: limits.login, googleKeys: options.googleKeys });
       await api.register(invitationAcceptRoutes, { prefix: "/auth", credentialRateLimit: limits.login });
       await api.register(passwordResetRoutes, { prefix: "/auth", credentialRateLimit: limits.login });
       await api.register(publicRoutes, { prefix: "/public", leadRateLimit: limits.leads, visitRateLimit: limits.visits });

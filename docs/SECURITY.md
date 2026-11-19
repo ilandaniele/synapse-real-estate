@@ -24,6 +24,10 @@ automated test, and the full suites passed after the fixes (see [TESTING.md](TES
   is returned once to the inviting owner, and owners can issue a reset link for a member, but only for users
   who belong to no other organization, so an owner cannot take over an account outside their own. Both
   responses are `no-store` and audited. See [EMAIL.md](EMAIL.md).
+- **Sign in with Google (optional, ADR-026):** the API verifies the Google ID token signature against Google's
+  published keys, the issuer, the audience (`GOOGLE_CLIENT_ID`), the expiry and `email_verified`. It then signs
+  in only an existing member with that email; Google never creates accounts. The route shares the login rate
+  limit and does not exist without `GOOGLE_CLIENT_ID`.
 - **Leads:** honeypot, consent, a rate limit per IP and a hashed IP (no raw IP stored).
 - **Rate limits per IP:** global 300/min, login 10/min, leads 5/min, reservations 5/min, mock payments 10/min.
 - **CSRF:** SameSite=Lax cookies plus an Origin check. Writes (`POST`, `PUT`, `PATCH`, `DELETE`) that send an

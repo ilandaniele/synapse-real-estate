@@ -1,67 +1,52 @@
 import bcrypt from "bcryptjs";
 import { and, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
-import { LoginInput, PasswordChangeInput, type SessionUser } from "@synapse/contracts";
+import type { JWTVerifyGetKey } from "jose";
+import { GoogleLoginInput, LoginInput, PasswordChangeInput, type AuthProviders, type SessionUser } from "@synapse/contracts";
 import { organizationMemberships, organizations, users } from "@synapse/db";
 import { audit } from "../lib/audit";
 import { SESSION_COOKIE, sessionCookieOptions, session, signSession } from "../lib/auth";
 import { badRequest, unauthorized } from "../lib/errors";
+import { googleSigningKeys, verifiedGoogleEmail } from "../lib/google";
 import { hashPassword, verifyPassword } from "../lib/passwords";
+import { findSignInCandidate, isMember, startSession } from "../lib/sign-in";
 
 // Compared against when the email is unknown so both failure paths cost one bcrypt verification.
 const DUMMY_HASH = bcrypt.hashSync("not-a-real-password", 10);
 
 export interface AuthRouteOptions {
   loginRateLimit: number;
+  /** Google's signing keys; tests pass local ones. */
+  googleKeys?: JWTVerifyGetKey;
 }
 
 export default async function authRoutes(app: FastifyInstance, opts: AuthRouteOptions) {
   const credentialRateLimit = { rateLimit: { max: opts.loginRateLimit, timeWindow: "1 minute" } };
 
-  app.post(
-    "/login",
-    { config: credentialRateLimit },
-    async (request, reply) => {
-      const input = LoginInput.parse(request.body);
-      const [row] = await app.db
-        .select({
-          userId: users.id,
-          email: users.email,
-          name: users.name,
-          passwordHash: users.passwordHash,
-          organizationId: organizations.id,
-          organizationName: organizations.name,
-          role: organizationMemberships.role,
-        })
-        .from(users)
-        .leftJoin(organizationMemberships, eq(organizationMemberships.userId, users.id))
-        .leftJoin(organizations, eq(organizations.id, organizationMemberships.organizationId))
-        .where(eq(users.email, input.email.trim().toLowerCase()))
-        .orderBy(organizationMemberships.createdAt)
-        .limit(1);
+  app.post("/login", { config: credentialRateLimit }, async (request, reply) => {
+    const input = LoginInput.parse(request.body);
+    const candidate = await findSignInCandidate(app, input.email);
+    const valid = await verifyPassword(input.password, candidate?.passwordHash ?? DUMMY_HASH);
+    if (!valid || !isMember(candidate)) throw unauthorized("Invalid email or password");
+    return startSession(app, reply, candidate);
+  });
 
-      const valid = await verifyPassword(input.password, row?.passwordHash ?? DUMMY_HASH);
-      if (!row || !valid || !row.organizationId || !row.role || !row.organizationName) {
-        throw unauthorized("Invalid email or password");
-      }
-      const token = await signSession(app.config.sessionSecret, {
-        userId: row.userId,
-        organizationId: row.organizationId,
-        role: row.role,
-      });
-      reply.setCookie(SESSION_COOKIE, token, sessionCookieOptions(app.config));
-      reply.header("Cache-Control", "no-store");
-      const user: SessionUser = {
-        id: row.userId,
-        email: row.email,
-        name: row.name,
-        organizationId: row.organizationId,
-        organizationName: row.organizationName,
-        role: row.role,
-      };
-      return user;
-    },
-  );
+  app.get("/providers", async () => {
+    const providers: AuthProviders = { google: app.config.googleClientId ? { clientId: app.config.googleClientId } : null };
+    return providers;
+  });
+
+  const googleClientId = app.config.googleClientId;
+  if (googleClientId) {
+    const keys = opts.googleKeys ?? googleSigningKeys();
+    app.post("/google", { config: credentialRateLimit }, async (request, reply) => {
+      const { credential } = GoogleLoginInput.parse(request.body);
+      const email = await verifiedGoogleEmail(credential, googleClientId, keys);
+      const candidate = email ? await findSignInCandidate(app, email) : undefined;
+      if (!isMember(candidate)) throw unauthorized("This Google account has no access");
+      return startSession(app, reply, candidate);
+    });
+  }
 
   app.post("/logout", async (_request, reply) => {
     reply.clearCookie(SESSION_COOKIE, { path: "/" });

@@ -16,6 +16,8 @@ Errors always use the `ApiError` shape `{error: {code, message, details?}}`. Bod
 | GET | /docs, /docs/json | public, not in production | Swagger UI / OpenAPI 3.0 generated from the Zod contracts |
 | GET | /media/* | public | Local storage only (`STORAGE_DRIVER=local`). Static from STORAGE_DIR. `uploads/` is never served. 7 d cache, nosniff. With S3, media URLs use `MEDIA_PUBLIC_URL` |
 | POST | /api/v1/auth/login | public | 10/min/IP; 401 identical for wrong email or password |
+| GET | /api/v1/auth/providers | public | `{ google: { clientId } \| null }` |
+| POST | /api/v1/auth/google | public | Only when `GOOGLE_CLIENT_ID` is set (else 404). Google ID token; 10/min/IP shared with login; 401 for an invalid token or a non-member email |
 | POST | /api/v1/auth/logout | public | clears cookie |
 | GET | /api/v1/auth/me | session | SessionUser |
 | POST | /api/v1/auth/invitations/preview | public | `{token}` -> `{email, role, organizationName, expiresAt}`; 404 `NOT_FOUND` for unknown, used, revoked or expired. 10/min/IP |

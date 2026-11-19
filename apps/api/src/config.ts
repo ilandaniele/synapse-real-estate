@@ -34,6 +34,8 @@ const Env = z.object({
   STRIPE_API_URL: z.string().url().default("https://api.stripe.com"),
   // Public https URL of the showroom (https://<SHOWROOM_HOST>); Stripe sends the buyer back here.
   SHOWROOM_PUBLIC_URL: z.union([z.literal(""), z.string().url()]).default(""),
+  // OAuth client ID (Google Cloud Console, type "Web application"). Empty hides "Sign in with Google".
+  GOOGLE_CLIENT_ID: z.union([z.literal(""), z.string().endsWith(".apps.googleusercontent.com")]).default(""),
 });
 
 export interface Config {
@@ -55,6 +57,7 @@ export interface Config {
   reservationDeposit: string;
   stripe?: StripeConfig;
   showroomPublicUrl: string;
+  googleClientId?: string;
 }
 
 export type PaymentProvider = "none" | "mock" | "stripe";
@@ -112,5 +115,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, warn: (message:
         ? { secretKey: e.STRIPE_SECRET_KEY, webhookSecret: e.STRIPE_WEBHOOK_SECRET, apiUrl: e.STRIPE_API_URL.replace(/\/+$/, "") }
         : undefined,
     showroomPublicUrl: (e.SHOWROOM_PUBLIC_URL || "http://localhost:3000").replace(/\/+$/, ""),
+    googleClientId: e.GOOGLE_CLIENT_ID || undefined,
   };
 }

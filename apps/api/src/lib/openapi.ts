@@ -25,6 +25,8 @@ import {
   ReservationProgress,
   ReservationInput,
   ReservationSettings,
+  AuthProviders,
+  GoogleLoginInput,
   LoginInput,
   Member,
   MemberInput,
@@ -72,6 +74,8 @@ const A = "/api/v1/admin";
 const ROUTES: RouteDoc[] = [
   { method: "get", path: "/health", summary: "Liveness probe", tag: "system", response: z.object({ status: z.literal("ok") }) },
   { method: "post", path: "/api/v1/auth/login", summary: "Log in (sets httpOnly session cookie)", tag: "auth", body: LoginInput, response: SessionUser },
+  { method: "get", path: "/api/v1/auth/providers", summary: "Sign-in methods offered besides email and password", tag: "auth", response: AuthProviders },
+  { method: "post", path: "/api/v1/auth/google", summary: "Log in with a Google ID token (only when GOOGLE_CLIENT_ID is set)", tag: "auth", body: GoogleLoginInput, response: SessionUser },
   { method: "post", path: "/api/v1/auth/logout", summary: "Log out", tag: "auth", response: Ok },
   { method: "post", path: "/api/v1/auth/password", summary: "Change password; revokes other sessions and re-issues the cookie", tag: "auth", auth: true, body: PasswordChangeInput, status: 204 },
   { method: "get", path: "/api/v1/auth/me", summary: "Current session user", tag: "auth", auth: true, response: SessionUser },

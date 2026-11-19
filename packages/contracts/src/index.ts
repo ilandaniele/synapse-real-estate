@@ -193,6 +193,10 @@ export const Lead = z.object({
 export type Lead = z.infer<typeof Lead>;
 
 export const LoginInput = z.object({ email: z.string().email(), password: z.string().min(8).max(200) });
+/** The ID token Google Identity Services hands the page after the user picks an account. */
+export const GoogleLoginInput = z.object({ credential: z.string().min(1).max(4096) });
+export const AuthProviders = z.object({ google: z.object({ clientId: z.string() }).nullable() });
+export type AuthProviders = z.infer<typeof AuthProviders>;
 export const SessionUser = z.object({
   id: Uuid,
   email: z.string(),

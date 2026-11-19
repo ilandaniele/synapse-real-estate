@@ -229,3 +229,17 @@ Formato corto: contexto, decisión, consecuencias. Estado: Aceptada salvo indica
   El manifiesto público lleva ambos idiomas, así que la caché del CDN no depende del idioma. Los test ids de los
   hotspots salen de la etiqueta localizada (`hotspot-go-inside` en inglés). La migración 0008 corre en el
   próximo despliegue; las filas existentes quedan con `{}` y se ven en español hasta que se traduzcan.
+
+## ADR-026 Acceso al admin con Google
+- **Contexto**: entrar al panel solo con email y contraseña obligaba a recordar o recuperar contraseñas, sobre
+  todo la del propietario, que en producción es aleatoria.
+- **Decisión**: el admin muestra el botón oficial de Google Identity Services cuando `GOOGLE_CLIENT_ID` está
+  definido. El botón entrega un ID token firmado por Google y el admin lo envía a `POST /api/v1/auth/google`. El
+  API lo verifica con las claves públicas de Google (`jose`, firma RS256, emisor `accounts.google.com`, audiencia
+  igual al client ID, caducidad) y exige `email_verified`. Después busca al usuario por email con la misma
+  consulta que el login y emite la cookie de sesión de siempre. `GET /api/v1/auth/providers` publica el client
+  ID, así que el admin no necesita reconstruirse para activarlo. No hay redirección ni client secret.
+- **Consecuencias**: Google no crea cuentas. Solo entra quien ya es miembro de una organización, por invitación o
+  por la carga inicial; cualquier otro email recibe 401. La contraseña sigue funcionando. La CSP del admin admite
+  `https://accounts.google.com/gsi/` en script, estilo, conexión y frame. Revocar el acceso es quitar al miembro,
+  como antes.

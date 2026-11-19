@@ -3,11 +3,17 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { LoginInput, type SessionUser } from "@synapse/contracts";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { LoginInput, type AuthProviders, type SessionUser } from "@synapse/contracts";
 import { api, errorMessage, ApiRequestError } from "@/lib/api";
 import { keys } from "@/lib/queries";
 import { Button, TextField } from "@/components/ui";
+import { GoogleSignInButton } from "@/components/GoogleSignInButton";
+
+function loginErrorMessage(error: Error | null, unauthorizedText: string): string | null {
+  if (!error) return null;
+  return error instanceof ApiRequestError && error.status === 401 ? unauthorizedText : errorMessage(error);
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,13 +22,22 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
 
+  const [googleUnavailable, setGoogleUnavailable] = useState(false);
+
+  const signedIn = (user: SessionUser) => {
+    queryClient.setQueryData(keys.me, user);
+    router.replace("/");
+  };
   const login = useMutation({
     mutationFn: (input: { email: string; password: string }) => api<SessionUser>("/auth/login", { method: "POST", body: input }),
-    onSuccess: (user) => {
-      queryClient.setQueryData(keys.me, user);
-      router.replace("/");
-    },
+    onSuccess: signedIn,
   });
+  const googleLogin = useMutation({
+    mutationFn: (credential: string) => api<SessionUser>("/auth/google", { method: "POST", body: { credential } }),
+    onSuccess: signedIn,
+  });
+  const providers = useQuery({ queryKey: ["auth-providers"], queryFn: () => api<AuthProviders>("/auth/providers"), staleTime: Infinity });
+  const googleClientId = providers.data?.google?.clientId;
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -32,16 +47,15 @@ export default function LoginPage() {
       setLocalError("Introduce un email válido y una contraseña de al menos 8 caracteres.");
       return;
     }
+    googleLogin.reset();
     login.mutate(parsed.data);
   };
 
-  const serverError =
-    login.error instanceof ApiRequestError && login.error.status === 401
-      ? "Email o contraseña incorrectos."
-      : login.error
-        ? errorMessage(login.error)
-        : null;
-  const message = localError ?? serverError;
+  const message =
+    localError ??
+    loginErrorMessage(login.error, "Email o contraseña incorrectos.") ??
+    loginErrorMessage(googleLogin.error, "Esa cuenta de Google no tiene acceso. Pedí una invitación a un administrador.") ??
+    (googleUnavailable ? "No se pudo cargar el acceso con Google. Entrá con tu email y contraseña." : null);
 
   return (
     <main className="flex min-h-screen items-center justify-center p-4">
@@ -61,6 +75,20 @@ export default function LoginPage() {
           <Button type="submit" variant="primary" disabled={login.isPending} data-testid="login-submit">
             {login.isPending ? "Entrando…" : "Entrar"}
           </Button>
+          {googleClientId ? (
+            <>
+              <p className="text-center text-xs text-gray-500">o</p>
+              <GoogleSignInButton
+                clientId={googleClientId}
+                onCredential={(credential) => {
+                  setLocalError(null);
+                  login.reset();
+                  googleLogin.mutate(credential);
+                }}
+                onError={() => setGoogleUnavailable(true)}
+              />
+            </>
+          ) : null}
           <Link href="/forgot-password" className="text-sm text-blue-700 hover:underline" data-testid="login-forgot">
             ¿Olvidaste tu contraseña?
           </Link>
