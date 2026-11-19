@@ -142,6 +142,14 @@ una versión nueva únicamente si, frente a la última publicada, no cambió nad
 39 filas traducidas y `lomas-del-faro` publicada como v2; `vista-alta` sin cambios. El manifiesto en vivo trae
 `translations.en` y el tour de la villa 6 en inglés muestra «Living room» y «Go inside».
 
+SMTP activado el 2026-11-19 con Gmail y una contraseña de aplicación (cuenta con verificación en 2 pasos,
+myaccount.google.com/apppasswords). El usuario la cargó con un script interactivo en la VM, que guarda una copia
+`.env.production.bak-<fecha>` y añade `SMTP_URL=smtps://<correo>:<contraseña>@smtp.gmail.com:465`, `MAIL_FROM` y
+`ADMIN_PUBLIC_URL`; la contraseña no pasó por el chat ni por git. Luego se recreó solo el API
+(`up -d --no-build api`, porque `restart` no relee `env_file`). `transporter.verify()` dentro del contenedor
+autentica contra Gmail, y `POST /api/v1/auth/password-reset/request` responde 202 en lugar de 503. Gmail limita
+el envío a unos 500 correos al día; para más volumen, usar un proveedor transaccional.
+
 Para cobrar con Stripe (ADR-023), con una cuenta propia:
 1. En el panel de Stripe, crear el endpoint de webhook
    `https://<SHOWROOM_HOST>/api/v1/public/reservations/stripe/webhook` con los eventos
