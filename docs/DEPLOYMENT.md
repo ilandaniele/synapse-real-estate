@@ -180,6 +180,11 @@ Para entrar al admin con Google (ADR-026):
    `GET /api/v1/auth/providers`. El admin sí necesita la imagen nueva por la CSP.
 3. Solo entran emails que ya son miembros. Para sumar a alguien, invitarlo desde «Miembros» con su Gmail.
 
+Redespliegue del 2026-11-20 con Google (commit `f235f1f`): imagen copiada en 253 s y
+`up -d --no-build api admin`, sin migraciones. `GET /api/v1/auth/providers` devuelve el client ID y el login
+muestra «Iniciar sesión con Google». En la consola de Google el tester agregado no aparecía en la lista al
+recargar; si Google rechaza el login con «acceso bloqueado», volver a agregarlo en «Audience → Test users».
+
 ### Instalación en la VM
 ```bash
 sudo apt-get update && sudo apt-get install -y docker.io docker-compose-v2 git
