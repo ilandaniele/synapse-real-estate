@@ -193,6 +193,7 @@ export const Lead = z.object({
 export type Lead = z.infer<typeof Lead>;
 
 export const LoginInput = z.object({ email: z.string().email(), password: z.string().min(8).max(200) });
+export type LoginInput = z.infer<typeof LoginInput>;
 /** The ID token Google Identity Services hands the page after the user picks an account. */
 export const GoogleLoginInput = z.object({ credential: z.string().min(1).max(4096) });
 export const AuthProviders = z.object({ google: z.object({ clientId: z.string() }).nullable() });
@@ -523,3 +524,12 @@ export const Reservation = z.object({
   createdAt: IsoDate,
 });
 export type Reservation = z.infer<typeof Reservation>;
+
+/** Public showroom accounts; a separate population from staff users. */
+export const BuyerRegisterInput = z.object({ name: z.string().trim().min(1).max(120), email: Email, password: NewPassword });
+export type BuyerRegisterInput = z.infer<typeof BuyerRegisterInput>;
+export const BuyerProfile = z.object({ id: Uuid, email: z.string(), name: z.string(), favoriteUnitIds: z.array(Uuid) });
+export type BuyerProfile = z.infer<typeof BuyerProfile>;
+/** Favorited units as the latest publication shows them, newest favorite first. */
+export const BuyerFavorites = z.object({ items: z.array(Unit) });
+export type BuyerFavorites = z.infer<typeof BuyerFavorites>;

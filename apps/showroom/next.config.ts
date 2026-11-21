@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
     "@synapse/domain",
     "@synapse/contracts",
   ],
-  headers: async () => securityHeaders(["https://tiles.openfreemap.org"]),
+  headers: async () => securityHeaders(["https://tiles.openfreemap.org"], { googleSignIn: true }),
   turbopack: {
     root: path.resolve(import.meta.dirname, "../.."),
   },

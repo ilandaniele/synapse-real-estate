@@ -12,6 +12,7 @@ import { sortUnits, unitHasTour } from "@/lib/manifest";
 import { trackVisit } from "@/lib/analytics";
 import { useReservationSettings } from "@/lib/reservations";
 import { useShowroomStore } from "@/lib/store";
+import { FavoriteToggle } from "./FavoriteToggle";
 import { LeadForm } from "./LeadForm";
 import { ManifestGate } from "./ManifestGate";
 import { BTN_PRIMARY } from "./UnitCard";
@@ -83,7 +84,10 @@ function UnitSheet({ manifest, slug }: { manifest: DevelopmentManifest; slug: st
           </h1>
         </div>
         <div className="flex flex-col items-start gap-2 sm:items-end">
-          <StatusBadge status={unit.status} locale={locale} />
+          <div className="flex items-center gap-2">
+            <StatusBadge status={unit.status} locale={locale} />
+            <FavoriteToggle unitId={unit.id} unitName={unit.name} testId="sheet-favorite" />
+          </div>
           <Price amount={unit.price} currency={unit.currency} locale={INTL_LOCALE[locale]} className="text-3xl font-semibold text-[#8a6a22]" />
         </div>
       </header>

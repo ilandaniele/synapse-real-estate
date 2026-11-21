@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, UserRound, X } from "lucide-react";
 import { useI18n } from "@/i18n/I18nProvider";
 import { LocaleSwitch } from "@/i18n/LocaleSwitch";
 import { useManifest } from "@/lib/query";
@@ -95,7 +95,21 @@ export function SiteHeader() {
           })}
         </nav>
 
-        <LocaleSwitch />
+        <div className="flex shrink-0 items-center gap-1">
+          <Link
+            href="/cuenta"
+            data-buyer-only
+            data-testid="nav-account"
+            aria-current={pathname === "/cuenta" ? "page" : undefined}
+            className={`inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-md px-2 text-sm font-medium transition-colors ${
+              pathname === "/cuenta" ? "bg-white/15 text-[#f0d79a]" : "text-white/80 hover:bg-white/10 hover:text-white"
+            }`}
+          >
+            <UserRound aria-hidden="true" size={20} />
+            <span className="sr-only lg:not-sr-only">{t.account.headerLink}</span>
+          </Link>
+          <LocaleSwitch />
+        </div>
       </div>
     </header>
   );

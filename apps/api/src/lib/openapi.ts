@@ -26,6 +26,9 @@ import {
   ReservationInput,
   ReservationSettings,
   AuthProviders,
+  BuyerFavorites,
+  BuyerProfile,
+  BuyerRegisterInput,
   GoogleLoginInput,
   LoginInput,
   Member,
@@ -60,7 +63,7 @@ interface RouteDoc {
   path: string;
   summary: string;
   tag: string;
-  auth?: Action | true;
+  auth?: Action | true | "buyer";
   body?: z.ZodType;
   response?: z.ZodType;
   status?: number;
@@ -70,7 +73,10 @@ interface RouteDoc {
 const arr = <T extends z.ZodType>(s: T) => z.array(s);
 const Ok = z.object({ ok: z.boolean() });
 
+const BuyerAccount = BuyerProfile.omit({ favoriteUnitIds: true });
+
 const A = "/api/v1/admin";
+const B = "/api/v1/buyer";
 const ROUTES: RouteDoc[] = [
   { method: "get", path: "/health", summary: "Liveness probe", tag: "system", response: z.object({ status: z.literal("ok") }) },
   { method: "post", path: "/api/v1/auth/login", summary: "Log in (sets httpOnly session cookie)", tag: "auth", body: LoginInput, response: SessionUser },
@@ -79,6 +85,14 @@ const ROUTES: RouteDoc[] = [
   { method: "post", path: "/api/v1/auth/logout", summary: "Log out", tag: "auth", response: Ok },
   { method: "post", path: "/api/v1/auth/password", summary: "Change password; revokes other sessions and re-issues the cookie", tag: "auth", auth: true, body: PasswordChangeInput, status: 204 },
   { method: "get", path: "/api/v1/auth/me", summary: "Current session user", tag: "auth", auth: true, response: SessionUser },
+  { method: "post", path: `${B}/register`, summary: "Create a showroom buyer account and sign it in (sets httpOnly buyer cookie)", tag: "buyer", body: BuyerRegisterInput, response: BuyerAccount, status: 201 },
+  { method: "post", path: `${B}/login`, summary: "Buyer log in with email and password", tag: "buyer", body: LoginInput, response: BuyerAccount },
+  { method: "post", path: `${B}/google`, summary: "Buyer log in with a Google ID token, creating the account if new (only when GOOGLE_CLIENT_ID is set)", tag: "buyer", body: GoogleLoginInput, response: BuyerAccount },
+  { method: "post", path: `${B}/logout`, summary: "Buyer log out", tag: "buyer", response: Ok },
+  { method: "get", path: `${B}/me`, summary: "Signed-in buyer and saved unit ids", tag: "buyer", auth: "buyer", response: BuyerProfile },
+  { method: "get", path: `${B}/favorites`, summary: "Saved units still published, newest first (max 100)", tag: "buyer", auth: "buyer", response: BuyerFavorites },
+  { method: "put", path: `${B}/favorites/{unitId}`, summary: "Save a published unit (idempotent)", tag: "buyer", auth: "buyer", status: 204 },
+  { method: "delete", path: `${B}/favorites/{unitId}`, summary: "Remove a saved unit (idempotent)", tag: "buyer", auth: "buyer", status: 204 },
   { method: "get", path: "/api/v1/public/developments/{slug}/manifest", summary: "Latest published manifest (ETag, cacheable)", tag: "public", response: DevelopmentManifest },
   { method: "post", path: "/api/v1/public/leads", summary: "Submit a lead (honeypot `website` must be empty; 5/min/IP)", tag: "public", body: LeadInput, response: z.object({ id: z.string().uuid() }), status: 201 },
   { method: "get", path: "/api/v1/public/reservations/settings", summary: "Whether online reservations are enabled and the deposit amount", tag: "public", response: ReservationSettings },
@@ -152,6 +166,11 @@ const schemaOf = (schema: z.ZodType, io: "input" | "output") => {
   return json;
 };
 
+function securityOf(auth: NonNullable<RouteDoc["auth"]>) {
+  if (auth === "buyer") return { security: [{ buyerCookieAuth: [] }], description: "Requires a showroom buyer session." };
+  return { security: [{ cookieAuth: [] }], description: auth === true ? "Requires a session." : `Requires a session with permission \`${auth}\`.` };
+}
+
 export function buildOpenApiDocument(publicApiUrl: string) {
   const paths: Record<string, Record<string, unknown>> = {};
   for (const r of ROUTES) {
@@ -167,7 +186,7 @@ export function buildOpenApiDocument(publicApiUrl: string) {
       summary: r.summary,
       tags: [r.tag],
       parameters: [...params, ...query],
-      ...(r.auth ? { security: [{ cookieAuth: [] }], description: r.auth === true ? "Requires a session." : `Requires a session with permission \`${r.auth}\`.` } : {}),
+      ...(r.auth ? securityOf(r.auth) : {}),
       ...(r.body ? { requestBody: { required: true, content: { "application/json": { schema: schemaOf(r.body, "input") } } } } : {}),
       responses: {
         [status]: r.response
@@ -182,7 +201,12 @@ export function buildOpenApiDocument(publicApiUrl: string) {
     openapi: "3.0.3" as const,
     info: { title: "Synapse Real Estate API", version: "0.1.0", description: "Schemas are generated from the shared Zod contracts (@synapse/contracts)." },
     servers: [{ url: publicApiUrl }],
-    components: { securitySchemes: { cookieAuth: { type: "apiKey" as const, in: "cookie" as const, name: "synapse_session" } } },
+    components: {
+      securitySchemes: {
+        cookieAuth: { type: "apiKey" as const, in: "cookie" as const, name: "synapse_session" },
+        buyerCookieAuth: { type: "apiKey" as const, in: "cookie" as const, name: "synapse_buyer" },
+      },
+    },
     paths,
   };
 }

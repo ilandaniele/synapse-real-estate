@@ -1,4 +1,3 @@
-import bcrypt from "bcryptjs";
 import { and, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { JWTVerifyGetKey } from "jose";
@@ -8,11 +7,8 @@ import { audit } from "../lib/audit";
 import { SESSION_COOKIE, sessionCookieOptions, session, signSession } from "../lib/auth";
 import { badRequest, unauthorized } from "../lib/errors";
 import { googleSigningKeys, verifiedGoogleEmail } from "../lib/google";
-import { hashPassword, verifyPassword } from "../lib/passwords";
+import { DUMMY_PASSWORD_HASH, hashPassword, verifyPassword } from "../lib/passwords";
 import { findSignInCandidate, isMember, startSession } from "../lib/sign-in";
-
-// Compared against when the email is unknown so both failure paths cost one bcrypt verification.
-const DUMMY_HASH = bcrypt.hashSync("not-a-real-password", 10);
 
 export interface AuthRouteOptions {
   loginRateLimit: number;
@@ -26,7 +22,7 @@ export default async function authRoutes(app: FastifyInstance, opts: AuthRouteOp
   app.post("/login", { config: credentialRateLimit }, async (request, reply) => {
     const input = LoginInput.parse(request.body);
     const candidate = await findSignInCandidate(app, input.email);
-    const valid = await verifyPassword(input.password, candidate?.passwordHash ?? DUMMY_HASH);
+    const valid = await verifyPassword(input.password, candidate?.passwordHash ?? DUMMY_PASSWORD_HASH);
     if (!valid || !isMember(candidate)) throw unauthorized("Invalid email or password");
     return startSession(app, reply, candidate);
   });

@@ -26,6 +26,10 @@ html[data-kiosk="true"] body {
   overscroll-behavior: none;
 }
 
+html[data-kiosk="true"] [data-buyer-only] {
+  display: none;
+}
+
 html[data-kiosk="true"] :is(input, textarea) {
   user-select: text;
   -webkit-user-select: text;

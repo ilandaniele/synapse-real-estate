@@ -64,6 +64,13 @@
       "when": 1795020921682,
       "tag": "0008_content_translations",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795291858477,
+      "tag": "0009_buyers",
+      "breakpoints": true
     }
   ]
 }

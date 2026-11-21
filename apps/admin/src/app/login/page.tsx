@@ -5,10 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { LoginInput, type AuthProviders, type SessionUser } from "@synapse/contracts";
+import { GoogleSignInButton } from "@synapse/ui";
 import { api, errorMessage, ApiRequestError } from "@/lib/api";
 import { keys } from "@/lib/queries";
 import { Button, TextField } from "@/components/ui";
-import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 
 function loginErrorMessage(error: Error | null, unauthorizedText: string): string | null {
   if (!error) return null;

@@ -4,3 +4,5 @@ export const MANIFEST_URL = `${API_URL}/api/v1/public/developments/${DEVELOPMENT
 export const LEADS_URL = `${API_URL}/api/v1/public/leads`;
 export const RESERVATIONS_URL = `${API_URL}/api/v1/public/reservations`;
 export const VISITS_URL = `${API_URL}/api/v1/public/visits`;
+export const BUYER_URL = `${API_URL}/api/v1/buyer`;
+export const AUTH_PROVIDERS_URL = `${API_URL}/api/v1/auth/providers`;

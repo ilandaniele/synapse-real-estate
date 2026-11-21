@@ -36,7 +36,7 @@ declare module "fastify" {
   }
 }
 
-const key = (secret: string) => new TextEncoder().encode(secret);
+export const key = (secret: string) => new TextEncoder().encode(secret);
 
 export async function signSession(secret: string, claims: SessionClaims): Promise<string> {
   return new SignJWT({ org: claims.organizationId, role: claims.role, iatMs: Date.now() })

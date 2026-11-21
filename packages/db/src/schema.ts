@@ -9,6 +9,7 @@ import {
   numeric,
   pgEnum,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   unique,
@@ -588,4 +589,29 @@ export const reservations = pgTable(
     createdAt: createdAt(),
   },
   (t) => [index("reservations_org_created_idx").on(t.organizationId, t.createdAt), index("reservations_unit_idx").on(t.unitId)],
+);
+
+export const buyers = pgTable("buyers", {
+  id: id(),
+  email: text("email").notNull().unique(),
+  name: text("name").notNull(),
+  /** Null for accounts created with Google. */
+  passwordHash: text("password_hash"),
+  sessionsValidAfter: timestamp("sessions_valid_after", { withTimezone: true, mode: "date" }),
+  createdAt: createdAt(),
+  updatedAt: updatedAt(),
+});
+
+export const buyerFavorites = pgTable(
+  "buyer_favorites",
+  {
+    buyerId: uuid("buyer_id")
+      .notNull()
+      .references(() => buyers.id, { onDelete: "cascade" }),
+    unitId: uuid("unit_id")
+      .notNull()
+      .references(() => units.id, { onDelete: "cascade" }),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.buyerId, t.unitId] }), index("buyer_favorites_unit_idx").on(t.unitId)],
 );

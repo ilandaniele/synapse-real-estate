@@ -37,7 +37,15 @@ function loadGoogleIdentity(): Promise<GoogleIdentity> {
 }
 
 /** Google's own "Sign in with Google" button; hands the ID token to `onCredential`. */
-export function GoogleSignInButton({ clientId, onCredential, onError }: { clientId: string; onCredential: (credential: string) => void; onError: () => void }) {
+export interface GoogleSignInButtonProps {
+  clientId: string;
+  onCredential: (credential: string) => void;
+  onError: () => void;
+  locale?: string;
+  testId?: string;
+}
+
+export function GoogleSignInButton({ clientId, onCredential, onError, locale = "es", testId = "login-google" }: GoogleSignInButtonProps) {
   const container = useRef<HTMLDivElement>(null);
   const handlers = useRef({ onCredential, onError });
   useEffect(() => {
@@ -50,13 +58,13 @@ export function GoogleSignInButton({ clientId, onCredential, onError }: { client
       .then((google) => {
         if (cancelled || !container.current) return;
         google.accounts.id.initialize({ client_id: clientId, callback: ({ credential }) => handlers.current.onCredential(credential) });
-        google.accounts.id.renderButton(container.current, { theme: "outline", size: "large", text: "signin_with", locale: "es", width: 320 });
+        google.accounts.id.renderButton(container.current, { theme: "outline", size: "large", text: "signin_with", locale, width: 320 });
       })
       .catch(() => !cancelled && handlers.current.onError());
     return () => {
       cancelled = true;
     };
-  }, [clientId]);
+  }, [clientId, locale]);
 
-  return <div ref={container} className="flex min-h-10 justify-center" data-testid="login-google" />;
+  return <div ref={container} className="flex min-h-10 justify-center" data-testid={testId} />;
 }

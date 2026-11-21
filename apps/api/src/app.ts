@@ -10,12 +10,14 @@ import type { Db } from "@synapse/db";
 import { LocalStorage, type ObjectStorage } from "@synapse/storage";
 import { defaultMediaBaseUrl, loadConfig, type Config } from "./config";
 import { decorateAuth } from "./lib/auth";
+import { decorateBuyerAuth } from "./lib/buyer-auth";
 import { errorHandler, forbidden, notFoundHandler } from "./lib/errors";
 import { logMailer, smtpMailer, type Mailer } from "./lib/mailer";
 import { registerMetrics } from "./lib/metrics";
 import { stripeGateway, type PaymentGateway } from "./lib/stripe";
 import { buildOpenApiDocument } from "./lib/openapi";
 import authRoutes from "./routes/auth";
+import buyerRoutes from "./routes/buyer";
 import healthRoutes from "./routes/health";
 import invitationAcceptRoutes from "./routes/invitations";
 import passwordResetRoutes from "./routes/password-reset";
@@ -124,6 +126,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   app.decorate("mailer", options.mailer ?? defaultMailer(config, app));
   app.decorate("paymentGateway", options.paymentGateway ?? (config.stripe ? stripeGateway(config.stripe.apiUrl, config.stripe.secretKey) : null));
   decorateAuth(app);
+  decorateBuyerAuth(app);
   app.setErrorHandler(errorHandler);
   app.setNotFoundHandler(notFoundHandler);
 
@@ -173,6 +176,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   await app.register(
     async (api) => {
       await api.register(authRoutes, { prefix: "/auth", loginRateLimit: limits.login, googleKeys: options.googleKeys });
+      await api.register(buyerRoutes, { prefix: "/buyer", loginRateLimit: limits.login, googleKeys: options.googleKeys });
       await api.register(invitationAcceptRoutes, { prefix: "/auth", credentialRateLimit: limits.login });
       await api.register(passwordResetRoutes, { prefix: "/auth", credentialRateLimit: limits.login });
       await api.register(publicRoutes, { prefix: "/public", leadRateLimit: limits.leads, visitRateLimit: limits.visits });
