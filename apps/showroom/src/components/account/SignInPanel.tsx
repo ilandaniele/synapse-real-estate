@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useId, useState, type FormEvent } from "react";
 import { BuyerRegisterInput, LoginInput } from "@synapse/contracts";
 import { GoogleSignInButton } from "@synapse/ui";
@@ -157,6 +158,12 @@ export function SignInPanel() {
           />
         </div>
       ) : null}
+
+      <p className="mt-6 text-center text-sm">
+        <Link href="/privacidad" className="text-slate-600 underline underline-offset-2 hover:text-slate-900">
+          {t.privacy.link}
+        </Link>
+      </p>
     </div>
   );
 }

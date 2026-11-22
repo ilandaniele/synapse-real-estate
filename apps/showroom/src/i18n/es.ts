@@ -262,6 +262,33 @@ export const es = {
     signInToSave: (name: string) => `Ingresa para guardar ${name}`,
     failed: "No se pudo actualizar. Inténtalo de nuevo.",
   },
+  privacy: {
+    title: "Política de privacidad",
+    updated: "Última actualización: 22 de noviembre de 2026",
+    link: "Política de privacidad",
+    sections: [
+      {
+        heading: "Qué datos guardamos",
+        body: "Si creas una cuenta guardamos tu nombre, tu email, un hash de tu contraseña (nunca la contraseña) y las unidades que marcas como guardadas. Si ingresas con Google recibimos solo tu nombre, tu email y tu identificador de Google; no accedemos a nada más de tu cuenta. Si envías una consulta o una reserva guardamos los datos que escribes en el formulario.",
+      },
+      {
+        heading: "Para qué los usamos",
+        body: "Para mantener tu sesión, mostrarte tus unidades guardadas y responder a tus consultas sobre la promoción. No vendemos tus datos ni los usamos para publicidad.",
+      },
+      {
+        heading: "Cookies y estadísticas",
+        body: "Usamos una cookie propia para mantener tu sesión. Contamos visitas a las páginas de forma anónima y no contamos nada si tu navegador envía Do Not Track o Global Privacy Control.",
+      },
+      {
+        heading: "Terceros",
+        body: "Google procesa el ingreso con Google y Stripe procesa los pagos de reserva, cada uno bajo su propia política. Los datos se guardan en nuestro servidor.",
+      },
+      {
+        heading: "Tus derechos",
+        body: "Puedes pedirnos ver, corregir o borrar tus datos desde la página de contacto.",
+      },
+    ],
+  },
   kiosk: {
     title: "¿Seguís ahí?",
     before: "Por inactividad, la presentación vuelve al inicio en",

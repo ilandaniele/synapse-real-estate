@@ -264,6 +264,33 @@ export const en: Messages = {
     signInToSave: (name) => `Sign in to save ${name}`,
     failed: "Could not update. Try again.",
   },
+  privacy: {
+    title: "Privacy policy",
+    updated: "Last updated: November 22, 2026",
+    link: "Privacy policy",
+    sections: [
+      {
+        heading: "What we store",
+        body: "If you create an account we store your name, your email, a hashed version of your password and the units you save. If you sign in with Google we receive only your name, your email and your Google identifier; we access nothing else in your account. If you send an enquiry or a reservation we store what you type in the form.",
+      },
+      {
+        heading: "What we use it for",
+        body: "To keep you signed in, show your saved units and answer your questions about the development. We do not sell your data or use it for advertising.",
+      },
+      {
+        heading: "Cookies and statistics",
+        body: "We use one first-party cookie to keep you signed in. We count page views anonymously and count nothing if your browser sends Do Not Track or Global Privacy Control.",
+      },
+      {
+        heading: "Third parties",
+        body: "Google handles Google sign-in and Stripe handles reservation payments, each under its own policy. Your data is stored on our server.",
+      },
+      {
+        heading: "Your rights",
+        body: "You can ask us to show, correct or delete your data through the contact page.",
+      },
+    ],
+  },
   kiosk: {
     title: "Are you still there?",
     before: "Due to inactivity, the presentation returns to the start in",
