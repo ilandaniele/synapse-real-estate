@@ -185,6 +185,13 @@ Redespliegue del 2026-11-20 con Google (commit `f235f1f`): imagen copiada en 253
 muestra «Iniciar sesión con Google». En la consola de Google el tester agregado no aparecía en la lista al
 recargar; si Google rechaza el login con «acceso bloqueado», volver a agregarlo en «Audience → Test users».
 
+Redespliegue del 2026-11-22 con cuentas de comprador (commit `dce1536`): backup previo
+`20261122T162859Z`, imagen copiada en 271 s y `up -d --no-build api admin showroom`. La migración
+`0009_buyers` corrió al arrancar el API (`buyers` existe, vacía). `GET /api/v1/buyer/me` responde 401 sin
+sesión y `/cuenta` responde 200 con el formulario y el botón de Google. Para que un comprador entre con Google,
+el origen del showroom tiene que estar entre los orígenes autorizados del cliente OAuth y la app de Google tiene
+que estar publicada (en «Testing» solo entran los test users).
+
 ### Instalación en la VM
 ```bash
 sudo apt-get update && sudo apt-get install -y docker.io docker-compose-v2 git
