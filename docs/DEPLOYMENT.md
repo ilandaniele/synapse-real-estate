@@ -49,6 +49,13 @@ Caddy sirve cada host con su app y manda `/api/*` y `/media/*` al API **en el mi
 Los hosts gratuitos salen de [sslip.io](https://sslip.io), que resuelve `showroom.203-0-113-10.sslip.io` a
 `203.0.113.10`. DuckDNS es una alternativa si se prefiere un nombre fijo.
 
+Desde el 2026-11-22 la VM también responde en `synapse-realty.duckdns.org` (showroom) y
+`admin.synapse-realty.duckdns.org` (admin); el subdominio DuckDNS está en la cuenta del usuario y apunta a la IP de
+la VM. `SHOWROOM_HOST` y `ADMIN_HOST` aceptan listas separadas por comas (Caddy emite un certificado por host), así
+que los hosts sslip siguen activos. `CORS_ORIGINS` incluye los cuatro orígenes y `ADMIN_PUBLIC_URL` /
+`SHOWROOM_PUBLIC_URL` apuntan a los nombres DuckDNS. Los cuatro orígenes están autorizados en el cliente OAuth de
+Google.
+
 ### Lo que hace el usuario (requiere su cuenta)
 1. Crear la cuenta de Oracle Cloud (pide tarjeta para verificar identidad; Always Free no cobra mientras
    no se haga *upgrade* a Pay As You Go).
