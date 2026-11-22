@@ -56,6 +56,11 @@ que los hosts sslip siguen activos. `CORS_ORIGINS` incluye los cuatro orígenes 
 `SHOWROOM_PUBLIC_URL` apuntan a los nombres DuckDNS. Los cuatro orígenes están autorizados en el cliente OAuth de
 Google.
 
+El mismo día la pantalla de consentimiento de Google pasó a «In production» (cualquier cuenta de Google puede
+ingresar). Google exige un enlace de privacidad para publicar: Branding apunta a `https://synapse-realty.duckdns.org`
+y a `/privacidad` (commit `3a9c14a`, desplegado reiniciando solo `showroom`, backup previo `20261122T165144Z`). Con
+scopes básicos, sin logo y con menos de 10 dominios no hace falta verificación; subir un logo la exigiría.
+
 ### Lo que hace el usuario (requiere su cuenta)
 1. Crear la cuenta de Oracle Cloud (pide tarjeta para verificar identidad; Always Free no cobra mientras
    no se haga *upgrade* a Pay As You Go).
