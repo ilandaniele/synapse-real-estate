@@ -225,7 +225,9 @@ el mismo path se ve sin recargar a mano; el resto de `/media` sigue con 7 días.
 (`manifest.json`, `.model.units[]`), con un `UPDATE units SET label_position = ...` en una transacción
 (sin re-sembrar). Antes: V1–V4 `[x, 12.4, -38]`, V5–V8 `[x, 5.8, 32]` con x = -66, -22, 22, 66.
 Ahora: V1 13.9, V2 16.4, V3 13.6, V4 13.9, V5 9.8, V6 7, V7 7.3, V8 9.8 (solo cambia Y). El showroom lee la
-última publicación (snapshot), así que el cambio se ve recién al publicar una versión nueva desde el admin.
+última publicación (snapshot), así que después se insertó por SQL la publicación v3: copia de la v2 con
+`version`, `publishedAt` y las `labelPosition` de `units` (por `code`), mismo `published_by`, sin fila de auditoría.
+Tiene 7 unidades porque V8 está `UNLISTED`. Volver atrás: `DELETE FROM publications WHERE version = 3` de ese desarrollo.
 
 ### Instalación en la VM
 ```bash
