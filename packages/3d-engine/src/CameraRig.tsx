@@ -32,9 +32,13 @@ export function CameraRig({ overall, focus, preset }: CameraRigProps) {
   const lastPreset = useRef<CameraPreset>(preset);
   const camera = useThree((s) => s.camera);
   const invalidate = useThree((s) => s.invalidate);
+  const viewport = useThree((s) => s.size);
+  // Read through a ref so a resize (e.g. the mobile address bar) never re-frames the camera on its own.
+  const aspectRef = useRef(1);
+  aspectRef.current = viewport.height > 0 ? viewport.width / viewport.height : 1;
 
   const fov = camera instanceof PerspectiveCamera ? camera.fov : 45;
-  const overallDistance = framingDistance(boxSize(overall), fov, 1);
+  const overallDistance = framingDistance(boxSize(overall), fov, 1, aspectRef.current);
   const focusSize = focus ? boxSize(focus) : null;
   const minDistance = Math.max(2, (focusSize ? Math.max(...focusSize) : Math.max(...boxSize(overall))) * 0.15);
 
@@ -57,6 +61,7 @@ export function CameraRig({ overall, focus, preset }: CameraRigProps) {
       direction,
       padding: focus ? 1.9 : 1.05,
       minDistance: focus ? minDistance * 1.5 : 0,
+      aspect: aspectRef.current,
     });
     const target = new Vector3(...next.target);
     const position = new Vector3(...next.position);

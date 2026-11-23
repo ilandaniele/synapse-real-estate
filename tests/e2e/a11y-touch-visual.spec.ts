@@ -83,6 +83,17 @@ test.describe("Táctil @touch", () => {
     await expect(page.getByTestId("unit-card")).toContainText("Villa 6");
   });
 
+  test("en pantalla vertical todas las etiquetas entran en el ancho", async ({ page, isMobile }) => {
+    test.skip(!isMobile, "mobile project only");
+    await page.goto("/masterplan");
+    await waitForMasterplan(page);
+    const width = page.viewportSize()?.width ?? 0;
+    for (const label of await page.locator('[data-testid^="masterplan-label-"]').all()) {
+      const box = await label.boundingBox();
+      expect(box && box.x >= 0 && box.x + box.width <= width, (await label.getAttribute("data-testid")) ?? "label").toBe(true);
+    }
+  });
+
   test("pellizcar con dos dedos acerca el masterplan", async ({ page, isMobile }) => {
     test.skip(!isMobile, "mobile project only");
     await page.goto("/masterplan");

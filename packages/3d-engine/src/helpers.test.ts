@@ -98,6 +98,13 @@ describe("camera helpers", () => {
     expect(far).toBeGreaterThan(near * 5);
   });
 
+  it("backs off on portrait screens so the sides fit the narrower horizontal view", () => {
+    const landscape = framingDistance([100, 40, 100], 45, 1, 16 / 9);
+    const portrait = framingDistance([100, 40, 100], 45, 1, 375 / 812);
+    expect(landscape).toBeCloseTo(framingDistance([100, 40, 100], 45, 1));
+    expect(portrait).toBeGreaterThan(landscape * 2);
+  });
+
   it("places the camera at `distance` along the direction from the box center", () => {
     const goal = computeCameraGoal({ box, fovDeg: 45, direction: [0, 2, 0] });
     expect(goal.target).toEqual([5, 2, 10]);

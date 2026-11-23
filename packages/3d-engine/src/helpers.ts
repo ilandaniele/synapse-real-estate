@@ -116,11 +116,12 @@ export function normalizeVec3(v: Vec3): Vec3 {
   return len === 0 ? [0, 1, 0] : [v[0] / len, v[1] / len, v[2] / len];
 }
 
-/** Distance at which a bounding sphere around `size` fits the vertical field of view. */
-export function framingDistance(size: Vec3, fovDeg: number, padding = 1.15): number {
+/** Distance at which a bounding sphere around `size` fits both the vertical and the horizontal field of view. */
+export function framingDistance(size: Vec3, fovDeg: number, padding = 1.15, aspect = 1): number {
   const radius = Math.hypot(size[0], size[1], size[2]) / 2;
-  const half = (fovDeg * Math.PI) / 360;
-  return (radius / Math.sin(half)) * padding;
+  const verticalHalf = (fovDeg * Math.PI) / 360;
+  const horizontalHalf = Math.atan(Math.tan(verticalHalf) * aspect);
+  return (radius / Math.sin(Math.min(verticalHalf, horizontalHalf))) * padding;
 }
 
 export interface CameraGoal {
@@ -136,12 +137,14 @@ export interface CameraGoalInput {
   direction: Vec3;
   padding?: number;
   minDistance?: number;
+  /** Viewport width / height. */
+  aspect?: number;
 }
 
 /** Camera target (box center) and position that frame `box` along `direction`. */
-export function computeCameraGoal({ box, fovDeg, direction, padding, minDistance = 0 }: CameraGoalInput): CameraGoal {
+export function computeCameraGoal({ box, fovDeg, direction, padding, minDistance = 0, aspect }: CameraGoalInput): CameraGoal {
   const target = boxCenter(box);
-  const distance = Math.max(framingDistance(boxSize(box), fovDeg, padding), minDistance);
+  const distance = Math.max(framingDistance(boxSize(box), fovDeg, padding, aspect), minDistance);
   const d = normalizeVec3(direction);
   return {
     target,
