@@ -240,6 +240,10 @@ Redespliegue del 2026-11-23 del showroom (commit `1aadd95`): tocar o hacer clic 
 deja seleccionada (antes el canvas lo tomaba como clic en el vacío y deseleccionaba). Verificado en producción
 con Playwright en Pixel 7 y Desktop Chrome. La VM no tiene repo git: solo `docker load` + `up -d --no-build showroom`.
 
+Redespliegue del 2026-11-23 del showroom (commit `a28d6f6`): en pantallas verticales la cámara se aleja hasta
+que el masterplan entra en el ancho. Verificado en producción con Playwright: ninguna etiqueta cortada en Pixel 7
+ni en Desktop Chrome, y tocar una etiqueta sigue seleccionando la villa.
+
 ### Instalación en la VM
 ```bash
 sudo apt-get update && sudo apt-get install -y docker.io docker-compose-v2 git
