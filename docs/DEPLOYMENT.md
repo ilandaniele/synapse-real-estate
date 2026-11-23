@@ -233,6 +233,9 @@ Mismo día, etiquetas 2 m más arriba (el generador usa `altura + 5` en vez de `
 V1–V8 con Y = 15.9, 18.4, 15.6, 15.9, 11.8, 9, 9.3, 11.8 y publicación v4 por SQL, copia de la v3 con esas
 posiciones. Volver a la v3: `DELETE FROM publications WHERE version = 4` de ese desarrollo.
 
+Redespliegue del 2026-11-23 del showroom (commit `82006d8`): las etiquetas del masterplan se apoyan en un palito
+y quedan por encima del techo en pantalla. `up -d --no-build showroom`; Caddy dio error unos segundos mientras arrancaba.
+
 ### Instalación en la VM
 ```bash
 sudo apt-get update && sudo apt-get install -y docker.io docker-compose-v2 git
