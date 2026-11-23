@@ -64,8 +64,8 @@ scopes básicos, sin logo y con menos de 10 dominios no hace falta verificación
 Para que la pantalla muestre el nombre de la app («Lomas del Faro», igual al título de la home) se pidió la
 verificación de marca. La propiedad `https://synapse-realty.duckdns.org/` quedó verificada en Search Console con el
 meta tag `google-site-verification` de `apps/showroom/src/app/layout.tsx` (backup previo `20261123T013204Z`). No hay
-que quitar ese tag. Google pide esperar 24 h tras verificar la propiedad antes de reenviar en Branding → View issues →
-«I have fixed the issues».
+que quitar ese tag. El reenvío (Branding → View issues → «I have fixed the issues») se aprobó el 2026-11-23, unas 1,5 h
+después de verificar la propiedad, y la marca se publicó con «Publish branding».
 
 ### Lo que hace el usuario (requiere su cuenta)
 1. Crear la cuenta de Oracle Cloud (pide tarjeta para verificar identidad; Always Free no cobra mientras
