@@ -10,7 +10,11 @@ import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { meta } = MESSAGES[await getLocale()];
-  return { title: meta.title, description: meta.description };
+  return {
+    title: meta.title,
+    description: meta.description,
+    verification: { google: "y9G2WIqQKmfZwqxY4fYwpElL_rZFLBF_XT784H4bC4k" },
+  };
 }
 
 export const viewport: Viewport = {

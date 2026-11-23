@@ -61,6 +61,12 @@ ingresar). Google exige un enlace de privacidad para publicar: Branding apunta a
 y a `/privacidad` (commit `3a9c14a`, desplegado reiniciando solo `showroom`, backup previo `20261122T165144Z`). Con
 scopes básicos, sin logo y con menos de 10 dominios no hace falta verificación; subir un logo la exigiría.
 
+Para que la pantalla muestre el nombre de la app («Lomas del Faro», igual al título de la home) se pidió la
+verificación de marca. La propiedad `https://synapse-realty.duckdns.org/` quedó verificada en Search Console con el
+meta tag `google-site-verification` de `apps/showroom/src/app/layout.tsx` (backup previo `20261123T013204Z`). No hay
+que quitar ese tag. Google pide esperar 24 h tras verificar la propiedad antes de reenviar en Branding → View issues →
+«I have fixed the issues».
+
 ### Lo que hace el usuario (requiere su cuenta)
 1. Crear la cuenta de Oracle Cloud (pide tarjeta para verificar identidad; Always Free no cobra mientras
    no se haga *upgrade* a Pay As You Go).
