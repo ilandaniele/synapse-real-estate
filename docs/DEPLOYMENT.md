@@ -210,6 +210,13 @@ sesión y `/cuenta` responde 200 con el formulario y el botón de Google. Para q
 el origen del showroom tiene que estar entre los orígenes autorizados del cliente OAuth y la app de Google tiene
 que estar publicada (en «Testing» solo entran los test users).
 
+Redespliegue del 2026-11-23 con el masterplan detallado (commit `cd448bb`): `up -d --no-build showroom`
+con la imagen nueva (iluminación de cielo). El GLB no se regeneró en la VM: se generó local
+(`ASSETS_ONLY=masterplan pnpm assets:generate`, 1,98 MB) y se copió con `docker cp` a
+`/app/storage/demo/models/masterplan.glb` del contenedor `api`; el anterior quedó como `masterplan.prev.glb`.
+`/media/...` se cachea 7 días en el navegador, así que quien ya lo visitó puede ver el modelo viejo hasta recargar
+sin caché. Las `labelPosition` de las unidades siguen las del seed original (no se re-sembró).
+
 ### Instalación en la VM
 ```bash
 sudo apt-get update && sudo apt-get install -y docker.io docker-compose-v2 git
