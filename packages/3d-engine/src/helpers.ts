@@ -69,14 +69,18 @@ export interface UnitVisualInput {
 }
 
 export interface UnitVisual {
-  emissiveIntensity: number;
+  /** Status-colored glow on the ground plate. */
+  plotGlow: number;
+  /** Faint warm lift on the building itself; kept low so it keeps its materials. */
+  buildingGlow: number;
   opacity: number;
 }
 
-/** Visual state of a villa: selected glows most, hovered glows lightly; a selected villa is never faded. */
+/** Visual state of a villa: the plot carries the highlight, the building only lifts slightly; a selected villa is never faded. */
 export function computeUnitVisual(input: UnitVisualInput): UnitVisual {
   return {
-    emissiveIntensity: input.selected ? 0.45 : input.hovered ? 0.18 : 0,
+    plotGlow: input.selected ? 0.3 : input.hovered ? 0.15 : 0,
+    buildingGlow: input.selected ? 0.06 : input.hovered ? 0.03 : 0,
     opacity: input.selected ? 1 : input.filterOpacity,
   };
 }

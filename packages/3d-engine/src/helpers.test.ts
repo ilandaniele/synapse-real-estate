@@ -68,8 +68,15 @@ describe("computeUnitVisual", () => {
     const sel = computeUnitVisual({ selected: true, hovered: false, filterOpacity: 1 });
     const hov = computeUnitVisual({ selected: false, hovered: true, filterOpacity: 1 });
     const none = computeUnitVisual({ selected: false, hovered: false, filterOpacity: 1 });
-    expect(sel.emissiveIntensity).toBeGreaterThan(hov.emissiveIntensity);
-    expect(hov.emissiveIntensity).toBeGreaterThan(none.emissiveIntensity);
+    expect(sel.plotGlow).toBeGreaterThan(hov.plotGlow);
+    expect(hov.plotGlow).toBeGreaterThan(none.plotGlow);
+    expect(sel.buildingGlow).toBeGreaterThan(hov.buildingGlow);
+    expect(hov.buildingGlow).toBeGreaterThan(none.buildingGlow);
+  });
+  it("keeps the building close to its own colors so the selection is not washed out", () => {
+    const sel = computeUnitVisual({ selected: true, hovered: false, filterOpacity: 1 });
+    expect(sel.buildingGlow).toBeLessThanOrEqual(0.1);
+    expect(sel.plotGlow).toBeGreaterThan(sel.buildingGlow * 4);
   });
   it("fades filtered-out units but never the selected one", () => {
     expect(computeUnitVisual({ selected: false, hovered: false, filterOpacity: FADED_OPACITY }).opacity).toBe(FADED_OPACITY);

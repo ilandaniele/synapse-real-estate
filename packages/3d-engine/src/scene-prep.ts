@@ -98,6 +98,8 @@ export function prepareModel(source: Object3D, units: readonly Unit[]): Prepared
   };
 }
 
+const BUILDING_GLOW = new Color("#fff1d6");
+
 /** Applies status tint + highlight/fade to one villa. Mutates only the villa's own cloned materials. */
 export function applyUnitVisual(node: UnitNode, status: Unit["status"], visual: UnitVisual, base: Map<Material, MaterialBase>): void {
   const statusColor = new Color(STATUS_META[status].color);
@@ -112,9 +114,10 @@ export function applyUnitVisual(node: UnitNode, status: Unit["status"], visual: 
       material.depthWrite = fade ? false : original.depthWrite;
       if (!(material instanceof MeshStandardMaterial)) continue;
       if (isPlot) material.color.copy(statusColor);
-      if (visual.emissiveIntensity > 0) {
-        material.emissive.copy(isPlot ? statusColor : new Color("#ffffff"));
-        material.emissiveIntensity = visual.emissiveIntensity;
+      const glow = isPlot ? visual.plotGlow : visual.buildingGlow;
+      if (glow > 0) {
+        material.emissive.copy(isPlot ? statusColor : BUILDING_GLOW);
+        material.emissiveIntensity = glow;
       } else {
         material.emissive.copy(original.emissive);
         material.emissiveIntensity = original.emissiveIntensity;
