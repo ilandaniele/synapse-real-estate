@@ -7,8 +7,10 @@ const CSS = `
 .syn-mp-label::after { content: ""; position: absolute; inset: -8px; }
 .syn-mp-label:hover { transform: scale(1.06); }
 .syn-mp-label:focus-visible { outline: 3px solid #60a5fa; outline-offset: 2px; }
+.syn-mp-anchor { display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -100%); }
+.syn-mp-stem { width: 2px; height: 22px; background: rgba(255,255,255,.85); box-shadow: 0 1px 3px rgba(0,0,0,.35); }
 .syn-mp-dot { width: 9px; height: 9px; border-radius: 9999px; border: 1px solid rgba(255,255,255,.8); flex: none; }
-@media (max-width: 640px) { .syn-mp-label { font-size: 11px; padding: 2px 7px; min-height: 24px; gap: 4px; } .syn-mp-dot { width: 7px; height: 7px; } }
+@media (max-width: 640px) { .syn-mp-label { font-size: 11px; padding: 2px 7px; min-height: 24px; gap: 4px; } .syn-mp-dot { width: 7px; height: 7px; } .syn-mp-stem { height: 14px; } }
 @media (prefers-reduced-motion: reduce) { .syn-mp-spinner { animation-duration: 2.4s; } .syn-mp-label { transition: none; } }
 `;
 
