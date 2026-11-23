@@ -215,11 +215,17 @@ con la imagen nueva (iluminación de cielo). El GLB no se regeneró en la VM: se
 (`ASSETS_ONLY=masterplan pnpm assets:generate`, 1,98 MB) y se copió con `docker cp` a
 `/app/storage/demo/models/masterplan.glb` del contenedor `api`; el anterior quedó como `masterplan.prev.glb`.
 `/media/...` se cachea 7 días en el navegador, así que quien ya lo visitó puede ver el modelo viejo hasta recargar
-sin caché (desde `65bcb47`, ver abajo). Las `labelPosition` de las unidades siguen las del seed original (no se re-sembró).
+sin caché (desde `65bcb47`, ver abajo). Las `labelPosition` se actualizaron aparte por SQL (ver abajo).
 
 Redespliegue del 2026-11-23 del API (commits `5cec694` resaltado y `65bcb47` caché): `/media/demo/*` responde
 `Cache-Control: public, no-cache` con ETag (revalida y da 304 si no cambió), así un GLB o panorama regenerado en
 el mismo path se ve sin recargar a mano; el resto de `/media` sigue con 7 días. El API tardó unos 60 s en responder.
+
+2026-11-23, `labelPosition` de V1–V8 de `lomas-del-faro` al alto de los techos del masterplan nuevo
+(`manifest.json`, `.model.units[]`), con un `UPDATE units SET label_position = ...` en una transacción
+(sin re-sembrar). Antes: V1–V4 `[x, 12.4, -38]`, V5–V8 `[x, 5.8, 32]` con x = -66, -22, 22, 66.
+Ahora: V1 13.9, V2 16.4, V3 13.6, V4 13.9, V5 9.8, V6 7, V7 7.3, V8 9.8 (solo cambia Y). El showroom lee la
+última publicación (snapshot), así que el cambio se ve recién al publicar una versión nueva desde el admin.
 
 ### Instalación en la VM
 ```bash
