@@ -236,6 +236,10 @@ posiciones. Volver a la v3: `DELETE FROM publications WHERE version = 4` de ese 
 Redespliegue del 2026-11-23 del showroom (commit `82006d8`): las etiquetas del masterplan se apoyan en un palito
 y quedan por encima del techo en pantalla. `up -d --no-build showroom`; Caddy dio error unos segundos mientras arrancaba.
 
+Redespliegue del 2026-11-23 del showroom (commit `1aadd95`): tocar o hacer clic en la etiqueta de una villa la
+deja seleccionada (antes el canvas lo tomaba como clic en el vacío y deseleccionaba). Verificado en producción
+con Playwright en Pixel 7 y Desktop Chrome. La VM no tiene repo git: solo `docker load` + `up -d --no-build showroom`.
+
 ### Instalación en la VM
 ```bash
 sudo apt-get update && sudo apt-get install -y docker.io docker-compose-v2 git
