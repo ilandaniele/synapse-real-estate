@@ -11,6 +11,7 @@ import { MasterplanModel } from "./MasterplanModel";
 import { MasterplanStyles } from "./MasterplanStyles";
 import { MASTERPLAN_STRINGS, type MasterplanStrings } from "./strings";
 import { UnitList } from "./UnitList";
+import { isLabelEvent } from "./UnitLabel";
 import { hasWebGL } from "./webgl";
 
 export interface MasterplanProps {
@@ -108,7 +109,8 @@ export function Masterplan({
             camera={{ fov: 45, near: 0.5, far: 5000, position: [60, 60, 60] }}
             gl={{ antialias: true, alpha: true }}
             style={{ position: "absolute", inset: 0 }}
-            onPointerMissed={() => {
+            onPointerMissed={(event) => {
+              if (isLabelEvent(event)) return;
               if (selectedRef.current !== null) onSelect(null);
             }}
           >

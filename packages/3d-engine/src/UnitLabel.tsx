@@ -15,6 +15,11 @@ export interface UnitLabelProps {
   onHover: (unitId: string | null) => void;
 }
 
+/** Label clicks bubble into the canvas container, where R3F would otherwise report them as a click on empty space. */
+export function isLabelEvent(event: Event): boolean {
+  return event.target instanceof Element && event.target.closest(".syn-mp-label") !== null;
+}
+
 /** HTML badge standing on a stem above a villa: name + status dot. A real button, so it is keyboard/touch accessible. */
 export function UnitLabel({ unit, position, statusLabel, selected, faded, onSelect, onHover }: UnitLabelProps) {
   const meta = STATUS_META[unit.status];

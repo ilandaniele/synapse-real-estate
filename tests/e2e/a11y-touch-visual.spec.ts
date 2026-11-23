@@ -73,6 +73,16 @@ test.describe("Táctil @touch", () => {
     await waitForPanorama(page, "comedor");
   });
 
+  test("tocar la etiqueta de una villa la selecciona", async ({ page, isMobile }) => {
+    test.skip(!isMobile, "mobile project only");
+    await page.goto("/masterplan");
+    await waitForMasterplan(page);
+    const label = page.getByTestId("masterplan-label-V6");
+    await label.tap();
+    await expect(label).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByTestId("unit-card")).toContainText("Villa 6");
+  });
+
   test("pellizcar con dos dedos acerca el masterplan", async ({ page, isMobile }) => {
     test.skip(!isMobile, "mobile project only");
     await page.goto("/masterplan");
