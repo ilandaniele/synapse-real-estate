@@ -229,6 +229,10 @@ Ahora: V1 13.9, V2 16.4, V3 13.6, V4 13.9, V5 9.8, V6 7, V7 7.3, V8 9.8 (solo ca
 `version`, `publishedAt` y las `labelPosition` de `units` (por `code`), mismo `published_by`, sin fila de auditoría.
 Tiene 7 unidades porque V8 está `UNLISTED`. Volver atrás: `DELETE FROM publications WHERE version = 3` de ese desarrollo.
 
+Mismo día, etiquetas 2 m más arriba (el generador usa `altura + 5` en vez de `+ 3`): `units.label_position` de
+V1–V8 con Y = 15.9, 18.4, 15.6, 15.9, 11.8, 9, 9.3, 11.8 y publicación v4 por SQL, copia de la v3 con esas
+posiciones. Volver a la v3: `DELETE FROM publications WHERE version = 4` de ese desarrollo.
+
 ### Instalación en la VM
 ```bash
 sudo apt-get update && sudo apt-get install -y docker.io docker-compose-v2 git

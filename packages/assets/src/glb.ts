@@ -62,7 +62,7 @@ export async function buildMasterplanGlb(): Promise<MasterplanModel> {
     const plotMaterial = doc.createMaterial(`${p.node}_Plot_Mat`).setBaseColorFactor([0.86, 0.83, 0.75, 1]).setRoughnessFactor(0.9).setMetallicFactor(0);
     group.addChild(meshNode(`${p.node}_Plot`, [[villa.plot, plotMaterial]]));
     scene.addChild(group);
-    units.push({ code: p.code, node: p.node, labelPosition: [p.cx, round(p.level + villa.height + 3), p.cz] });
+    units.push({ code: p.code, node: p.node, labelPosition: [p.cx, round(p.level + villa.height + 5), p.cz] });
   }
 
   scene.addChild(partsNode("Trees", vegetation()));
