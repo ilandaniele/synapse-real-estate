@@ -1,3 +1,4 @@
+import path from "node:path";
 import cookie from "@fastify/cookie";
 import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
@@ -59,6 +60,8 @@ export interface BuildAppOptions {
 
 const TEST_SECRET = "dev-only-secret-dev-only-secret-0123456789";
 const MEDIA_CACHE = "public, max-age=604800, stale-while-revalidate=86400";
+/** Demo assets are regenerated under the same path, so browsers revalidate them (cheap 304 via ETag). */
+const DEMO_MEDIA_CACHE = "public, no-cache";
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
 /** Upload URLs carry a signed token in the query string; keep it out of the logs. */
@@ -78,7 +81,8 @@ async function registerLocalMedia(app: FastifyInstance, root: string) {
     list: false,
     setHeaders(reply, filePath) {
       reply.header("Cross-Origin-Resource-Policy", "cross-origin");
-      reply.header("Cache-Control", MEDIA_CACHE);
+      const isDemo = path.relative(root, filePath).split(path.sep)[0] === "demo";
+      reply.header("Cache-Control", isDemo ? DEMO_MEDIA_CACHE : MEDIA_CACHE);
       if (filePath.toLowerCase().endsWith(".svg")) {
         reply.header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; sandbox");
       }

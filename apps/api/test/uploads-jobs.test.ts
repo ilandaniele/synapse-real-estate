@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
@@ -334,5 +334,16 @@ describe("media serving", () => {
     expect(ok.statusCode).toBe(200);
     expect(ok.headers["x-content-type-options"]).toBe("nosniff");
     expect(String(ok.headers["cache-control"])).toContain("max-age=");
+  });
+
+  it("makes browsers revalidate demo files, which are regenerated in place", async () => {
+    mkdirSync(path.join(ctx.storageDir, "demo", "models"), { recursive: true });
+    writeFileSync(path.join(ctx.storageDir, "demo", "models", "masterplan.glb"), buildGlb(["a"]));
+    const res = await ctx.app.inject({ method: "GET", url: "/media/demo/models/masterplan.glb" });
+    expect(res.statusCode).toBe(200);
+    expect(String(res.headers["cache-control"])).toContain("no-cache");
+    const etag = String(res.headers.etag);
+    const again = await ctx.app.inject({ method: "GET", url: "/media/demo/models/masterplan.glb", headers: { "if-none-match": etag } });
+    expect(again.statusCode).toBe(304);
   });
 });
