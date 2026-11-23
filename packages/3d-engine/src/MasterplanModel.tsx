@@ -6,6 +6,7 @@ import { Line, useGLTF } from "@react-three/drei";
 import type { Unit } from "@synapse/contracts";
 import { STATUS_LABELS, STATUS_META, buildMeshIndex, type Locale } from "@synapse/domain";
 import { CameraRig } from "./CameraRig";
+import { SkyLighting } from "./SkyLighting";
 import {
   computeUnitVisual,
   defaultLabelPosition,
@@ -147,12 +148,14 @@ export function MasterplanModel({
 
   return (
     <>
-      <hemisphereLight args={["#dbeafe", "#8b7f68", 1.0]} />
+      <SkyLighting />
       <directionalLight
         castShadow
-        intensity={2.4}
+        intensity={2.2}
+        color="#fff4e0"
         position={[reach * 0.7, sunHeight, reach * 0.5]}
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={[4096, 4096]}
+        shadow-radius={4}
         shadow-camera-left={-reach}
         shadow-camera-right={reach}
         shadow-camera-top={reach}

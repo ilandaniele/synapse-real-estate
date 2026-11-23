@@ -5,23 +5,26 @@ import { buildManifest } from "./manifest";
 import { PANORAMAS } from "./scenes/index";
 
 describe("masterplan GLB", () => {
-  it("contains 8 villa groups with Body/Roof/Pool/Plot children", async () => {
+  it("contains 8 villa groups with Body/Garden/Plot/Pool/Roof children in three typologies", async () => {
     const model = await buildMasterplanGlb();
     expect(model.glb.byteLength).toBeLessThan(2 * 1024 * 1024);
 
     const doc = await new NodeIO().readBinary(model.glb);
     const nodes = doc.getRoot().listNodes();
     const byName = new Map(nodes.map((n) => [n.getName(), n]));
+    const roofMaterials: Array<string | undefined> = [];
 
     for (let i = 1; i <= 8; i++) {
       const name = `Villa_${String(i).padStart(2, "0")}`;
       const group = byName.get(name);
       expect(group, name).toBeDefined();
       const children = (group?.listChildren() ?? []).map((c) => c.getName()).sort();
-      expect(children).toEqual([`${name}_Body`, `${name}_Plot`, `${name}_Pool`, `${name}_Roof`]);
+      expect(children).toEqual([`${name}_Body`, `${name}_Garden`, `${name}_Plot`, `${name}_Pool`, `${name}_Roof`]);
       const bodyMaterials = byName.get(`${name}_Body`)?.getMesh()?.listPrimitives().map((p) => p.getMaterial()?.getName());
-      expect(bodyMaterials).toEqual(["Render_White", "Wood_Cladding", "Glass_Tinted"]);
+      expect(bodyMaterials).toEqual(expect.arrayContaining(["Glass_Tinted", "Window_Frame"]));
+      roofMaterials.push(...(byName.get(`${name}_Roof`)?.getMesh()?.listPrimitives().map((p) => p.getMaterial()?.getName()) ?? []));
     }
+    expect(roofMaterials).toEqual(expect.arrayContaining(["Roof_Gravel", "Roof_Terracotta", "Roof_Sedum"]));
     for (const name of ["Terrain", "Road", "Trees", "Viewpoints"]) expect(byName.has(name), name).toBe(true);
     const markers = byName.get("Viewpoints")?.listChildren() ?? [];
     expect(markers.map((m) => m.getName())).toEqual(["PANO_Acceso", "PANO_Mirador", "PANO_Terraza_V6"]);
