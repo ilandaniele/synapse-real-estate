@@ -1,10 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { exceedsDragThreshold, pointFromClient, slugify, toPercentStyle, viewDeltaForKey } from "./geometry";
+import { edgeShift, exceedsDragThreshold, pointFromClient, slugify, toPercentStyle, viewDeltaForKey } from "./geometry";
 
 describe("slugify", () => {
   it("strips accents and punctuation", () => {
     expect(slugify("Baño principal")).toBe("bano-principal");
     expect(slugify("  Ir a: Cocina! ")).toBe("ir-a-cocina");
+  });
+});
+
+describe("edgeShift", () => {
+  const bounds = { left: 0, right: 400 };
+  it("leaves boxes that fit alone", () => {
+    expect(edgeShift({ left: 100, right: 200 }, bounds)).toBe(0);
+  });
+  it("pulls boxes back from either edge", () => {
+    expect(edgeShift({ left: 300, right: 470 }, bounds)).toBe(-78);
+    expect(edgeShift({ left: -50, right: 120 }, bounds)).toBe(58);
+  });
+  it("aligns boxes wider than the bounds to the left edge", () => {
+    expect(edgeShift({ left: 20, right: 520 }, bounds)).toBe(-12);
   });
 });
 

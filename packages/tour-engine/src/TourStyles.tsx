@@ -11,10 +11,10 @@ const CSS = `
 .syn-hs-btn[data-selected="true"] { border-color: #facc15; box-shadow: 0 0 0 5px rgba(250,204,21,.4); }
 .syn-hs-btn[data-editable="true"] { cursor: grab; touch-action: none; }
 .syn-hs-btn svg { width: 24px; height: 24px; }
-.syn-hs-tip { position: absolute; left: 0; top: -52px; transform: translateX(-50%); white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .15s ease; padding: 4px 10px; border-radius: 6px; background: rgba(17,24,39,.9); color: #fff; font: 600 13px/1.3 system-ui, sans-serif; }
+.syn-hs-tip { position: absolute; left: 0; top: -52px; transform: translateX(calc(-50% + var(--syn-hs-shift, 0px))); white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .15s ease; padding: 4px 10px; border-radius: 6px; background: rgba(17,24,39,.9); color: #fff; font: 600 13px/1.3 system-ui, sans-serif; }
 .syn-hs:hover .syn-hs-tip, .syn-hs-btn:focus-visible + .syn-hs-tip, .syn-hs-btn[data-selected="true"] + .syn-hs-tip { opacity: 1; }
 @media (pointer: coarse) { .syn-hs-tip { opacity: 1; } }
-.syn-hs-pop { position: absolute; left: 0; top: 34px; transform: translateX(-50%); width: 220px; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,.97); color: #111827; box-shadow: 0 6px 24px rgba(0,0,0,.35); font: 400 14px/1.4 system-ui, sans-serif; }
+.syn-hs-pop { position: absolute; left: 0; top: 34px; transform: translateX(calc(-50% + var(--syn-hs-shift, 0px))); width: 220px; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,.97); color: #111827; box-shadow: 0 6px 24px rgba(0,0,0,.35); font: 400 14px/1.4 system-ui, sans-serif; }
 .syn-hs-pop[hidden] { display: none; }
 .syn-hs-pop strong { display: block; margin-bottom: 4px; }
 .syn-fp-ring { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; border-radius: 9999px; border: 2px solid #2563eb; pointer-events: none; animation: syn-tour-pulse 1.6s ease-out infinite; }

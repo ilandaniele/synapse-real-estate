@@ -40,6 +40,20 @@ export function exceedsDragThreshold(dx: number, dy: number, threshold = 5): boo
   return Math.hypot(dx, dy) > threshold;
 }
 
+export interface HorizontalBounds {
+  left: number;
+  right: number;
+}
+
+/** Horizontal offset that moves a box inside `bounds` (keeping `margin` px), or 0 when it already fits. */
+export function edgeShift(box: HorizontalBounds, bounds: HorizontalBounds, margin = 8): number {
+  const min = bounds.left + margin;
+  const max = bounds.right - margin;
+  if (box.left < min || box.right - box.left > max - min) return min - box.left;
+  if (box.right > max) return max - box.right;
+  return 0;
+}
+
 export interface ViewDelta {
   yaw: number;
   pitch: number;

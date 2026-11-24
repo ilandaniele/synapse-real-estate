@@ -2,6 +2,7 @@
 import type * as Marzipano from "marzipano";
 import type { Hotspot } from "@synapse/contracts";
 import { createHotspotHandle, type HotspotCallbacks, type HotspotHandle } from "./hotspot-dom";
+import type { HorizontalBounds } from "./geometry";
 import type { TourStrings } from "./strings";
 
 export interface HotspotEntry {
@@ -47,6 +48,10 @@ export function syncHotspots(record: SceneRecord, desired: readonly Hotspot[], o
       record.hotspots.set(h.id, { hotspot, handle });
     }
   }
+}
+
+export function fitRecordHotspots(record: SceneRecord, bounds: HorizontalBounds): void {
+  for (const entry of record.hotspots.values()) entry.handle.fit(bounds);
 }
 
 export function destroyRecordHotspots(record: SceneRecord): void {

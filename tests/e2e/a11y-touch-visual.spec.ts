@@ -94,6 +94,27 @@ test.describe("Táctil @touch", () => {
     }
   });
 
+  test("la etiqueta de un punto de información junto al borde entra en pantalla", async ({ page, isMobile }) => {
+    test.skip(!isMobile, "mobile project only");
+    await page.goto("/tour/villa-6?scene=living");
+    await waitForPanorama(page, "living");
+    const info = page.locator('[data-hotspot-type="INFO"]').first();
+    const fits = async () => {
+      const width = page.viewportSize()?.width ?? 0;
+      const box = await info.locator("xpath=following-sibling::span[1]").boundingBox();
+      return box !== null && box.x >= 0 && box.x + box.width <= width;
+    };
+    await expect.poll(fits).toBe(true);
+    await info.tap();
+    const popover = info.locator("xpath=following-sibling::div[1]");
+    await expect(popover).toBeVisible();
+    const width = page.viewportSize()?.width ?? 0;
+    await expect.poll(async () => {
+      const box = await popover.boundingBox();
+      return box !== null && box.x >= 0 && box.x + box.width <= width;
+    }).toBe(true);
+  });
+
   test("pellizcar con dos dedos acerca el masterplan", async ({ page, isMobile }) => {
     test.skip(!isMobile, "mobile project only");
     await page.goto("/masterplan");

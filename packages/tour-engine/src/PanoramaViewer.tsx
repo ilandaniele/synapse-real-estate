@@ -18,7 +18,7 @@ import type { Hotspot, Scene } from "@synapse/contracts";
 import { DEFAULT_LOCALE, degToRad, normalizePanoPosition, type Locale, type PanoPosition } from "@synapse/domain";
 import { exceedsDragThreshold, slugify, viewDeltaForKey, type PanoView } from "./geometry";
 import type { HotspotCallbacks } from "./hotspot-dom";
-import { destroyRecordHotspots, syncHotspots, type SceneRecord } from "./hotspot-layer";
+import { destroyRecordHotspots, fitRecordHotspots, syncHotspots, type SceneRecord } from "./hotspot-layer";
 import { createPanoramaSource } from "./panorama-source";
 import { TOUR_STRINGS } from "./strings";
 import { TourStyles } from "./TourStyles";
@@ -93,6 +93,18 @@ export function PanoramaViewer(props: PanoramaViewerProps) {
     latest.current = props;
   });
 
+  const fitFrame = useRef(0);
+  // Marzipano moves hotspots on its next frame, so labels are measured after it.
+  const scheduleHotspotFit = useCallback(() => {
+    cancelAnimationFrame(fitFrame.current);
+    fitFrame.current = requestAnimationFrame(() => {
+      const record = currentRef.current;
+      const el = stageRef.current;
+      if (record && el) fitRecordHotspots(record, el.getBoundingClientRect());
+    });
+  }, []);
+  useEffect(() => () => cancelAnimationFrame(fitFrame.current), []);
+
   const toPano = useCallback((clientX: number, clientY: number): PanoPosition | null => {
     const view = currentRef.current?.mz.view();
     const el = stageRef.current;
@@ -155,7 +167,10 @@ export function PanoramaViewer(props: PanoramaViewerProps) {
         mzRef.current = mz;
         viewerRef.current = viewer;
         const v = viewer;
-        observer = new ResizeObserver(() => v.updateSize());
+        observer = new ResizeObserver(() => {
+          v.updateSize();
+          scheduleHotspotFit();
+        });
         observer.observe(stageEl);
         setViewerReady(true);
       } catch {
@@ -175,7 +190,7 @@ export function PanoramaViewer(props: PanoramaViewerProps) {
       stageEl.replaceChildren();
       setViewerReady(false);
     };
-  }, []);
+  }, [scheduleHotspotFit]);
 
   // Scene lifecycle: new Marzipano scene on the shared viewer, cross-fade, drop stale scenes.
   const previewUrl = scene.previewUrl;
@@ -207,7 +222,10 @@ export function PanoramaViewer(props: PanoramaViewerProps) {
     const onError = () => {
       if (!loaded && currentRef.current === record) setStatus("error");
     };
-    const onViewChange = () => latest.current.onViewChange?.(readView(view));
+    const onViewChange = () => {
+      latest.current.onViewChange?.(readView(view));
+      scheduleHotspotFit();
+    };
     store.addEventListener("textureLoad", onLoad);
     store.addEventListener("textureError", onError);
     view.addEventListener("change", onViewChange);
@@ -248,7 +266,8 @@ export function PanoramaViewer(props: PanoramaViewerProps) {
     const record = currentRef.current;
     if (!viewerReady || !record) return;
     syncHotspots(record, hotspots, { selectedHotspotId, editable, callbacks: hotspotCallbacks, strings });
-  }, [viewerReady, sceneRev, hotspots, selectedHotspotId, editable, hotspotCallbacks, strings]);
+    scheduleHotspotFit();
+  }, [viewerReady, sceneRev, hotspots, selectedHotspotId, editable, hotspotCallbacks, strings, scheduleHotspotFit]);
 
   const onKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
     if (e.target !== e.currentTarget) return;

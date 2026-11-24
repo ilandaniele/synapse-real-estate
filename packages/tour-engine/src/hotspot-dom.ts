@@ -1,5 +1,5 @@
 import type { Hotspot } from "@synapse/contracts";
-import { exceedsDragThreshold, slugify } from "./geometry";
+import { edgeShift, exceedsDragThreshold, slugify, type HorizontalBounds } from "./geometry";
 import type { TourStrings } from "./strings";
 
 export interface HotspotViewState {
@@ -21,6 +21,8 @@ export interface HotspotHandle {
   /** Root element handed to Marzipano (`hotspotContainer().createHotspot`). */
   element: HTMLElement;
   update(hotspot: Hotspot, state: HotspotViewState): void;
+  /** Slides the label and popover sideways so they stay inside `bounds` (client px). */
+  fit(bounds: HorizontalBounds): void;
   destroy(): void;
 }
 
@@ -66,9 +68,20 @@ export function createHotspotHandle(
 
   root.append(button, tip, popover);
 
+  let lastBounds: HorizontalBounds | null = null;
+  const fit = (bounds: HorizontalBounds) => {
+    lastBounds = bounds;
+    for (const el of [tip, popover]) {
+      if (el.hidden) continue;
+      el.style.removeProperty("--syn-hs-shift");
+      el.style.setProperty("--syn-hs-shift", `${edgeShift(el.getBoundingClientRect(), bounds)}px`);
+    }
+  };
+
   const setPopoverOpen = (open: boolean) => {
     popover.hidden = !open;
     button.setAttribute("aria-expanded", String(open));
+    if (open && lastBounds) fit(lastBounds);
   };
 
   const render = () => {
@@ -163,6 +176,7 @@ export function createHotspotHandle(
       view = nextState;
       render();
     },
+    fit,
     destroy() {
       for (const type of STOP_PROPAGATION) root.removeEventListener(type, stop);
       button.removeEventListener("pointerdown", onPointerDown);
