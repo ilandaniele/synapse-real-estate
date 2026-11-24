@@ -244,6 +244,11 @@ Redespliegue del 2026-11-23 del showroom (commit `a28d6f6`): en pantallas vertic
 que el masterplan entra en el ancho. Verificado en producción con Playwright: ninguna etiqueta cortada en Pixel 7
 ni en Desktop Chrome, y tocar una etiqueta sigue seleccionando la villa.
 
+Redespliegue del 2026-11-24 del showroom (commits `37f9a0a` y `ddcf4e1`): en pantallas verticales el masterplan
+encuadra solo las villas, y las etiquetas de los hotspots del tour se corren hacia adentro junto al borde.
+Verificado en producción con Playwright en Pixel 7: las 7 etiquetas del masterplan y la del punto de información
+entran en el ancho.
+
 ### Instalación en la VM
 ```bash
 sudo apt-get update && sudo apt-get install -y docker.io docker-compose-v2 git
