@@ -13,6 +13,7 @@ import {
   filterOpacity,
   isDragGesture,
   pickUnitFromHits,
+  unionBox,
   type CameraPreset,
   type ObjectLike,
   type Vec3,
@@ -122,6 +123,7 @@ export function MasterplanModel({
   };
 
   const { bounds } = prepared;
+  const villasBox = useMemo(() => unionBox([...prepared.units.values()].map((node) => node.box)), [prepared]);
   const reach = Math.max(
     Math.abs(bounds.min[0]),
     Math.abs(bounds.max[0]),
@@ -197,7 +199,7 @@ export function MasterplanModel({
           })
         : null}
 
-      <CameraRig overall={bounds} focus={selectedNode ? selectedNode.box : null} preset={cameraPreset} />
+      <CameraRig overall={bounds} villas={villasBox} focus={selectedNode ? selectedNode.box : null} preset={cameraPreset} />
     </>
   );
 }

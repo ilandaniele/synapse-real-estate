@@ -6,6 +6,7 @@ import { OrbitControls } from "@react-three/drei";
 import { PerspectiveCamera, Vector3 } from "three";
 import {
   computeCameraGoal,
+  overviewBox,
   framingDistance,
   boxSize,
   presetDirection,
@@ -17,6 +18,8 @@ import {
 export interface CameraRigProps {
   /** Whole model; used for the overview framing and orbit limits. */
   overall: BoxLike;
+  /** Box around every villa, framed by the overview on portrait screens. */
+  villas: BoxLike | null;
   /** Selected villa box, or `null` to frame the whole model. */
   focus: BoxLike | null;
   preset: CameraPreset;
@@ -25,7 +28,7 @@ export interface CameraRigProps {
 const FLY_RATE = 6;
 
 /** OrbitControls + smooth fly-to for demand-rendered canvases. */
-export function CameraRig({ overall, focus, preset }: CameraRigProps) {
+export function CameraRig({ overall, villas, focus, preset }: CameraRigProps) {
   const controlsRef = useRef<ElementRef<typeof OrbitControls>>(null);
   const goal = useRef<{ target: Vector3; position: Vector3 } | null>(null);
   const initialized = useRef(false);
@@ -42,7 +45,8 @@ export function CameraRig({ overall, focus, preset }: CameraRigProps) {
   const focusSize = focus ? boxSize(focus) : null;
   const minDistance = Math.max(2, (focusSize ? Math.max(...focusSize) : Math.max(...boxSize(overall))) * 0.15);
 
-  const framingKey = boxesKey(focus, overall);
+  const framed = focus ?? overviewBox(overall, villas, aspectRef.current);
+  const framingKey = boxesKey(focus, framed);
 
   // Compute a new goal when the selection, preset or model changes.
   useEffect(() => {
@@ -56,7 +60,7 @@ export function CameraRig({ overall, focus, preset }: CameraRigProps) {
     const direction: Vec3 = keepDirection ? [current.x, Math.max(current.y, 0.2 * current.length()), current.z] : presetDirection(preset);
 
     const next = computeCameraGoal({
-      box: focus ?? overall,
+      box: framed,
       fovDeg: fov,
       direction,
       padding: focus ? 1.9 : 1.05,

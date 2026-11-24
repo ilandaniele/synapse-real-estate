@@ -97,6 +97,28 @@ export const boxSize = (box: BoxLike): Vec3 => [
   box.max[2] - box.min[2],
 ];
 
+/** Smallest box containing every box, or `null` when there are none. */
+export function unionBox(boxes: Iterable<BoxLike>): BoxLike | null {
+  let union: BoxLike | null = null;
+  for (const { min, max } of boxes) {
+    union = union
+      ? {
+          min: [Math.min(union.min[0], min[0]), Math.min(union.min[1], min[1]), Math.min(union.min[2], min[2])],
+          max: [Math.max(union.max[0], max[0]), Math.max(union.max[1], max[1]), Math.max(union.max[2], max[2])],
+        }
+      : { min, max };
+  }
+  return union;
+}
+
+/**
+ * Box the overview frames. Portrait screens are too narrow for the whole terrain, so they frame
+ * only the villas and let the surrounding landscape spill off the sides.
+ */
+export function overviewBox(overall: BoxLike, villas: BoxLike | null, aspect: number): BoxLike {
+  return aspect < 1 && villas ? villas : overall;
+}
+
 /** Fallback label anchor: top center of the bounding box, lifted slightly. */
 export function defaultLabelPosition(box: BoxLike, lift = 1.5): Vec3 {
   const c = boxCenter(box);

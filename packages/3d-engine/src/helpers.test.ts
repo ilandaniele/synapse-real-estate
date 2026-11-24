@@ -9,9 +9,11 @@ import {
   filterOpacity,
   framingDistance,
   isDragGesture,
+  overviewBox,
   pickUnitFromHits,
   presetDirection,
   resolveUnitFromObject,
+  unionBox,
   type ObjectLike,
 } from "./helpers";
 
@@ -103,6 +105,18 @@ describe("camera helpers", () => {
     const portrait = framingDistance([100, 40, 100], 45, 1, 375 / 812);
     expect(landscape).toBeCloseTo(framingDistance([100, 40, 100], 45, 1));
     expect(portrait).toBeGreaterThan(landscape * 2);
+  });
+
+  it("unions boxes and returns null for none", () => {
+    expect(unionBox([box, { min: [-5, 1, 2], max: [3, 8, 4] }])).toEqual({ min: [-5, 0, 0], max: [10, 8, 20] });
+    expect(unionBox([])).toBeNull();
+  });
+
+  it("frames only the villas on portrait screens", () => {
+    const villas = { min: [2, 0, 2], max: [8, 4, 18] } as const;
+    expect(overviewBox(box, villas, 375 / 812)).toBe(villas);
+    expect(overviewBox(box, villas, 16 / 9)).toBe(box);
+    expect(overviewBox(box, null, 375 / 812)).toBe(box);
   });
 
   it("places the camera at `distance` along the direction from the box center", () => {
